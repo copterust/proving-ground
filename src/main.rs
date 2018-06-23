@@ -14,30 +14,26 @@ use rt::ExceptionFrame;
 entry!(main);
 fn main() -> !{
     let prphs = stm32f30x::Peripherals::take().unwrap();
-    prphs.RCC.apb2enr.write(|w| w.tim1en().enabled());
-    prphs.RCC.ahbenr.write(|w| w.iopaen().enabled());
-
-    prphs.GPIOA.moder.write(|w| w.moder8().alternate());
+    // Turn on PORTB
+    prphs.RCC.ahbenr.write(|w| w.iopben().enabled());
+    // Turn on TIM4
+    prphs.RCC.apb1enr.write(|w| w.tim4en().enabled());
+    // Setup PORTB6
     unsafe {
-        prphs.GPIOA.afrh.write(|w| w.afrh8().bits(0b0000_0110));
-        prphs.GPIOA.ospeedr.write(|w| w.ospeedr8().bits(0b10));
-
-        prphs.TIM1.ccer.write(|w| w.cc1e().set_bit());
-        prphs.TIM1.ccer.write(|w| w.cc2e().set_bit());
-        prphs.TIM1.ccer.write(|w| w.cc3e().set_bit());
-        prphs.TIM1.ccer.write(|w| w.cc4e().set_bit());
-
-        prphs.TIM1.arr.write(|w| w.bits(100));
-        prphs.TIM1.psc.write(|w| w.bits(8));
-        prphs.TIM1.bdtr.write(|w| w.moe().set_bit());
-        prphs.TIM1.cr1.write(|w| w.cen().set_bit());
-        prphs.TIM1.ccr1.write(|w| w.bits(6553));
+        // Medium speed
+        prphs.GPIOB.ospeedr.write(|w| w.ospeedr6().bits(0x02));
+        // Push-pull output
+        prphs.GPIOB.otyper.write(|w| w.ot6().bit(false));
+        // Alternative function mode
+        prphs.GPIOB.moder.write(|w| w.moder6().alternate());
+        // Pull-up resistor enabled
+        prphs.GPIOB.pupdr.write(|w| w.pupdr6().bits(0x01));
+        // AF2
+        prphs.GPIOB.afrl.write(|w| w.afrl6().bits(0x02));
     }
 
     loop {
-//        unsafe {
-//            prphs.TIM1.ccr1.write(|w| w.bits(50));
-//        }
+
     }
 }
 
