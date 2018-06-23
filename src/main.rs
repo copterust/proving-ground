@@ -11,6 +11,8 @@ extern crate stm32f30x;
 
 use rt::ExceptionFrame;
 
+use cortex_m::asm;
+
 entry!(main);
 fn main() -> !{
     let prphs = stm32f30x::Peripherals::take().unwrap();
@@ -46,7 +48,12 @@ fn main() -> !{
     }
 
     loop {
-
+        for i in 0..50 {
+            unsafe {
+                prphs.TIM4.ccr1.write(|w| w.bits(i));
+                tick_delay(1000);
+            }
+        }
     }
 }
 
@@ -58,4 +65,8 @@ fn hard_fault(ef: &ExceptionFrame) -> ! {
 exception!(*, default_handler);
 fn default_handler(irqn: i16) {
     panic!("Unhandled exception (IRQn = {})", irqn);
+}
+
+fn tick_delay(ticks: usize) {
+    (0..ticks).for_each(|_| asm::nop());
 }
