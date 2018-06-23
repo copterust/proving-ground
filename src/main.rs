@@ -48,10 +48,16 @@ fn main() -> !{
     }
 
     loop {
-        for i in 0..50 {
+        for i in 10..50 {
             unsafe {
                 prphs.TIM4.ccr1.write(|w| w.bits(i));
-                tick_delay(1000);
+                tick_delay(25000);
+            }
+        }
+        for i in 10..50 {
+            unsafe {
+                prphs.TIM4.ccr1.write(|w| w.bits(50 - i));
+                tick_delay(25000);
             }
         }
     }
