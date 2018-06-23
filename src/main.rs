@@ -31,6 +31,19 @@ fn main() -> !{
         // AF2
         prphs.GPIOB.afrl.write(|w| w.afrl6().bits(0x02));
     }
+    // Setup TIM4 as PWM
+    unsafe {
+        // Set period
+        prphs.TIM4.arr.write(|w| w.bits(49));
+        // Set prescaler
+        prphs.TIM4.psc.write(|w| w.bits(71));
+        // Enable output for channel 1
+        prphs.TIM4.ccer.write(|w| w.cc1e().bit(true));
+        // Set channel 1 as PWM1
+        prphs.TIM4.ccmr1_output.write(|w| w.oc1m().bits(0b0110));
+        // Enable timer
+        prphs.TIM4.cr1.write(|w| w.cen().bit(true));
+    }
 
     loop {
 
