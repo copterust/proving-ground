@@ -20,10 +20,24 @@ fn main() -> !{
     prphs.GPIOA.moder.write(|w| w.moder8().alternate());
     unsafe {
         prphs.GPIOA.afrh.write(|w| w.afrh8().bits(0b0000_0110));
+        prphs.GPIOA.ospeedr.write(|w| w.ospeedr8().bits(0b10));
+
+        prphs.TIM1.ccer.write(|w| w.cc1e().set_bit());
+        prphs.TIM1.ccer.write(|w| w.cc2e().set_bit());
+        prphs.TIM1.ccer.write(|w| w.cc3e().set_bit());
+        prphs.TIM1.ccer.write(|w| w.cc4e().set_bit());
+
+        prphs.TIM1.arr.write(|w| w.bits(100));
+        prphs.TIM1.psc.write(|w| w.bits(8));
+        prphs.TIM1.bdtr.write(|w| w.moe().set_bit());
+        prphs.TIM1.cr1.write(|w| w.cen().set_bit());
+        prphs.TIM1.ccr1.write(|w| w.bits(6553));
     }
 
     loop {
-        
+//        unsafe {
+//            prphs.TIM1.ccr1.write(|w| w.bits(50));
+//        }
     }
 }
 
