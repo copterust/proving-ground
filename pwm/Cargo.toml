@@ -1,7 +1,7 @@
 [package]
-name = "mini"
+name = "pwm"
 version = "0.1.0"
-authors = ["Roma Sokolov"]
+authors = ["Roma Sokolov", "Alexander Zhuravlev"]
 
 [dependencies]
 
