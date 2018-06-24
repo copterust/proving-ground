@@ -1,0 +1,27 @@
+[package]
+name = "mini"
+version = "0.1.0"
+authors = ["Roma Sokolov"]
+
+[dependencies]
+
+[profile.dev]
+panic = "abort"
+debug = true
+opt-level = "s"
+lto = false
+codegen-units = 1
+incremental = false
+
+[dependencies.panic-abort]
+version = "0.2.0"
+
+[dependencies.cortex-m]
+version = "0.5.2"
+
+[dependencies.stm32f30x]
+version = "0.7.0"
+features = ["rt"]
+
+[dependencies.cortex-m-rt]
+version = "0.5.1"
