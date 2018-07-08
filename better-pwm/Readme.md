@@ -1,3 +1,3 @@
-# Pwm
+# Better-Pwm
 
-PWM manipulations with stm32f3x.
+PWM manipulations with copterust for of stm32f3x-hal.
