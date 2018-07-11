@@ -1,0 +1,2 @@
+(gdb) set mem inaccessible-by-default off
+(gdb) dump binary memory dump.bin 0x48000400 0x48000428  // GPIOB, up to brr
