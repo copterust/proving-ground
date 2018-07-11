@@ -2,3 +2,5 @@
 */Cargo.lock
 /expls
 /.dir-locals.el
+*.bin
+*.dump

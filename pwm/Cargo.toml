@@ -8,7 +8,7 @@ authors = ["Roma Sokolov", "Alexander Zhuravlev"]
 [profile.dev]
 panic = "abort"
 debug = true
-opt-level = "s"
+opt-level = 0
 lto = false
 codegen-units = 1
 incremental = false

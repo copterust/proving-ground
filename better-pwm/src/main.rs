@@ -35,6 +35,7 @@ fn main() -> ! {
     let device = hal::stm32f30x::Peripherals::take().unwrap();
     // let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
+
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
 
     // Turn on TIM4
@@ -46,10 +47,11 @@ fn main() -> ! {
     // Setup PORTB6
     let pb6 = gpiob
         .pb6
-        .pull_type(wip::PullUp)
         .alternating(wip::AF2)
         .output_speed(wip::MediumSpeed)
-        .output_type(wip::PushPull);
+        .pull_type(wip::PullUp)
+        .output_type(wip::PushPull)
+        .alt_fn(wip::AF2);
     unsafe {
         P = Some(pb6);
     }

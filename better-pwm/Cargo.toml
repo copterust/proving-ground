@@ -8,7 +8,7 @@ authors = ["Roma Sokolov", "Alexander Zhuravlev"]
 [profile.dev]
 panic = "abort"
 debug = true
-opt-level = "s"
+opt-level = 0
 lto = false
 codegen-units = 1
 incremental = false
@@ -28,4 +28,5 @@ version = "0.5.1"
 
 [dependencies.stm32f30x-hal]
 git = "https://github.com/copterust/stm32f30x-hal.git"
-rev = "ad9f5f625430aa11ae1e8891f904d2d3ba3f27f4"
+rev = "624bfcae3341091b88bc555c14ff8f149ea606da"
+# path = "../../stm32f30x-hal"
