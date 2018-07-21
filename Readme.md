@@ -1,6 +1,6 @@
 # Examples
 
-Collection of tiny ARM programs
+Collection of tiny programs for STM32 boards written in Rust. [![Build Status](https://travis-ci.org/copterust/proving-ground.svg?branch=master)](https://travis-ci.org/copterust/proving-ground)
 
 # General guidelines
 

@@ -13,7 +13,7 @@ install:
   - rustup target add thumbv7em-none-eabi
 
 script:
-  - travis.sh
+  - ./travis.sh
 
 cache: cargo
 before_cache:
