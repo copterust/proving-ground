@@ -1,0 +1,25 @@
+language: rust
+rust:
+  - nightly
+
+matrix:
+  include:
+    - addons:
+        apt:
+          packages:
+            - gcc-arm-none-eabi
+
+install:
+  - rustup target add thumbv7em-none-eabi
+
+script:
+  - cargo build --verbose
+
+cache: cargo
+before_cache:
+  - chmod -R a+r $HOME/.cargo
+
+branches:
+  only:
+    - develop
+    - master
