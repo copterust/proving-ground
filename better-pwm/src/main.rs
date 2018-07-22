@@ -10,80 +10,48 @@ extern crate panic_abort;
 
 extern crate stm32f30x;
 extern crate stm32f30x_hal as hal;
-use hal::gpio::wip;
-use hal::rcc::RccExt;
-use wip::GpioExt;
+use hal::flash::FlashExt;
+// use hal::gpio;
+
+use hal::prelude::*;
+use hal::pwm::PwmBinding;
+use hal::timer;
 
 use rt::ExceptionFrame;
 
 use cortex_m::asm;
 
-type PT = hal::gpio::wip::gpiob::PB6<
-    hal::gpio::wip::PullUp,
-    hal::gpio::wip::AltFn<
-        hal::gpio::wip::AF2,
-        hal::gpio::wip::PushPull,
-        hal::gpio::wip::MediumSpeed,
-    >,
->;
-
 #[used]
-static mut P: Option<PT> = None;
+static mut P: Option<i32> = None;
 
 entry!(main);
 fn main() -> ! {
     let device = hal::stm32f30x::Peripherals::take().unwrap();
-    // let core = cortex_m::Peripherals::take().unwrap();
+    let mut flash = device.FLASH.constrain();
     let mut rcc = device.RCC.constrain();
 
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
-
-    // Turn on TIM4
-    unsafe {
-        let rcc = &*stm32f30x::RCC::ptr();
-        rcc.apb1enr.write(|w| w.tim4en().enabled());
-    }
-
-    // Setup PORTB6
-    let pb6 = gpiob
-        .pb6
-        .alternating(wip::AF2)
-        .output_speed(wip::MediumSpeed)
-        .pull_type(wip::PullUp)
-        .output_type(wip::PushPull)
-        .alt_fn(wip::AF2);
-    unsafe {
-        P = Some(pb6);
-    }
-    // ^ this is to avoid warnings about unused stuff and to avoid optimazing port away
-    // in real program pb6 would be consumed by pwm, but that will come later
-
-    // Setup TIM4 as PWM
-    unsafe {
-        // Set period
-        device.TIM4.arr.write(|w| w.bits(49));
-        // Set prescaler
-        device.TIM4.psc.write(|w| w.bits(71));
-        // Enable output for channel 1
-        device.TIM4.ccer.write(|w| w.cc1e().bit(true));
-        // Set channel 1 as PWM1
-        device.TIM4.ccmr1_output.write(|w| w.oc1m().bits(0b0110));
-        // Enable timer
-        device.TIM4.cr1.write(|w| w.cen().bit(true));
-    }
+    // get port b
+    let pb6 = gpiob.pb6;
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .freeze(&mut flash.acr);
+    let tim4 = timer::tim4::Timer::new(device.TIM4, 650.khz(), clocks, &mut rcc.apb1);
+    let (ch1, mut tim4) = tim4.take_ch1();
+    tim4.enable();
+    let mut pwm = PwmBinding::bind_pb6_tim4_ch1(pb6, ch1);
+    pwm.enable();
 
     loop {
         for i in 10..50 {
-            unsafe {
-                device.TIM4.ccr1.write(|w| w.bits(i));
-                tick_delay(25000);
-            }
+            pwm.set_duty(i);
+            tick_delay(25000);
         }
         for i in 10..50 {
-            unsafe {
-                device.TIM4.ccr1.write(|w| w.bits(50 - i));
-                tick_delay(25000);
-            }
+            pwm.set_duty(50 - i);
+            tick_delay(25000);
         }
     }
 }
