@@ -10,19 +10,17 @@ extern crate panic_abort;
 
 extern crate stm32f30x;
 extern crate stm32f30x_hal as hal;
-use hal::flash::FlashExt;
-// use hal::gpio;
 
+use hal::gpio;
+use hal::gpio::gpiob::PB6;
 use hal::prelude::*;
 use hal::pwm::PwmBinding;
 use hal::timer;
+use hal::timer::tim4::Channel;
 
 use rt::ExceptionFrame;
 
 use cortex_m::asm;
-
-#[used]
-static mut P: Option<i32> = None;
 
 entry!(main);
 fn main() -> ! {
@@ -41,7 +39,9 @@ fn main() -> ! {
     let tim4 = timer::tim4::Timer::new(device.TIM4, 650.khz(), clocks, &mut rcc.apb1);
     let (ch1, mut tim4) = tim4.take_ch1();
     tim4.enable();
-    let mut pwm = PwmBinding::bind_pb6_tim4_ch1(pb6, ch1);
+    // Two ways to create binding: via named func or via turbo fishing:
+    // let mut pwm = PwmBinding::bind_pb6_tim4_ch1(pb6, ch1);
+    let mut pwm = PwmBinding::<PB6<_, _>, Channel<timer::CH1, _>, gpio::AF2>::new(pb6, ch1);
     pwm.enable();
 
     loop {

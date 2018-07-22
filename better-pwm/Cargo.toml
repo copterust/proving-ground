@@ -28,4 +28,5 @@ version = "0.5.1"
 
 [dependencies.stm32f30x-hal]
 git = "https://github.com/copterust/stm32f30x-hal.git"
-rev = "ce3cc78a333cf5b7ea84f7a1a399b0ebca050df3"
+rev = "d937bfbf5e782f1843bfb0c36f5541cbe9b1dda8"
+# path = "../../stm32f30x-hal"
