@@ -8,8 +8,8 @@ extern crate cortex_m;
 extern crate cortex_m_rt as rt;
 extern crate panic_abort;
 
+extern crate alt_stm32f30x_hal as hal;
 extern crate stm32f30x;
-extern crate stm32f30x_hal as hal;
 
 use hal::gpio;
 use hal::gpio::gpiob::PB6;

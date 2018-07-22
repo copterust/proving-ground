@@ -26,7 +26,5 @@ features = ["rt"]
 [dependencies.cortex-m-rt]
 version = "0.5.1"
 
-[dependencies.stm32f30x-hal]
-git = "https://github.com/copterust/stm32f30x-hal.git"
-rev = "d937bfbf5e782f1843bfb0c36f5541cbe9b1dda8"
-# path = "../../stm32f30x-hal"
+[dependencies.alt-stm32f30x-hal]
+version = "0.3.0"
