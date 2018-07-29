@@ -30,19 +30,19 @@ fn main() -> ! {
 
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     // get port b
-    let pb6 = gpiob.pb6;
+    let pb6 = gpiob.pb6.pull_type(gpio::PullUp);
     let clocks = rcc
         .cfgr
         .sysclk(64.mhz())
         .pclk1(32.mhz())
         .freeze(&mut flash.acr);
-    let tim4 = timer::tim4::Timer::new(device.TIM4, 650.khz(), clocks, &mut rcc.apb1);
+    let tim4 = timer::tim4::Timer::new(device.TIM4, 1.mhz(), clocks, &mut rcc.apb1);
     let (ch1, mut tim4) = tim4.take_ch1();
-    tim4.enable();
     // Two ways to create binding: via named func or via turbo fishing:
     // let mut pwm = PwmBinding::bind_pb6_tim4_ch1(pb6, ch1);
     let mut pwm = PwmBinding::<PB6<_, _>, tim4::Channel<timer::CH1, _>, gpio::AF2>::new(pb6, ch1);
     pwm.enable();
+    tim4.enable();
 
     loop {
         for i in 10..50 {

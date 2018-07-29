@@ -27,4 +27,4 @@ features = ["rt"]
 version = "0.5.1"
 
 [dependencies.alt-stm32f30x-hal]
-version = "0.3.0"
+version = "0.3.4"
