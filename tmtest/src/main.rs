@@ -27,8 +27,8 @@ fn main() -> ! {
 
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     // get port b
-    let mut pb6 = gpiob
-        .pb6
+    let mut pb8 = gpiob
+        .pb8
         .pull_type(gpio::PullUp)
         .output()
         .output_type(gpio::PushPull);
@@ -43,10 +43,10 @@ fn main() -> ! {
         tim4.start(1.hz());
         while let Err(nb::Error::WouldBlock) = tim4.wait() {}
         if b {
-            pb6.set_high();
+            pb8.set_high();
             b = false;
         } else {
-            pb6.set_low();
+            pb8.set_low();
             b = true
         }
     }
