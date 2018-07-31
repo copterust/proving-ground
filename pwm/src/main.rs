@@ -14,7 +14,7 @@ use rt::ExceptionFrame;
 use cortex_m::asm;
 
 entry!(main);
-fn main() -> !{
+fn main() -> ! {
     let prphs = stm32f30x::Peripherals::take().unwrap();
     // Turn on PORTB
     prphs.RCC.ahbenr.write(|w| w.iopben().enabled());
@@ -23,15 +23,15 @@ fn main() -> !{
     // Setup PORTB6
     unsafe {
         // Medium speed
-        prphs.GPIOB.ospeedr.write(|w| w.ospeedr6().bits(0x02));
+        prphs.GPIOB.ospeedr.write(|w| w.ospeedr8().bits(0x02));
         // Push-pull output
-        prphs.GPIOB.otyper.write(|w| w.ot6().bit(false));
+        prphs.GPIOB.otyper.write(|w| w.ot8().bit(false));
         // Alternative function mode
-        prphs.GPIOB.moder.write(|w| w.moder6().alternate());
+        prphs.GPIOB.moder.write(|w| w.moder8().alternate());
         // Pull-up resistor enabled
-        prphs.GPIOB.pupdr.write(|w| w.pupdr6().bits(0x01));
+        prphs.GPIOB.pupdr.write(|w| w.pupdr8().bits(0x01));
         // AF2
-        prphs.GPIOB.afrl.write(|w| w.afrl6().bits(0x02));
+        prphs.GPIOB.afrh.write(|w| w.afrh8().bits(0x02));
     }
     // Setup TIM4 as PWM
     unsafe {
@@ -40,9 +40,9 @@ fn main() -> !{
         // Set prescaler
         prphs.TIM4.psc.write(|w| w.bits(71));
         // Enable output for channel 1
-        prphs.TIM4.ccer.write(|w| w.cc1e().bit(true));
+        prphs.TIM4.ccer.write(|w| w.cc3e().bit(true));
         // Set channel 1 as PWM1
-        prphs.TIM4.ccmr1_output.write(|w| w.oc1m().bits(0b0110));
+        prphs.TIM4.ccmr2_output.write(|w| w.oc3m().bits(0b0110));
         // Enable timer
         prphs.TIM4.cr1.write(|w| w.cen().bit(true));
     }
@@ -50,13 +50,13 @@ fn main() -> !{
     loop {
         for i in 10..50 {
             unsafe {
-                prphs.TIM4.ccr1.write(|w| w.bits(i));
+                prphs.TIM4.ccr3.write(|w| w.bits(i));
                 tick_delay(25000);
             }
         }
         for i in 10..50 {
             unsafe {
-                prphs.TIM4.ccr1.write(|w| w.bits(50 - i));
+                prphs.TIM4.ccr3.write(|w| w.bits(50 - i));
                 tick_delay(25000);
             }
         }
