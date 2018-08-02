@@ -1,8 +1,4 @@
 language: rust
-rust:
-  - stable
-  - beta
-  - nightly
 
 matrix:
   include:
@@ -10,6 +6,18 @@ matrix:
         apt:
           packages:
             - gcc-arm-none-eabi
+      rust: stable
+    - addons:
+        apt:
+          packages:
+            - gcc-arm-none-eabi
+      rust: nightly
+
+    - addons:
+        apt:
+          packages:
+            - gcc-arm-none-eabi
+      rust: beta
 
 install:
   - rustup target add thumbv7em-none-eabi
