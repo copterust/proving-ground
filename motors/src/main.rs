@@ -11,9 +11,8 @@ extern crate panic_abort;
 extern crate alt_stm32f30x_hal as hal;
 extern crate stm32f30x;
 
-use hal::gpio::PullUp;
+use hal::gpio::{MediumSpeed, PullUp};
 use hal::prelude::*;
-use hal::pwm::PwmBinding;
 use hal::timer;
 
 use rt::ExceptionFrame;
@@ -34,10 +33,10 @@ fn main() -> ! {
         .freeze(&mut flash.acr);
     let (ch1, ch2, ch3, ch4, mut tim) =
         timer::tim2::Timer::new(device.TIM2, 1.mhz(), clocks, &mut rcc.apb1).take_all();
-    let mut motor_pa0 = PwmBinding::bind_pa0_tim2_ch1(gpioa.pa0.pull_type(PullUp), ch1);
-    let mut motor_pa1 = PwmBinding::bind_pa1_tim2_ch2(gpioa.pa1.pull_type(PullUp), ch2);
-    let mut motor_pa2 = PwmBinding::bind_pa2_tim2_ch3(gpioa.pa2.pull_type(PullUp), ch3);
-    let mut motor_pa3 = PwmBinding::bind_pa3_tim2_ch4(gpioa.pa3.pull_type(PullUp), ch4);
+    let mut motor_pa0 = gpioa.pa0.pull_type(PullUp).to_pwm(ch1, MediumSpeed);
+    let mut motor_pa1 = gpioa.pa1.pull_type(PullUp).to_pwm(ch2, MediumSpeed);
+    let mut motor_pa2 = gpioa.pa2.pull_type(PullUp).to_pwm(ch3, MediumSpeed);
+    let mut motor_pa3 = gpioa.pa3.pull_type(PullUp).to_pwm(ch4, MediumSpeed);
     motor_pa0.enable();
     motor_pa1.enable();
     motor_pa2.enable();
