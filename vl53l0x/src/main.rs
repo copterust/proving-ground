@@ -43,7 +43,7 @@ fn main() -> ! {
     let (tx, mut rx) = serial.split();
 
     let mut l = Logger { tx };
-    write!(l, "\r\nVL53L0x demor\n");
+    write!(l, "\r\nVL53L0x demo\r\n");
 
     // i2c
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
@@ -57,7 +57,8 @@ fn main() -> ! {
         &mut rcc.apb1);
 
     let mut tof = vl53l0x::new(i2c).unwrap();
-    write!(l, "Result: {}", tof.who_am_i());
+    write!(l, "WHO_AM_I: {}\r\n", tof.who_am_i());
+    write!(l, "RevisionID: {}\r\n", tof.revision_id);
 
     loop {
         match rx.read() {
