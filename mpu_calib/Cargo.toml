@@ -34,6 +34,5 @@ version = "0.5.0"
 package = "alt-stm32f30x-hal"
 
 [dependencies.mpu9250]
-# git = "https://github.com/copterust/mpu9250.git"
-# rev = "d6fbfd549dcd3627c4aa08d2d8db3da15e9f6ac9"
-path = "../../mpu9250"
+git = "https://github.com/copterust/mpu9250.git"
+rev = "c62440ea439816e58ee0987d8089e6a82d4633f6"
