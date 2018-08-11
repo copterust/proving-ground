@@ -14,6 +14,8 @@ use hal::time::Bps;
 use nb;
 use rt::{entry, exception, ExceptionFrame};
 
+mod vl53l0x;
+
 entry!(main);
 fn main() -> ! {
     let device = hal::stm32f30x::Peripherals::take().unwrap();
@@ -26,17 +28,7 @@ fn main() -> ! {
         .pclk2(36.mhz())
         .freeze(&mut flash.acr);
 
-    // i2c
-    let gpiob = device.GPIOB.split(&mut rcc.ahb);
-    let scl = gpiob.pb8.alternating(gpio::AF4);
-    let sda = gpiob.pb9.alternating(gpio::AF4);
-    let mut i2c = hal::i2c::I2c::i2c1(
-        device.I2C1,
-        (scl, sda),
-        1.mhz(),
-        clocks,
-        &mut rcc.apb1);
-
+    // serial
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let txpin = gpioa.pa9.alternating(gpio::AF7);
     let rxpin = gpioa.pa10.alternating(gpio::AF7);
@@ -48,16 +40,24 @@ fn main() -> ! {
         &mut rcc.apb2,
     );
     serial.listen(serial::Event::Rxne);
-    let (mut tx, mut rx) = serial.split();
-    // COBS frame
-    tx.write(0x00).unwrap();
-    let mut l = Logger { tx };
-    write!(l, "\r\nReading i2c...\r\n");
+    let (tx, mut rx) = serial.split();
 
-    let mut data: [u8; 1] = [0];
-    let addr: u8 = 0xC0; // Probably WHO_AM_I, should be 0xEE
-    i2c.write_read(0x29, &[addr], &mut data).unwrap();
-    write!(l, "Result: {}\r\n", data[0]);
+    let mut l = Logger { tx };
+    write!(l, "\r\nVL53L0x demor\n");
+
+    // i2c
+    let gpiob = device.GPIOB.split(&mut rcc.ahb);
+    let scl = gpiob.pb8.alternating(gpio::AF4);
+    let sda = gpiob.pb9.alternating(gpio::AF4);
+    let i2c = hal::i2c::I2c::i2c1(
+        device.I2C1,
+        (scl, sda),
+        1.mhz(),
+        clocks,
+        &mut rcc.apb1);
+
+    let mut tof = vl53l0x::new(i2c).unwrap();
+    write!(l, "Result: {}", tof.who_am_i());
 
     loop {
         match rx.read() {
