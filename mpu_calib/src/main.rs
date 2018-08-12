@@ -66,7 +66,7 @@ fn main() -> ! {
         "Mag Calibration: Wave device in a figure eight until done!\r\n"
     );
 
-    let sample_count = 5;
+    let sample_count = 250;
     let mut mag_max_x: i16 = -32767;
     let mut mag_max_y: i16 = -32767;
     let mut mag_max_z: i16 = -32767;
@@ -75,8 +75,6 @@ fn main() -> ! {
     let mut mag_min_z: i16 = 32767;
 
     write!(l, "factory biases: {:?}\r\n", mpu.mag_sensitivity_adj());
-    let (fx, fy, fz) = mpu.read_mag_factory_biases().unwrap();
-    write!(l, "raw factory biases: {:?}; {:?}; {:?}\r\n", fx, fy, fz);
 
     for _ in 0..sample_count {
         match mpu.mag() {
