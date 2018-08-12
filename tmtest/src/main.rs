@@ -1,23 +1,16 @@
 #![deny(warnings)]
 #![no_std]
 #![no_main]
-#![feature(used)]
 
-extern crate cortex_m;
-extern crate nb;
-#[macro_use]
-extern crate cortex_m_rt as rt;
-extern crate alt_stm32f30x_hal as hal;
-extern crate embedded_hal as ehal;
-extern crate panic_abort;
-extern crate stm32f30x;
+// used to provide panic_implementation
+#[allow(unused)]
+use panic_abort;
 
-// use ehal::digital::OutputPin;
 use hal::gpio;
 use hal::prelude::*;
 use hal::timer::tim4;
 
-use rt::ExceptionFrame;
+use rt::{entry, exception, ExceptionFrame};
 
 entry!(main);
 fn main() -> ! {

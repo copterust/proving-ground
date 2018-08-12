@@ -2,16 +2,13 @@
 #![no_std]
 #![no_main]
 
-extern crate cortex_m;
-#[macro_use]
-extern crate cortex_m_rt as rt;
-extern crate panic_abort;
-
-extern crate stm32f30x;
-
-use rt::ExceptionFrame;
+// used to provide panic_implementation
+#[allow(unused)]
+use panic_abort;
 
 use cortex_m::asm;
+use rt::{entry, exception, ExceptionFrame};
+use stm32f30x;
 
 entry!(main);
 fn main() -> ! {

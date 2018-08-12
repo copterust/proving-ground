@@ -30,9 +30,10 @@ version = "0.2.1"
 package = "embedded-hal"
 
 [dependencies.hal]
-version = "0.5.0"
+version = "0.6.0"
 package = "alt-stm32f30x-hal"
 
 [dependencies.mpu9250]
-git = "https://github.com/copterust/mpu9250.git"
-rev = "c62440ea439816e58ee0987d8089e6a82d4633f6"
+# git = "https://github.com/copterust/mpu9250.git"
+# rev = "c62440ea439816e58ee0987d8089e6a82d4633f6"
+path = "../../mpu9250"

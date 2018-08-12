@@ -2,15 +2,13 @@
 #![no_std]
 #![no_main]
 
-extern crate cortex_m;
-#[macro_use]
-extern crate cortex_m_rt as rt;
-extern crate panic_abort;
-
-use rt::ExceptionFrame;
+// used to provide panic_implementation
+#[allow(unused)]
+use panic_abort;
+use rt::{entry, exception, ExceptionFrame};
 
 entry!(main);
-fn main() -> !{
+fn main() -> ! {
     panic!("opa");
 }
 

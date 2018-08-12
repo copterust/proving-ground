@@ -1,21 +1,15 @@
 #![deny(warnings)]
 #![no_std]
 #![no_main]
-#![feature(used)]
 
-extern crate cortex_m;
-#[macro_use]
-extern crate cortex_m_rt as rt;
-extern crate panic_abort;
-
-extern crate alt_stm32f30x_hal as hal;
-extern crate stm32f30x;
+// used to provide panic_implementation
+#[allow(unused)]
+use panic_abort;
 
 use hal::gpio::{MediumSpeed, PullUp};
 use hal::prelude::*;
 use hal::timer;
-
-use rt::ExceptionFrame;
+use rt::{entry, exception, ExceptionFrame};
 
 use cortex_m::asm;
 

@@ -30,5 +30,5 @@ version = "0.2.1"
 package = "embedded-hal"
 
 [dependencies.hal]
-version = "0.5.0"
+version = "0.6.0"
 package = "alt-stm32f30x-hal"
