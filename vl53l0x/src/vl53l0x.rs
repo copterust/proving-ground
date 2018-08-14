@@ -1,23 +1,23 @@
-#![no_std]
-
 //use ehal::blocking::i2c::WriteRead;
 
 pub const ADDRESS: u8 = 0x29;
 
-pub struct VL53L0x<I2C: ehal::blocking::i2c::WriteRead>
-{
+pub struct VL53L0x<I2C: ehal::blocking::i2c::WriteRead> {
     com: I2C,
-    pub revision_id: u8
+    pub revision_id: u8,
 }
 
 pub fn new<I2C, E>(i2c: I2C) -> Result<VL53L0x<I2C>, E>
-where I2C: ehal::blocking::i2c::WriteRead<Error = E> {
+where
+    I2C: ehal::blocking::i2c::WriteRead<Error = E>,
+{
     let mut chip = VL53L0x {
         com: i2c,
-        revision_id: 0x00
+        revision_id: 0x00,
     };
-    
-    if chip.who_am_i() == 0xEE { // FIXME: return an error/optional
+
+    if chip.who_am_i() == 0xEE {
+        // FIXME: return an error/optional
         chip.set_high_i2c_voltage(); // TODO: make configurable
         chip.revision_id = chip.read_revision_id();
         chip.reset();
@@ -28,8 +28,7 @@ where I2C: ehal::blocking::i2c::WriteRead<Error = E> {
     Ok(chip)
 }
 
-impl<I2C: ehal::blocking::i2c::WriteRead> VL53L0x<I2C>
-{
+impl<I2C: ehal::blocking::i2c::WriteRead> VL53L0x<I2C> {
     pub fn set_standard_i2c_mode(&mut self) {
         self.write_byte_raw(0x80, 0x01);
         self.write_byte_raw(0xFF, 0x01);
@@ -79,7 +78,9 @@ impl<I2C: ehal::blocking::i2c::WriteRead> VL53L0x<I2C>
 
     fn write_byte(&mut self, reg: Register, byte: u8) {
         let mut buffer = [0];
-        let _ = self.com.write_read(ADDRESS, &[reg as u8, byte], &mut buffer);
+        let _ = self
+            .com
+            .write_read(ADDRESS, &[reg as u8, byte], &mut buffer);
     }
 
     fn read_byte(&mut self, reg: Register) -> u8 {
