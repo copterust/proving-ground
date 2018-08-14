@@ -58,7 +58,7 @@ fn main() -> ! {
         clocks,
         &mut rcc.apb2,
     );
-    let mut mpu = Mpu9250::marg(spi, ncs, &mut delay).unwrap();
+    let mut mpu = Mpu9250::marg_default(spi, ncs, &mut delay).unwrap();
     let tmr = hal::time::MonoTimer::new(core.DWT, clocks);
     let now = tmr.now();
     write!(

@@ -5,6 +5,7 @@
 #[allow(unused)]
 use panic_abort;
 
+use core::f32::{INFINITY, NEG_INFINITY};
 use core::fmt::{self, Write};
 
 use hal::prelude::*;
@@ -35,7 +36,7 @@ fn main() -> ! {
     let mut serial = serial::Serial::usart1(
         device.USART1,
         (txpin, rxpin),
-        Bps(9600),
+        Bps(115200),
         clocks,
         &mut rcc.apb2,
     );
@@ -59,22 +60,28 @@ fn main() -> ! {
         clocks,
         &mut rcc.apb2,
     );
-    let mut mpu = Mpu9250::marg(spi, ncs, &mut delay).unwrap();
+    let mut mpu = Mpu9250::marg_default(spi, ncs, &mut delay).unwrap();
+
+    let sample_count = 500;
+    let mut mag_max_x: f32 = NEG_INFINITY;
+    let mut mag_max_y: f32 = NEG_INFINITY;
+    let mut mag_max_z: f32 = NEG_INFINITY;
+    let mut mag_min_x: f32 = INFINITY;
+    let mut mag_min_y: f32 = INFINITY;
+    let mut mag_min_z: f32 = INFINITY;
+
+    let mag_sensitivity = mpu.mag_sensitivity_adjustments();
+    write!(
+        l,
+        "factory sensitivity adjustments: {:?}\r\n",
+        mag_sensitivity
+    );
 
     write!(
         l,
         "Mag Calibration: Wave device in a figure eight until done!\r\n"
     );
-
-    let sample_count = 250;
-    let mut mag_max_x: i16 = -32767;
-    let mut mag_max_y: i16 = -32767;
-    let mut mag_max_z: i16 = -32767;
-    let mut mag_min_x: i16 = 32767;
-    let mut mag_min_y: i16 = 32767;
-    let mut mag_min_z: i16 = 32767;
-
-    write!(l, "factory biases: {:?}\r\n", mpu.mag_sensitivity_adj());
+    delay.delay_ms(200u32);
 
     for _ in 0..sample_count {
         match mpu.mag() {
@@ -101,7 +108,6 @@ fn main() -> ! {
                 if m.z < mag_min_z {
                     mag_min_z = m.z;
                 }
-                write!(l, "{:?}\r\n", m);
             }
             Err(e) => {
                 write!(l, "err: {:?}\r\n", e);
@@ -116,7 +122,7 @@ fn main() -> ! {
     let mag_avg_bias_z = ((mag_max_z + mag_min_z) as f32) / 2.; // get average z mag bias in counts
 
     let mag_res = mpu.mag_resolution();
-    let mag_sensitivity = mpu.mag_sensitivity_adj();
+
     // save mag biases in G for main program
     let mag_bias_x = mag_avg_bias_x * mag_res * mag_sensitivity.x;
     let mag_bias_y = mag_avg_bias_y * mag_res * mag_sensitivity.y;
