@@ -1,0 +1,35 @@
+cargo-features = ["edition", "rename-dependency"]
+
+[package]
+name = "therm"
+version = "0.1.0"
+authors = ["Roma Sokolov", "Alexander Zhuravlev"]
+edition = '2018'
+
+[profile.dev]
+panic = "abort"
+debug = true
+opt-level = "s"
+lto = false
+codegen-units = 1
+incremental = false
+
+[dependencies]
+panic-abort = "0.2.0"
+nb = "0.1.1"
+cortex-m = "0.5.2"
+stm32f30x = {version = "0.7.0", features = ["rt"]}
+mpu9250 = "0.2.2"
+
+[dependencies.rt]
+version = "0.5.1"
+package = "cortex-m-rt"
+
+[dependencies.ehal]
+features = ["unproven"]
+version = "0.2.1"
+package = "embedded-hal"
+
+[dependencies.hal]
+version = "0.6.0"
+package = "alt-stm32f30x-hal"
