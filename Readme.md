@@ -9,7 +9,10 @@ Collection of tiny programs for STM32 boards written in Rust. [![Build Status](h
 * Install appropriate target: `rustup target add thumbv7em-none-eabi`
 * Install toolchain: `sudo apt-get install gcc-arm-none-eabi` on Ubuntu or `brew cask install gcc-arm-embedded` on MacOS
 * Install `bobbin-cli` to speed up development: `cargo install bobbin-cli`
-* `cd` to exapmle dir and run `bobbin -v build` to build, or `bobbin -v load --bin <example name>` to flash device.
+* run `cargo -v build --bin <EXAMPLENAME>` to build, or `bobbin -v load --bin <example name>` to flash device.
+
+Most of the examples depend on some features so command may fail,
+but error message will contain name of the feature you need to enable: `cargo -v build --bin pwm features==with_device`.
 
 
 # Note on targets:

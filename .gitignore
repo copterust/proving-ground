@@ -1,6 +1,4 @@
-*/target
-*/Cargo.lock
+/target
+/Cargo.lock
 /expls
 /.dir-locals.el
-*.bin
-*.dump
