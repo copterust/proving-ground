@@ -14,7 +14,7 @@ use hal::time::Bps;
 use nb;
 use rt::{entry, exception, ExceptionFrame};
 
-mod bmp288;
+mod bmp280;
 
 entry!(main);
 fn main() -> ! {
@@ -43,7 +43,7 @@ fn main() -> ! {
     let (tx, mut rx) = serial.split();
 
     let mut l = Logger { tx };
-    write!(l, "\r\nBMP288 demo\r\n");
+    write!(l, "\r\nBMP280 demo\r\n");
 
     // i2c
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
@@ -56,7 +56,7 @@ fn main() -> ! {
         clocks,
         &mut rcc.apb1);
 
-    let mut ps = bmp288::new(i2c).unwrap();
+    let mut ps = bmp280::new(i2c).unwrap();
     write!(l, "ID: {}\r\n", ps.id());
     ps.reset();
     write!(l, "ID after reset: {}\r\n", ps.id());

@@ -5,21 +5,21 @@ use core::fmt;
 
 pub const ADDRESS: u8 = 0x76;
 
-pub struct BMP288<I2C: ehal::blocking::i2c::WriteRead>
+pub struct BMP280<I2C: ehal::blocking::i2c::WriteRead>
 {
     com: I2C,
 }
 
-pub fn new<I2C, E>(i2c: I2C) -> Result<BMP288<I2C>, E>
+pub fn new<I2C, E>(i2c: I2C) -> Result<BMP280<I2C>, E>
 where I2C: ehal::blocking::i2c::WriteRead<Error = E> {
-    let mut chip = BMP288 {
+    let mut chip = BMP280 {
         com: i2c,
     };
 
     Ok(chip)
 }
 
-impl<I2C: ehal::blocking::i2c::WriteRead> BMP288<I2C>
+impl<I2C: ehal::blocking::i2c::WriteRead> BMP280<I2C>
 {
     pub fn status(&mut self) -> Status {
         let status = self.read_byte(Register::status);
