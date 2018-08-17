@@ -1,0 +1,95 @@
+cargo-features = ["edition", "rename-dependency"]
+
+[profile.dev]
+panic = "abort"
+debug = true
+opt-level = "s"
+lto = false
+codegen-units = 1
+incremental = false
+
+[package]
+name = "proving_ground"
+description = "Examples of tiny programs for stm32f30x MCUs"
+version = "0.1.0"
+authors = ["Roma Sokolov", "Alexander Zhuravlev"]
+edition = '2018'
+
+
+[dependencies]
+panic-abort = "0.2.0"
+cortex-m = "0.5.4"
+rt = {version = "0.5.2", package = "cortex-m-rt"}
+nb = {version = "0.1.1", "optional" = true}
+stm32f30x = {version = "0.7.0", optional = true}
+mpu9250 = {version = "0.2.4", optional = true }
+
+[dependencies.ehal]
+features = ["unproven"]
+version = "0.2.1"
+package = "embedded-hal"
+optional = true
+
+[dependencies.hal]
+version = "0.6.2"
+package = "alt-stm32f30x-hal"
+optional = true
+
+[features]
+no_device = []
+with_device = ["stm32f30x/rt"]
+with_hal = ["with_device", "nb", "ehal", "hal"]
+with_mpu = ["with_hal", "mpu9250"]
+# --all-features will include "generic", but you can't build "mini"
+# if device crate is used.
+all = ["with_mpu"]
+
+[[bin]]
+name = "mini"
+path = "mini/main.rs"
+required-features = ["no_device"]
+
+[[bin]]
+name = "pwm"
+path = "pwm/main.rs"
+required-features = ["with_device"]
+
+[[bin]]
+name = "better_pwm"
+path = "better_pwm/main.rs"
+required-features = ["with_hal"]
+
+[[bin]]
+name = "motors"
+path = "motors/main.rs"
+required-features = ["with_hal"]
+
+[[bin]]
+name = "tmtest"
+path = "tmtest/main.rs"
+required-features = ["with_hal"]
+
+[[bin]]
+name = "serial_echo"
+path = "serial_echo/main.rs"
+required-features = ["with_hal"]
+
+[[bin]]
+name = "vl53l0x"
+path = "vl53l0x/main.rs"
+required-features = ["with_hal"]
+
+[[bin]]
+name = "raw_sensors"
+path = "raw_sensors/main.rs"
+required-features = ["with_mpu"]
+
+[[bin]]
+name = "therm"
+path = "therm/main.rs"
+required-features = ["with_mpu"]
+
+[[bin]]
+name = "mpu_calib"
+path = "mpu_calib/main.rs"
+required-features = ["with_mpu"]
