@@ -62,9 +62,25 @@ impl fmt::Display for Status {
     }
 }
 
+enum Oversampling {
+    skipped = 0b000,
+    x1 = 0b001,
+    x2 = 0b010,
+    x4 = 0b011,
+    x8 = 0b100,
+    x16 = 0b101
+}
+
+enum PowerMode {
+    Sleep = 0b00,
+    Forced = 0b01,
+    Normal = 0b11
+}
+
 #[allow(non_camel_case_types)]
 enum Register {
     id = 0xD0,
     reset = 0xE0,
     status = 0xF3,
+    ctrl_meas = 0xF4,
 }
