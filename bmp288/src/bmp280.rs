@@ -21,6 +21,34 @@ where I2C: ehal::blocking::i2c::WriteRead<Error = E> {
 
 impl<I2C: ehal::blocking::i2c::WriteRead> BMP280<I2C>
 {
+    pub fn control(&mut self) -> Control {
+        let config = self.read_byte(Register::ctrl_meas);
+        let osrs_t = match config & (0b111 << 5) >> 5 {
+            x if x == Oversampling::skipped as u8 => Oversampling::skipped,
+            x if x == Oversampling::x1 as u8 => Oversampling::x1,
+            x if x == Oversampling::x2 as u8 => Oversampling::x2,
+            x if x == Oversampling::x4 as u8 => Oversampling::x4,
+            x if x == Oversampling::x8 as u8 => Oversampling::x8,
+            _ => Oversampling::x16
+        };
+        let osrs_p = match config & (0b111 << 2) >> 2 {
+            x if x == Oversampling::skipped as u8 => Oversampling::skipped,
+            x if x == Oversampling::x1 as u8 => Oversampling::x1,
+            x if x == Oversampling::x2 as u8 => Oversampling::x2,
+            x if x == Oversampling::x4 as u8 => Oversampling::x4,
+            x if x == Oversampling::x8 as u8 => Oversampling::x8,
+            _ => Oversampling::x16
+        };
+        let mode = match config & 0b11 {
+            x if x == PowerMode::Sleep as u8 => PowerMode::Sleep,
+            x if x == PowerMode::Forced as u8 => PowerMode::Forced,
+            x if x == PowerMode::Normal as u8 => PowerMode::Normal,
+            _ => PowerMode::Forced
+        };
+
+        Control { osrs_t: osrs_t, osrs_p: osrs_p, mode: mode }
+    }
+
     pub fn status(&mut self) -> Status {
         let status = self.read_byte(Register::status);
         Status {
@@ -50,6 +78,13 @@ impl<I2C: ehal::blocking::i2c::WriteRead> BMP280<I2C>
     }
 }
 
+#[derive(Debug)]
+pub struct Control {
+    osrs_t: Oversampling,
+    osrs_p: Oversampling,
+    mode: PowerMode
+}
+
 pub struct Status {
     measuring: bool,
     im_update: bool
@@ -62,7 +97,9 @@ impl fmt::Display for Status {
     }
 }
 
-enum Oversampling {
+#[derive(Debug)]
+#[allow(non_camel_case_types)]
+pub enum Oversampling {
     skipped = 0b000,
     x1 = 0b001,
     x2 = 0b010,
@@ -71,7 +108,8 @@ enum Oversampling {
     x16 = 0b101
 }
 
-enum PowerMode {
+#[derive(Debug)]
+pub enum PowerMode {
     Sleep = 0b00,
     Forced = 0b01,
     Normal = 0b11

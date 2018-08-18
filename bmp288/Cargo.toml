@@ -1,7 +1,7 @@
 cargo-features = ["edition", "rename-dependency"]
 
 [package]
-name = "bmp288"
+name = "bmp280"
 version = "0.1.0"
 authors = ["Roma Sokolov", "Alexander Zhuravlev"]
 edition = '2018'

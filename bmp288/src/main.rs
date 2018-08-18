@@ -61,6 +61,7 @@ fn main() -> ! {
     ps.reset();
     write!(l, "ID after reset: {}\r\n", ps.id());
     write!(l, "Status: {}\r\n", ps.status());
+    write!(l, "Config: {:?}\r\n", ps.control());
 
     loop {
         match rx.read() {
@@ -83,6 +84,7 @@ fn main() -> ! {
 struct Logger<W: ehal::serial::Write<u8>> {
     tx: W,
 }
+
 impl<W: ehal::serial::Write<u8>> fmt::Write for Logger<W> {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for c in s.chars() {
