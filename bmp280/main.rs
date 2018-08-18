@@ -68,6 +68,8 @@ fn main() -> ! {
         mode: bmp280::PowerMode::Normal
     });
     write!(l, "After write {:?}\r\n", ps.control());
+    ps.reset();
+    write!(l, "After reset {:?}\r\n", ps.control());
 
     loop {
         match rx.read() {

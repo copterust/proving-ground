@@ -22,15 +22,15 @@ where I2C: ehal::blocking::i2c::WriteRead<Error = E> {
 impl<I2C: ehal::blocking::i2c::WriteRead> BMP280<I2C>
 {
     pub fn set_control(&mut self, new: Control) {
-        let osrs_t = (new.osrs_t as u8) << 5;
-        let osrs_p = (new.osrs_p as u8) << 2;
-        let control = osrs_t | osrs_p | (new.mode as u8);
+        let osrs_t: u8 = (new.osrs_t as u8) << 5;
+        let osrs_p: u8 = (new.osrs_p as u8) << 2;
+        let control: u8 = osrs_t | osrs_p | (new.mode as u8);
         self.write_byte(Register::ctrl_meas, control);
     }
 
     pub fn control(&mut self) -> Control {
         let config = self.read_byte(Register::ctrl_meas);
-        let osrs_t = match config & (0b111 << 5) >> 5 {
+        let osrs_t = match (config & (0b111 << 5)) >> 5 {
             x if x == Oversampling::skipped as u8 => Oversampling::skipped,
             x if x == Oversampling::x1 as u8 => Oversampling::x1,
             x if x == Oversampling::x2 as u8 => Oversampling::x2,
@@ -38,7 +38,7 @@ impl<I2C: ehal::blocking::i2c::WriteRead> BMP280<I2C>
             x if x == Oversampling::x8 as u8 => Oversampling::x8,
             _ => Oversampling::x16
         };
-        let osrs_p = match config & (0b111 << 2) >> 2 {
+        let osrs_p = match (config & (0b111 << 2)) >> 2 {
             x if x == Oversampling::skipped as u8 => Oversampling::skipped,
             x if x == Oversampling::x1 as u8 => Oversampling::x1,
             x if x == Oversampling::x2 as u8 => Oversampling::x2,
@@ -106,6 +106,7 @@ impl fmt::Display for Status {
 
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
+#[allow(dead_code)]
 pub enum Oversampling {
     skipped = 0b000,
     x1 = 0b001,
@@ -116,6 +117,7 @@ pub enum Oversampling {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum PowerMode {
     Sleep = 0b00,
     Forced = 0b01,
