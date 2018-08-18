@@ -21,6 +21,13 @@ where I2C: ehal::blocking::i2c::WriteRead<Error = E> {
 
 impl<I2C: ehal::blocking::i2c::WriteRead> BMP280<I2C>
 {
+    pub fn set_control(&mut self, new: Control) {
+        let osrs_t = (new.osrs_t as u8) << 5;
+        let osrs_p = (new.osrs_p as u8) << 2;
+        let control = osrs_t | osrs_p | (new.mode as u8);
+        self.write_byte(Register::ctrl_meas, control);
+    }
+
     pub fn control(&mut self) -> Control {
         let config = self.read_byte(Register::ctrl_meas);
         let osrs_t = match config & (0b111 << 5) >> 5 {
@@ -80,9 +87,9 @@ impl<I2C: ehal::blocking::i2c::WriteRead> BMP280<I2C>
 
 #[derive(Debug)]
 pub struct Control {
-    osrs_t: Oversampling,
-    osrs_p: Oversampling,
-    mode: PowerMode
+    pub osrs_t: Oversampling,
+    pub osrs_p: Oversampling,
+    pub mode: PowerMode
 }
 
 pub struct Status {

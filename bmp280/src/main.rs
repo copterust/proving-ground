@@ -61,7 +61,13 @@ fn main() -> ! {
     ps.reset();
     write!(l, "ID after reset: {}\r\n", ps.id());
     write!(l, "Status: {}\r\n", ps.status());
-    write!(l, "Config: {:?}\r\n", ps.control());
+    write!(l, "{:?}\r\n", ps.control());
+    ps.set_control(bmp280::Control {
+        osrs_t: bmp280::Oversampling::x1,
+        osrs_p: bmp280::Oversampling::x4,
+        mode: bmp280::PowerMode::Normal
+    });
+    write!(l, "After write {:?}\r\n", ps.control());
 
     loop {
         match rx.read() {
