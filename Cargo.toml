@@ -93,3 +93,7 @@ required-features = ["with_mpu"]
 name = "mpu_calib"
 path = "mpu_calib/main.rs"
 required-features = ["with_mpu"]
+
+[[bin]]
+name = "bmp280"
+path = "bmp280/main.rs"
