@@ -21,6 +21,12 @@ where I2C: ehal::blocking::i2c::WriteRead<Error = E> {
 
 impl<I2C: ehal::blocking::i2c::WriteRead> BMP280<I2C>
 {
+    pub fn pressure(&mut self) -> u32 {
+        let mut data: [u8; 3] = [0, 0, 0];
+        let _ = self.com.write_read(ADDRESS, &[Register::press as u8], &mut data);
+        (data[0] as u32) << 16 | (data[1] as u32) << 8 | (data[2] as u32)
+    }
+
     pub fn config(&mut self) -> Config {
         let config = self.read_byte(Register::config);
         let t_sb = match (config & (0b111 << 5)) >> 5 {
@@ -202,4 +208,5 @@ enum Register {
     status = 0xF3,
     ctrl_meas = 0xF4,
     config = 0xF5,
+    press = 0xF7
 }

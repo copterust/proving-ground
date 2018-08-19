@@ -76,11 +76,21 @@ fn main() -> ! {
         filter: bmp280::Filter::c8
     });
     write!(l, "After write {:?}\r\n", ps.config());
-
+    ps.set_control(bmp280::Control {
+        osrs_t: bmp280::Oversampling::x1,
+        osrs_p: bmp280::Oversampling::x1,
+        mode: bmp280::PowerMode::Forced
+    });
+    write!(l, "Press any key to meausure\r\n");
     loop {
         match rx.read() {
-            Ok(b) => {
-                l.tx.write(b).unwrap();
+            Ok(_b) => {
+                write!(l, "Pressure: {}\r\n", ps.pressure());
+                ps.set_control(bmp280::Control {
+                    osrs_t: bmp280::Oversampling::x1,
+                    osrs_p: bmp280::Oversampling::x1,
+                    mode: bmp280::PowerMode::Forced
+                });
             }
             Err(nb::Error::Other(e)) => match e {
                 serial::Error::Overrun => {
