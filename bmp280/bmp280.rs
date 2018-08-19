@@ -12,7 +12,17 @@ pub struct BMP280<I2C: ehal::blocking::i2c::WriteRead>
     dig_t1: u16,
     dig_t2: i16,
     dig_t3: i16,
-    t_fine: i32
+    t_fine: i32,
+    // Pressure calibration
+    dig_p1: u16,
+    dig_p2: i16,
+    dig_p3: i16,
+    dig_p4: i16,
+    dig_p5: i16,
+    dig_p6: i16,
+    dig_p7: i16,
+    dig_p8: i16,
+    dig_p9: i16
 }
 
 pub fn new<I2C, E>(i2c: I2C) -> Result<BMP280<I2C>, E>
@@ -22,7 +32,16 @@ where I2C: ehal::blocking::i2c::WriteRead<Error = E> {
         dig_t1: 0,
         dig_t2: 0,
         dig_t3: 0,
-        t_fine: 0
+        t_fine: 0,
+        dig_p1: 0,
+        dig_p2: 0,
+        dig_p3: 0,
+        dig_p4: 0,
+        dig_p5: 0,
+        dig_p6: 0,
+        dig_p7: 0,
+        dig_p8: 0,
+        dig_p9: 0
     };
 
     if chip.id() == 0x58 {
@@ -41,6 +60,38 @@ impl<I2C: ehal::blocking::i2c::WriteRead> BMP280<I2C>
         self.dig_t1 = ((data[1] as u16) << 8) | (data[0] as u16);
         self.dig_t2 = ((data[3] as i16) << 8) | (data[2] as i16);
         self.dig_t3 = ((data[5] as i16) << 8) | (data[4] as i16);
+
+        self.dig_p1 = ((data[7] as u16) << 8) | (data[6] as u16);
+        self.dig_p2 = ((data[9] as i16) << 8) | (data[8] as i16);
+        self.dig_p3 = ((data[11] as i16) << 8) | (data[10] as i16);
+        self.dig_p4 = ((data[13] as i16) << 8) | (data[12] as i16);
+        self.dig_p5 = ((data[15] as i16) << 8) | (data[14] as i16);
+        self.dig_p6 = ((data[17] as i16) << 8) | (data[16] as i16);
+        self.dig_p7 = ((data[19] as i16) << 8) | (data[18] as i16);
+        self.dig_p8 = ((data[21] as i16) << 8) | (data[20] as i16);
+        self.dig_p9 = ((data[23] as i16) << 8) | (data[22] as i16);
+    }
+
+    pub fn read_pres(&mut self) -> f64 {
+        let mut data: [u8; 6] = [0, 0, 0, 0, 0, 0];
+        let _ = self.com.write_read(ADDRESS, &[Register::press as u8], &mut data);
+        let press = (data[0] as u32) << 12 | (data[1] as u32) << 4 | (data[2] as u32) >> 4;
+
+        let mut var1 = ((self.t_fine as f64) / 2.0) - 64000.0;
+        let mut var2 = var1 * var1 * (self.dig_p6 as f64) / 32768.0;
+        var2 = var2 + var1 * (self.dig_p5 as f64) * 2.0;
+        var2 = (var2 / 4.0) + ((self.dig_p4 as f64) * 65536.0);
+        var1 = ((self.dig_p3 as f64) * var1 * var1 / 524288.0
+                + (self.dig_p2 as f64) * var1) / 524288.0;
+        var1 = (1.0 + var1 / 32768.0) * (self.dig_p1 as f64);
+        let mut pressure = 1048576.0 - (press as f64);
+        if var1 != 0.0 {
+            pressure = (pressure - (var2 / 4096.0)) * 6250.0 / var1;
+            var1 = (self.dig_p9 as f64) * pressure * pressure / 2147483648.0;
+            var2 = pressure * (self.dig_p8 as f64) / 32768.0;
+            pressure = pressure + (var1 + var2 + (self.dig_p7 as f64)) / 16.0;
+        }
+        pressure
     }
 
     pub fn read_temp(&mut self) -> f64 {
