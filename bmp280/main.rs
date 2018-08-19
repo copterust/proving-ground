@@ -70,6 +70,12 @@ fn main() -> ! {
     write!(l, "After write {:?}\r\n", ps.control());
     ps.reset();
     write!(l, "After reset {:?}\r\n", ps.control());
+    write!(l, "{:?}\r\n", ps.config());
+    ps.set_config(bmp280::Config {
+        t_sb: bmp280::Standby::ms250,
+        filter: bmp280::Filter::c8
+    });
+    write!(l, "After write {:?}\r\n", ps.config());
 
     loop {
         match rx.read() {
