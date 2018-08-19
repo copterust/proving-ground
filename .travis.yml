@@ -13,7 +13,8 @@ install:
   - rustup target add thumbv7em-none-eabi
 
 script:
-  - ./travis.sh
+  - cargo -v build --bins --features=no_device
+  - cargo -v build --bins --features=all
 
 cache: cargo
 before_cache:
