@@ -8,29 +8,57 @@ pub const ADDRESS: u8 = 0x76;
 pub struct BMP280<I2C: ehal::blocking::i2c::WriteRead>
 {
     com: I2C,
+    // Temperature compensation
+    dig_t1: u16,
+    dig_t2: i16,
+    dig_t3: i16,
+    t_fine: i32
 }
 
 pub fn new<I2C, E>(i2c: I2C) -> Result<BMP280<I2C>, E>
 where I2C: ehal::blocking::i2c::WriteRead<Error = E> {
-    let chip = BMP280 {
+    let mut chip = BMP280 {
         com: i2c,
+        dig_t1: 0,
+        dig_t2: 0,
+        dig_t3: 0,
+        t_fine: 0
     };
+
+    if chip.id() == 0x58 {
+        chip.read_calibration();
+    }
 
     Ok(chip)
 }
 
 impl<I2C: ehal::blocking::i2c::WriteRead> BMP280<I2C>
 {
-    pub fn temperature(&mut self) -> u32 {
-        let mut data: [u8; 3] = [0, 0, 0];
-        let _ = self.com.write_read(ADDRESS, &[Register::temp as u8], &mut data);
-        (data[0] as u32) << 16 | (data[1] as u32) << 8 | (data[2] as u32)
+    fn read_calibration(&mut self) {
+        let mut data: [u8; 24] = [0; 24];
+        let _ = self.com.write_read(ADDRESS, &[Register::calib00 as u8], &mut data);
+
+        self.dig_t1 = ((data[1] as u16) << 8) | (data[0] as u16);
+        self.dig_t2 = ((data[3] as i16) << 8) | (data[2] as i16);
+        self.dig_t3 = ((data[5] as i16) << 8) | (data[4] as i16);
     }
 
-    pub fn pressure(&mut self) -> u32 {
-        let mut data: [u8; 3] = [0, 0, 0];
+    pub fn read_temp(&mut self) -> f64 {
+        let mut data: [u8; 6] = [0, 0, 0, 0, 0, 0];
         let _ = self.com.write_read(ADDRESS, &[Register::press as u8], &mut data);
-        (data[0] as u32) << 16 | (data[1] as u32) << 8 | (data[2] as u32)
+        let _pres = (data[0] as u32) << 12 | (data[1] as u32) << 4
+            | (data[2] as u32) >> 4;
+        let temp = (data[3] as u32) << 12 | (data[4] as u32) << 4
+            | (data[5] as u32) >> 4;
+
+        let v1 = ((temp as f64) / 16384.0 - (self.dig_t1 as f64) / 1024.0)
+                * (self.dig_t2 as f64);
+        let v2 = (((temp as f64) / 131072.0 - (self.dig_t1 as f64) / 8192.0)
+                * ((temp as f64) / 131072.0 - (self.dig_t1 as f64) / 8192.0))
+                * (self.dig_t3 as f64);
+        self.t_fine = (v1 + v2) as i32;
+
+        ((v1 + v2) / 5120.0)
     }
 
     pub fn config(&mut self) -> Config {
@@ -215,5 +243,5 @@ enum Register {
     ctrl_meas = 0xF4,
     config = 0xF5,
     press = 0xF7,
-    temp = 0xFA
+    calib00 = 0x88
 }
