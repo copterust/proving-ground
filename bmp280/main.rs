@@ -86,6 +86,7 @@ fn main() -> ! {
         match rx.read() {
             Ok(_b) => {
                 write!(l, "Pressure: {}\r\n", ps.pressure());
+                write!(l, "Temperature: {}\r\n", ps.temperature());
                 ps.set_control(bmp280::Control {
                     osrs_t: bmp280::Oversampling::x1,
                     osrs_p: bmp280::Oversampling::x1,
