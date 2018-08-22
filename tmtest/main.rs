@@ -18,10 +18,9 @@ fn main() -> ! {
     let mut flash = device.FLASH.constrain();
     let mut rcc = device.RCC.constrain();
 
-    let gpiob = device.GPIOB.split(&mut rcc.ahb);
-    // get port b
-    let mut pb8 = gpiob
-        .pb8
+    let gpioc = device.GPIOC.split(&mut rcc.ahb);
+    let mut beeper = gpioc
+        .pc14
         .pull_type(gpio::PullUp)
         .output()
         .output_type(gpio::PushPull);
@@ -36,10 +35,10 @@ fn main() -> ! {
         tim4.start(1.hz());
         while let Err(nb::Error::WouldBlock) = tim4.wait() {}
         if b {
-            pb8.set_high();
+            beeper.set_high();
             b = false;
         } else {
-            pb8.set_low();
+            beeper.set_low();
             b = true
         }
     }
