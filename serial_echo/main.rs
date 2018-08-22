@@ -32,7 +32,7 @@ fn main() -> ! {
     let mut serial = serial::Serial::usart1(
         device.USART1,
         (txpin, rxpin),
-        Bps(9600),
+        Bps(115200),
         clocks,
         &mut rcc.apb2,
     );
