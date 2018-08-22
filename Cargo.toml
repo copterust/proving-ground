@@ -26,7 +26,7 @@ cortex-m = "0.5.4"
 rt = {version = "0.5.2", package = "cortex-m-rt"}
 nb = {version = "0.1.1", "optional" = true}
 stm32f30x = {version = "0.7.0", optional = true}
-mpu9250 = {version = "0.2.4", optional = true }
+mpu9250 = {version = "0.5.0", optional = true }
 
 [dependencies.ehal]
 features = ["unproven"]
