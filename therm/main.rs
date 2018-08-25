@@ -9,7 +9,7 @@ use core::fmt::{self, Write};
 
 use hal::prelude::*;
 use hal::time::Bps;
-use hal::{delay, gpio, serial, spi};
+use hal::{delay, serial};
 use nb;
 use rt::{entry, exception, ExceptionFrame};
 
@@ -41,16 +41,14 @@ fn main() -> ! {
     let mut delay = delay::Delay::new(core.SYST, clocks);
     // SPI1
     let ncs = gpiob.pb9.output().push_pull();
-    let scl_sck = gpiob.pb3.alternating(gpio::AF5);
-    let sda_sdi_mosi = gpiob.pb5.alternating(gpio::AF5);
-    let ad0_sdo_miso = gpiob.pb4.alternating(gpio::AF5);
-    let spi = spi::Spi::spi1(
-        device.SPI1,
+    let scl_sck = gpiob.pb3;
+    let sda_sdi_mosi = gpiob.pb5;
+    let ad0_sdo_miso = gpiob.pb4;
+    let spi = device.SPI1.spi(
         (scl_sck, ad0_sdo_miso, sda_sdi_mosi),
         mpu9250::MODE,
         1.mhz(),
         clocks,
-        &mut rcc.apb2,
     );
     let mut mpu = Mpu9250::imu_default(spi, ncs, &mut delay).unwrap();
 
