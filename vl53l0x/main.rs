@@ -30,15 +30,9 @@ fn main() -> ! {
 
     // serial
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
-    let txpin = gpioa.pa9.alternating(gpio::AF7);
-    let rxpin = gpioa.pa10.alternating(gpio::AF7);
-    let mut serial = serial::Serial::usart1(
-        device.USART1,
-        (txpin, rxpin),
-        Bps(9600),
-        clocks,
-        &mut rcc.apb2,
-    );
+    let mut serial = device
+        .USART1
+        .serial((gpioa.pa9, gpioa.pa10), Bps(9600), clocks);
     serial.listen(serial::Event::Rxne);
     let (tx, mut rx) = serial.split();
 
@@ -49,12 +43,7 @@ fn main() -> ! {
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     let scl = gpiob.pb8.alternating(gpio::AF4);
     let sda = gpiob.pb9.alternating(gpio::AF4);
-    let i2c = hal::i2c::I2c::i2c1(
-        device.I2C1,
-        (scl, sda),
-        1.mhz(),
-        clocks,
-        &mut rcc.apb1);
+    let i2c = hal::i2c::I2c::i2c1(device.I2C1, (scl, sda), 1.mhz(), clocks, &mut rcc.apb1);
 
     let mut tof = vl53l0x::new(i2c).unwrap();
     write!(l, "WHO_AM_I: {}\r\n", tof.who_am_i());

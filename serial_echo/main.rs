@@ -7,7 +7,6 @@ use panic_abort;
 
 use core::fmt::{self, Write};
 
-use hal::gpio;
 use hal::prelude::*;
 use hal::serial;
 use hal::time::Bps;
@@ -26,16 +25,9 @@ fn main() -> ! {
         .pclk2(36.mhz())
         .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
-
-    let txpin = gpioa.pa9.alternating(gpio::AF7);
-    let rxpin = gpioa.pa10.alternating(gpio::AF7);
-    let mut serial = serial::Serial::usart1(
-        device.USART1,
-        (txpin, rxpin),
-        Bps(115200),
-        clocks,
-        &mut rcc.apb2,
-    );
+    let mut serial = device
+        .USART1
+        .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
     serial.listen(serial::Event::Rxne);
     let (mut tx, mut rx) = serial.split();
     // COBS frame

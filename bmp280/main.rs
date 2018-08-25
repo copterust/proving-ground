@@ -30,15 +30,9 @@ fn main() -> ! {
 
     // serial
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
-    let txpin = gpioa.pa9.alternating(gpio::AF7);
-    let rxpin = gpioa.pa10.alternating(gpio::AF7);
-    let mut serial = serial::Serial::usart1(
-        device.USART1,
-        (txpin, rxpin),
-        Bps(9600),
-        clocks,
-        &mut rcc.apb2,
-    );
+    let mut serial = device
+        .USART1
+        .serial((gpioa.pa9, gpioa.pa10), Bps(9600), clocks);
     serial.listen(serial::Event::Rxne);
     let (tx, mut rx) = serial.split();
 
@@ -49,12 +43,7 @@ fn main() -> ! {
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     let scl = gpiob.pb8.alternating(gpio::AF4);
     let sda = gpiob.pb9.alternating(gpio::AF4);
-    let i2c = hal::i2c::I2c::i2c1(
-        device.I2C1,
-        (scl, sda),
-        1.mhz(),
-        clocks,
-        &mut rcc.apb1);
+    let i2c = hal::i2c::I2c::i2c1(device.I2C1, (scl, sda), 1.mhz(), clocks, &mut rcc.apb1);
 
     let mut ps = bmp280::new(i2c).unwrap();
     write!(l, "ID: {}\r\n", ps.id());
@@ -65,7 +54,7 @@ fn main() -> ! {
     ps.set_control(bmp280::Control {
         osrs_t: bmp280::Oversampling::x1,
         osrs_p: bmp280::Oversampling::x4,
-        mode: bmp280::PowerMode::Normal
+        mode: bmp280::PowerMode::Normal,
     });
     write!(l, "After write {:?}\r\n", ps.control());
     ps.reset();
@@ -73,13 +62,13 @@ fn main() -> ! {
     write!(l, "{:?}\r\n", ps.config());
     ps.set_config(bmp280::Config {
         t_sb: bmp280::Standby::ms250,
-        filter: bmp280::Filter::c8
+        filter: bmp280::Filter::c8,
     });
     write!(l, "After write {:?}\r\n", ps.config());
     ps.set_control(bmp280::Control {
         osrs_t: bmp280::Oversampling::x1,
         osrs_p: bmp280::Oversampling::x1,
-        mode: bmp280::PowerMode::Forced
+        mode: bmp280::PowerMode::Forced,
     });
     write!(l, "Press any key to meausure\r\n");
     loop {
@@ -90,7 +79,7 @@ fn main() -> ! {
                 ps.set_control(bmp280::Control {
                     osrs_t: bmp280::Oversampling::x1,
                     osrs_p: bmp280::Oversampling::x1,
-                    mode: bmp280::PowerMode::Forced
+                    mode: bmp280::PowerMode::Forced,
                 });
             }
             Err(nb::Error::Other(e)) => match e {

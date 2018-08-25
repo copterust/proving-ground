@@ -10,7 +10,7 @@ use core::fmt::{self, Write};
 
 use hal::prelude::*;
 use hal::time::Bps;
-use hal::{delay, gpio, serial, spi};
+use hal::{delay, gpio, spi};
 use nb;
 use rt::{entry, exception, ExceptionFrame};
 
@@ -31,16 +31,9 @@ fn main() -> ! {
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
 
-    let txpin = gpioa.pa9.alternating(gpio::AF7);
-    let rxpin = gpioa.pa10.alternating(gpio::AF7);
-    let mut serial = serial::Serial::usart1(
-        device.USART1,
-        (txpin, rxpin),
-        Bps(115200),
-        clocks,
-        &mut rcc.apb2,
-    );
-    serial.listen(serial::Event::Rxne);
+    let serial = device
+        .USART1
+        .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
     let (mut tx, _rx) = serial.split();
     // COBS frame
     tx.write(0x00).unwrap();
