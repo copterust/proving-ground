@@ -12,13 +12,13 @@ use hal::time::Bps;
 use hal::{delay, serial};
 use nb;
 use rt::{entry, exception, ExceptionFrame};
-use stm32f30x::{interrupt, Interrupt};
+use stm32f30x::interrupt;
 
 use mpu9250::Mpu9250;
 
 static mut L: Option<Logger<hal::serial::Tx<hal::stm32f30x::USART1>>> = None;
 static mut RX: Option<hal::serial::Rx<hal::stm32f30x::USART1>> = None;
-static mut QUIET: bool = false;
+static mut QUIET: bool = true;
 const TURN_QUIET: u8 = 'q' as u8;
 
 entry!(main);
@@ -31,13 +31,14 @@ fn main() -> ! {
         .cfgr
         .sysclk(64.mhz())
         .pclk1(32.mhz())
-        .pclk2(36.mhz())
+        .pclk2(32.mhz())
         .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     let mut serial = device
         .USART1
         .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
+    let ser_int = serial.get_interrupt();
     serial.listen(serial::Event::Rxne);
     let (mut tx, rx) = serial.split();
     // COBS frame
@@ -59,19 +60,31 @@ fn main() -> ! {
         clocks,
     );
     write!(l, "spi ok\r\n");
-    let mut mpu = Mpu9250::imu_default(spi, ncs, &mut delay).unwrap();
+    let mut mpu = match Mpu9250::imu_default(spi, ncs, &mut delay) {
+        Ok(m) => m,
+        Err(e) => {
+            write!(l, "Mpu init error: {:?}", e);
+            panic!("mpu err");
+        }
+    };
     write!(l, "mpu ok\r\n");
-    // mpu.calibrate_at_rest(&mut delay).unwrap();
-    // write!(l, "calibration ok\r\n");
+    let accel_biases = match mpu.calibrate_at_rest(&mut delay) {
+        Ok(ab) => ab,
+        Err(e) => {
+            write!(l, "Mpu calib error: {:?}", e);
+            panic!("mpu err");
+        }
+    };
+    write!(l, "calibration ok: {:?}\r\n", accel_biases);
     unsafe { cortex_m::interrupt::enable() };
     let mut nvic = core.NVIC;
-    nvic.enable(Interrupt::USART1_EXTI25);
+    nvic.enable(ser_int);
 
     let tmr = hal::time::MonoTimer::new(core.DWT, clocks);
     let now = tmr.now();
     write!(
         l,
-        "All ok; starting: {:?}; freq: {:?}!\r\n",
+        "All ok; starting: {:?}; freq: {:?}; Press 'q' to toggle verbosity!\r\n",
         now.elapsed(),
         tmr.frequency()
     );
@@ -80,7 +93,7 @@ fn main() -> ! {
         match mpu.all() {
             Ok(meas) => {
                 let gyro = meas.gyro;
-                let accel = meas.accel;
+                let accel = meas.accel - accel_biases;
                 if unsafe { !QUIET } {
                     write!(
                         l,
@@ -137,12 +150,12 @@ fn usart_exti25() {
     let l = unsafe { extract(&mut L) };
     match rx.read() {
         Ok(b) => {
-            // echo byte as is
             if b == TURN_QUIET {
                 unsafe {
                     QUIET = !QUIET;
                 }
             } else {
+                // echo byte as is
                 write!(l, "{}", b as char);
             }
         }
