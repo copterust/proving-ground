@@ -3,8 +3,8 @@ NAME := $(bin)
 fea := $(shell grep "\[\[bin\]\]" -A3 Cargo.toml | grep $(NAME) -A2 | grep required | awk -F'[][]' '{print $$2}')
 FEATURES := $(if $(fea),"--features=$(fea)",)
 release :=
-MODE := $(if $(release),"release","debug")
-RELEASE_FLAG := $(if $(release),"--release",)
+MODE := $(if $(release),release,debug)
+RELEASE_FLAG := $(if $(release),--release,)
 TARGET := ./target/thumbv7em-none-eabihf/$(MODE)
 BIN := $(TARGET)/$(NAME)
 
