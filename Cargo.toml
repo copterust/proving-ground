@@ -89,6 +89,11 @@ path = "raw_sensors/main.rs"
 required-features = ["with_mpu"]
 
 [[bin]]
+name = "systick"
+path = "systick/main.rs"
+required-features = ["with_hal"]
+
+[[bin]]
 name = "therm"
 path = "therm/main.rs"
 required-features = ["with_mpu"]
