@@ -25,7 +25,7 @@ build:
 	cargo -v build $(RELEASE_FLAG) --bin $(NAME) $(FEATURES)
 
 flash: $(BIN).bin
-	python2 ./loader/stm32loader.py -p $(TTY) -f F3 -e -w -v $(BIN).bin
+	python2 ./loader/stm32loader.py -p $(TTY) -f F3 -e -w $(BIN).bin
 
 load: flash
 

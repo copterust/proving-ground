@@ -1,3 +1,3 @@
 # raw_sensors
 
-MonoTimer and Marg.all() readings.
+SysTick and Imu.all() or Marg.all() readings (mpu9250).

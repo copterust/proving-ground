@@ -19,6 +19,7 @@ use mpu9250::Mpu9250;
 static mut L: Option<Logger<hal::serial::Tx<hal::stm32f30x::USART1>>> = None;
 static mut RX: Option<hal::serial::Rx<hal::stm32f30x::USART1>> = None;
 static mut QUIET: bool = true;
+static mut NOW_MS: u32 = 0;
 const TURN_QUIET: u8 = 'q' as u8;
 
 entry!(main);
@@ -76,20 +77,21 @@ fn main() -> ! {
         }
     };
     write!(l, "calibration ok: {:?}\r\n", accel_biases);
+    let mut syst = delay.free();
     unsafe { cortex_m::interrupt::enable() };
+    let reload = (clocks.sysclk().0/1000) - 1;
+    syst.set_reload(reload);
+    syst.clear_current();
+    syst.enable_interrupt();
+    syst.enable_counter();
     let mut nvic = core.NVIC;
     nvic.enable(ser_int);
-
-    let tmr = hal::time::MonoTimer::new(core.DWT, clocks);
-    let now = tmr.now();
-    write!(
-        l,
-        "All ok; starting: {:?}; freq: {:?}; Press 'q' to toggle verbosity!\r\n",
-        now.elapsed(),
-        tmr.frequency()
-    );
+    let mut prev_t_ms = now_ms();
+    write!(l, "All ok, now: {:?}; Press 'q' to toggle verbosity!\r\n", prev_t_ms);
     loop {
-        let t = now.elapsed();
+        let t_ms = now_ms();
+        let dt_ms = t_ms.wrapping_sub(prev_t_ms);
+        prev_t_ms = t_ms;
         match mpu.all() {
             Ok(meas) => {
                 let gyro = meas.gyro;
@@ -97,13 +99,13 @@ fn main() -> ! {
                 if unsafe { !QUIET } {
                     write!(
                         l,
-                        "IMU: {:?}; g({};{};{}); a({};{};{})\r\n",
-                        t, gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z
+                        "IMU: t:{}ms; dt:{}ms; g({};{};{}); a({};{};{})\r\n",
+                        t_ms, dt_ms, gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z
                     );
                 }
             }
             Err(e) => {
-                write!(l, "Err: {:?}; {:?}", t, e);
+                write!(l, "Err: {:?}; {:?}", t_ms, e);
             }
         }
     }
@@ -176,6 +178,16 @@ fn usart_exti25() {
         },
     };
 }
+
+fn now_ms() -> u32 {
+    unsafe {
+        core::ptr::read_volatile(&NOW_MS as *const u32)
+    }
+}
+
+exception!(SysTick, || {
+    NOW_MS = NOW_MS.wrapping_add(1);
+});
 
 exception!(HardFault, |ef| {
     let l = extract(&mut L);
