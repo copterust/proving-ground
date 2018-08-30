@@ -7,7 +7,7 @@
 use panic_abort;
 
 use cortex_m::asm;
-use rt::{entry, exception, ExceptionFrame};
+use rt::{entry, exception};
 use stm32f30x;
 
 entry!(main);
@@ -60,15 +60,13 @@ fn main() -> ! {
     }
 }
 
-exception!(HardFault, hard_fault);
-fn hard_fault(ef: &ExceptionFrame) -> ! {
+exception!(HardFault, |ef| {
     panic!("HardFault at {:#?}", ef);
-}
+});
 
-exception!(*, default_handler);
-fn default_handler(irqn: i16) {
+exception!(*, |irqn| {
     panic!("Unhandled exception (IRQn = {})", irqn);
-}
+});
 
 fn tick_delay(ticks: usize) {
     (0..ticks).for_each(|_| asm::nop());

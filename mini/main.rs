@@ -5,19 +5,17 @@
 // used to provide panic_implementation
 #[allow(unused)]
 use panic_abort;
-use rt::{entry, exception, ExceptionFrame};
+use rt::{entry, exception};
 
 entry!(main);
 fn main() -> ! {
     panic!("opa");
 }
 
-exception!(HardFault, hard_fault);
-fn hard_fault(ef: &ExceptionFrame) -> ! {
+exception!(HardFault, |ef| {
     panic!("HardFault at {:#?}", ef);
-}
+});
 
-exception!(*, default_handler);
-fn default_handler(irqn: i16) {
+exception!(*, |irqn| {
     panic!("Unhandled exception (IRQn = {})", irqn);
-}
+});

@@ -11,7 +11,7 @@ use hal::prelude::*;
 use hal::time::Bps;
 use hal::{delay, serial};
 use nb;
-use rt::{entry, exception, ExceptionFrame};
+use rt::{entry, exception};
 use stm32f30x::interrupt;
 
 use mpu9250::Mpu9250;
@@ -177,16 +177,14 @@ fn usart_exti25() {
     };
 }
 
-exception!(HardFault, hard_fault);
-fn hard_fault(ef: &ExceptionFrame) -> ! {
-    let l = unsafe { extract(&mut L) };
+exception!(HardFault, |ef| {
+    let l = extract(&mut L);
     write!(l, "hard fault at {:?}", ef);
     panic!("HardFault at {:#?}", ef);
-}
+});
 
-exception!(*, default_handler);
-fn default_handler(irqn: i16) {
-    let l = unsafe { extract(&mut L) };
+exception!(*, |irqn| {
+    let l = extract(&mut L);
     write!(l, "Interrupt: {}", irqn);
     panic!("Unhandled exception (IRQn = {})", irqn);
-}
+});

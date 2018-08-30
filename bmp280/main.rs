@@ -12,7 +12,7 @@ use hal::prelude::*;
 use hal::serial;
 use hal::time::Bps;
 use nb;
-use rt::{entry, exception, ExceptionFrame};
+use rt::{entry, exception};
 
 mod bmp280;
 
@@ -124,12 +124,10 @@ impl<W: ehal::serial::Write<u8>> fmt::Write for Logger<W> {
     }
 }
 
-exception!(HardFault, hard_fault);
-fn hard_fault(ef: &ExceptionFrame) -> ! {
+exception!(HardFault, |ef| {
     panic!("HardFault at {:#?}", ef);
-}
+});
 
-exception!(*, default_handler);
-fn default_handler(irqn: i16) {
+exception!(*, |irqn| {
     panic!("Unhandled exception (IRQn = {})", irqn);
-}
+});

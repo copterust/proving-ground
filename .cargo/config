@@ -5,5 +5,13 @@ rustflags = [
   "-C", "linker=rust-lld",
 ]
 
+[target.thumbv7em-none-eabi]
+runner = 'arm-none-eabi-gdb'
+rustflags = [
+  "-C", "link-arg=-Tlink.x",
+  "-C", "linker=rust-lld",
+]
+
+
 [build]
 target = "thumbv7em-none-eabihf"

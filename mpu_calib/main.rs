@@ -12,7 +12,7 @@ use hal::delay;
 use hal::prelude::*;
 use hal::time::Bps;
 use nb;
-use rt::{entry, exception, ExceptionFrame};
+use rt::{entry, exception};
 
 use mpu9250::Mpu9250;
 
@@ -167,12 +167,10 @@ impl<W: ehal::serial::Write<u8>> fmt::Write for Logger<W> {
     }
 }
 
-exception!(HardFault, hard_fault);
-fn hard_fault(ef: &ExceptionFrame) -> ! {
+exception!(HardFault, |ef| {
     panic!("HardFault at {:#?}", ef);
-}
+});
 
-exception!(*, default_handler);
-fn default_handler(irqn: i16) {
+exception!(*, |irqn| {
     panic!("Unhandled exception (IRQn = {})", irqn);
-}
+});
