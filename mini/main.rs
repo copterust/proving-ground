@@ -1,7 +1,7 @@
 #![deny(warnings)]
 #![no_std]
 #![no_main]
-use cortex_m_rt::{entry, exception};
+use cortex_m_rt::entry;
 #[allow(unused)]
 use panic_abort;
 
