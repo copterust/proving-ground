@@ -2,22 +2,21 @@
 #![no_std]
 #![no_main]
 #![feature(core_intrinsics)]
-#![feature(panic_handler)]
 
 use core::fmt::{self, Write};
 use core::intrinsics;
 use core::panic::PanicInfo;
 
+use cortex_m::peripheral::syst::SystClkSource;
+use cortex_m_rt::{entry, exception, ExceptionFrame};
 use hal::prelude::*;
 use hal::time::Bps;
 use hal::{delay, serial};
 use nb;
-use rt::{entry, exception};
 use stm32f30x::interrupt;
-use cortex_m::peripheral::syst::SystClkSource;
 
-use mpu9250::Mpu9250;
 use dcmimu::DCMIMU;
+use mpu9250::Mpu9250;
 
 static mut L: Option<Logger<hal::serial::Tx<hal::stm32f30x::USART1>>> = None;
 static mut RX: Option<hal::serial::Rx<hal::stm32f30x::USART1>> = None;
@@ -25,7 +24,7 @@ static mut QUIET: bool = false;
 const TURN_QUIET: u8 = 'q' as u8;
 static mut NOW_MS: u32 = 0;
 
-entry!(main);
+#[entry]
 fn main() -> ! {
     let device = hal::stm32f30x::Peripherals::take().unwrap();
     let core = cortex_m::Peripherals::take().unwrap();
@@ -76,12 +75,16 @@ fn main() -> ! {
     let mut dcmimu = DCMIMU::new();
     let mut syst = delay.free();
     unsafe { cortex_m::interrupt::enable() };
-    syt_tick_config(&mut syst, clocks.sysclk().0/1000);
+    syt_tick_config(&mut syst, clocks.sysclk().0 / 1000);
     let mut nvic = core.NVIC;
     nvic.enable(ser_int);
 
     let mut prev_t_ms = now_ms();
-    write!(l, "All ok, now: {:?}; Press 'q' to toggle logging!\r\n", prev_t_ms);
+    write!(
+        l,
+        "All ok, now: {:?}; Press 'q' to toggle logging!\r\n",
+        prev_t_ms
+    );
     loop {
         match mpu.all() {
             Ok(meas) => {
@@ -91,15 +94,17 @@ fn main() -> ! {
                 let dt_ms = t_ms.wrapping_sub(prev_t_ms);
                 prev_t_ms = t_ms;
                 let dt_s = (dt_ms as f32) / 1000.;
-                let dcm = dcmimu.update((gyro.x, gyro.y, gyro.z),
-                                        (accel.x, accel.y, accel.z),
-                                        dt_s);
+                let dcm =
+                    dcmimu.update((gyro.x, gyro.y, gyro.z), (accel.x, accel.y, accel.z), dt_s);
                 if unsafe { !QUIET } {
-                    write!(l, "IMU: dt={}s; roll={}; yaw={}; pitch={}\r\n",
-                           dt_s,
-                           rad_to_degrees(dcm.roll),
-                           rad_to_degrees(dcm.yaw),
-                           rad_to_degrees(dcm.pitch));
+                    write!(
+                        l,
+                        "IMU: dt={}s; roll={}; yaw={}; pitch={}\r\n",
+                        dt_s,
+                        rad_to_degrees(dcm.roll),
+                        rad_to_degrees(dcm.yaw),
+                        rad_to_degrees(dcm.pitch)
+                    );
                 }
             }
             Err(e) => {
@@ -181,8 +186,7 @@ fn usart_exti25() {
     };
 }
 
-fn syt_tick_config(syst: &mut cortex_m::peripheral::SYST,
-                   ticks: u32) {
+fn syt_tick_config(syst: &mut cortex_m::peripheral::SYST, ticks: u32) {
     syst.set_reload(ticks - 1);
     syst.clear_current();
     syst.set_clock_source(SystClkSource::Core);
@@ -190,25 +194,26 @@ fn syt_tick_config(syst: &mut cortex_m::peripheral::SYST,
     syst.enable_counter();
 }
 
-
 fn now_ms() -> u32 {
+    unsafe { NOW_MS }
+}
+
+#[exception]
+fn SysTick() {
     unsafe {
-        NOW_MS
+        NOW_MS = NOW_MS.wrapping_add(1);
     }
 }
 
-exception!(SysTick, || {
-    NOW_MS = NOW_MS.wrapping_add(1);
-});
-
-exception!(HardFault, |ef| {
+#[exception]
+fn HardFault(ef: &ExceptionFrame) -> ! {
     panic!("HardFault at {:#?}", ef);
-});
+}
 
-exception!(*, |irqn| {
+#[exception]
+fn DefaultHandler(irqn: i16) {
     panic!("Unhandled exception (IRQn = {})", irqn);
-});
-
+}
 
 #[panic_handler]
 fn panic(panic_info: &PanicInfo) -> ! {
@@ -217,27 +222,31 @@ fn panic(panic_info: &PanicInfo) -> ! {
             let payload = panic_info.payload().downcast_ref::<&str>();
             match (panic_info.location(), payload) {
                 (Some(location), Some(msg)) => {
-                    write!(l,
-                           "\r\npanic in file '{}' at line {}: {:?}\r\n",
-                           location.file(),
-                           location.line(),
-                           msg);
-                },
+                    write!(
+                        l,
+                        "\r\npanic in file '{}' at line {}: {:?}\r\n",
+                        location.file(),
+                        location.line(),
+                        msg
+                    );
+                }
                 (Some(location), None) => {
-                    write!(l,
-                           "panic in file '{}' at line {}",
-                           location.file(),
-                           location.line());
-                },
+                    write!(
+                        l,
+                        "panic in file '{}' at line {}",
+                        location.file(),
+                        location.line()
+                    );
+                }
                 (None, Some(msg)) => {
                     write!(l, "panic: {:?}", msg);
-                },
+                }
                 (None, None) => {
                     write!(l, "panic occured, no info available");
-                },
+                }
             }
-        },
-        None => {},
+        }
+        None => {}
     }
     unsafe { intrinsics::abort() }
 }

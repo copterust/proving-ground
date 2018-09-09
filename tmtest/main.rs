@@ -10,9 +10,9 @@ use hal::gpio;
 use hal::prelude::*;
 use hal::timer::tim4;
 
-use rt::{entry, exception};
+use cortex_m_rt::{entry, exception, ExceptionFrame};
 
-entry!(main);
+#[entry]
 fn main() -> ! {
     let device = hal::stm32f30x::Peripherals::take().unwrap();
     let mut flash = device.FLASH.constrain();
@@ -44,10 +44,12 @@ fn main() -> ! {
     }
 }
 
-exception!(HardFault, |ef| {
+#[exception]
+fn HardFault(ef: &ExceptionFrame) -> ! {
     panic!("HardFault at {:#?}", ef);
-});
+}
 
-exception!(*, |irqn| {
+#[exception]
+fn DefaultHandler(irqn: i16) {
     panic!("Unhandled exception (IRQn = {})", irqn);
-});
+}

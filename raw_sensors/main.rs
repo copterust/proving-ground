@@ -7,11 +7,11 @@ use panic_abort;
 
 use core::fmt::{self, Write};
 
+use cortex_m_rt::{entry, exception, ExceptionFrame};
 use hal::prelude::*;
 use hal::time::Bps;
 use hal::{delay, serial};
 use nb;
-use rt::{entry, exception};
 use stm32f30x::interrupt;
 
 use mpu9250::Mpu9250;
@@ -22,7 +22,7 @@ static mut QUIET: bool = true;
 static mut NOW_MS: u32 = 0;
 const TURN_QUIET: u8 = 'q' as u8;
 
-entry!(main);
+#[entry]
 fn main() -> ! {
     let device = hal::stm32f30x::Peripherals::take().unwrap();
     let core = cortex_m::Peripherals::take().unwrap();
@@ -79,7 +79,7 @@ fn main() -> ! {
     write!(l, "calibration ok: {:?}\r\n", accel_biases);
     let mut syst = delay.free();
     unsafe { cortex_m::interrupt::enable() };
-    let reload = (clocks.sysclk().0/1000) - 1;
+    let reload = (clocks.sysclk().0 / 1000) - 1;
     syst.set_reload(reload);
     syst.clear_current();
     syst.enable_interrupt();
@@ -87,7 +87,11 @@ fn main() -> ! {
     let mut nvic = core.NVIC;
     nvic.enable(ser_int);
     let mut prev_t_ms = now_ms();
-    write!(l, "All ok, now: {:?}; Press 'q' to toggle verbosity!\r\n", prev_t_ms);
+    write!(
+        l,
+        "All ok, now: {:?}; Press 'q' to toggle verbosity!\r\n",
+        prev_t_ms
+    );
     loop {
         let t_ms = now_ms();
         let dt_ms = t_ms.wrapping_sub(prev_t_ms);
@@ -180,23 +184,26 @@ fn usart_exti25() {
 }
 
 fn now_ms() -> u32 {
+    unsafe { core::ptr::read_volatile(&NOW_MS as *const u32) }
+}
+
+#[exception]
+fn SysTick() {
     unsafe {
-        core::ptr::read_volatile(&NOW_MS as *const u32)
+        NOW_MS = NOW_MS.wrapping_add(1);
     }
 }
 
-exception!(SysTick, || {
-    NOW_MS = NOW_MS.wrapping_add(1);
-});
-
-exception!(HardFault, |ef| {
-    let l = extract(&mut L);
+#[exception]
+fn HardFault(ef: &ExceptionFrame) -> ! {
+    let l = unsafe { extract(&mut L) };
     write!(l, "hard fault at {:?}", ef);
     panic!("HardFault at {:#?}", ef);
-});
+}
 
-exception!(*, |irqn| {
-    let l = extract(&mut L);
+#[exception]
+fn DefaultHandler(irqn: i16) {
+    let l = unsafe { extract(&mut L) };
     write!(l, "Interrupt: {}", irqn);
     panic!("Unhandled exception (IRQn = {})", irqn);
-});
+}

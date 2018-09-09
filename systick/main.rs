@@ -7,17 +7,17 @@ use panic_abort;
 
 use core::fmt::{self, Write};
 
+use cortex_m::peripheral::syst::SystClkSource;
+use cortex_m_rt::{entry, exception, ExceptionFrame};
 use hal::prelude::*;
 use hal::time::Bps;
 use nb;
-use rt::{entry, exception};
-use cortex_m::peripheral::syst::SystClkSource;
 
 static mut NOW_MS: u32 = 0;
 static mut LAST_SNAPSHOT_MS: u32 = 0;
 static mut L: Option<Logger<hal::serial::Tx<hal::stm32f30x::USART1>>> = None;
 
-entry!(main);
+#[entry]
 fn main() -> ! {
     let device = hal::stm32f30x::Peripherals::take().unwrap();
     let core = cortex_m::Peripherals::take().unwrap();
@@ -37,11 +37,11 @@ fn main() -> ! {
     // COBS frame
     tx.write(0x00).unwrap();
     unsafe {
-        L = Some(Logger{tx});
+        L = Some(Logger { tx });
     }
     let l = unsafe { extract(&mut L) };
     write!(l, "logger ok\r\n");
-    let ticks = clocks.sysclk().0/1000; // 1 ms?
+    let ticks = clocks.sysclk().0 / 1000; // 1 ms?
     let mut syst = core.SYST;
     syt_tick_config(&mut syst, ticks);
     write!(l, "Ticks: {}\r\n", ticks);
@@ -51,15 +51,13 @@ fn main() -> ! {
     }
 }
 
-fn syt_tick_config(syst: &mut cortex_m::peripheral::SYST,
-                   ticks: u32) {
+fn syt_tick_config(syst: &mut cortex_m::peripheral::SYST, ticks: u32) {
     syst.set_reload(ticks - 1);
     syst.clear_current();
     syst.set_clock_source(SystClkSource::Core);
     syst.enable_interrupt();
     syst.enable_counter();
 }
-
 
 struct Logger<W: ehal::serial::Write<u8>> {
     tx: W,
@@ -96,20 +94,28 @@ unsafe fn extract<T>(opt: &'static mut Option<T>) -> &'static mut T {
     }
 }
 
-exception!(SysTick, || {
-    NOW_MS = NOW_MS.wrapping_add(1);
-    if (NOW_MS.wrapping_sub(LAST_SNAPSHOT_MS)) > 2000 {
-        LAST_SNAPSHOT_MS = NOW_MS;
-        let l = extract(&mut L);
-        write!(l, "Tick: {:?}ms; last: {:?}ms\r\n",
-               NOW_MS, LAST_SNAPSHOT_MS);
+#[exception]
+fn SysTick() {
+    unsafe {
+        NOW_MS = NOW_MS.wrapping_add(1);
+        if (NOW_MS.wrapping_sub(LAST_SNAPSHOT_MS)) > 2000 {
+            LAST_SNAPSHOT_MS = NOW_MS;
+            let l = extract(&mut L);
+            write!(
+                l,
+                "Tick: {:?}ms; last: {:?}ms\r\n",
+                NOW_MS, LAST_SNAPSHOT_MS
+            );
+        }
     }
-});
+}
 
-exception!(HardFault, |ef| {
+#[exception]
+fn HardFault(ef: &ExceptionFrame) -> ! {
     panic!("HardFault at {:#?}", ef);
-});
+}
 
-exception!(*, |irqn| {
+#[exception]
+fn DefaultHandler(irqn: i16) {
     panic!("Unhandled exception (IRQn = {})", irqn);
-});
+}

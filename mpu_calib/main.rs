@@ -8,15 +8,15 @@ use panic_abort;
 use core::f32::{INFINITY, NEG_INFINITY};
 use core::fmt::{self, Write};
 
+use cortex_m_rt::{entry, exception, ExceptionFrame};
 use hal::delay;
 use hal::prelude::*;
 use hal::time::Bps;
 use nb;
-use rt::{entry, exception};
 
 use mpu9250::Mpu9250;
 
-entry!(main);
+#[entry]
 fn main() -> ! {
     let device = hal::stm32f30x::Peripherals::take().unwrap();
     let core = cortex_m::Peripherals::take().unwrap();
@@ -167,10 +167,12 @@ impl<W: ehal::serial::Write<u8>> fmt::Write for Logger<W> {
     }
 }
 
-exception!(HardFault, |ef| {
+#[exception]
+fn HardFault(ef: &ExceptionFrame) -> ! {
     panic!("HardFault at {:#?}", ef);
-});
+}
 
-exception!(*, |irqn| {
+#[exception]
+fn DefaultHandler(irqn: i16) {
     panic!("Unhandled exception (IRQn = {})", irqn);
-});
+}

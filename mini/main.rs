@@ -1,21 +1,11 @@
 #![deny(warnings)]
 #![no_std]
 #![no_main]
-
-// used to provide panic_implementation
+use cortex_m_rt::{entry, exception};
 #[allow(unused)]
 use panic_abort;
-use rt::{entry, exception};
 
-entry!(main);
+#[entry]
 fn main() -> ! {
     panic!("opa");
 }
-
-exception!(HardFault, |ef| {
-    panic!("HardFault at {:#?}", ef);
-});
-
-exception!(*, |irqn| {
-    panic!("Unhandled exception (IRQn = {})", irqn);
-});
