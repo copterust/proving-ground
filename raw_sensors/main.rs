@@ -188,22 +188,20 @@ fn now_ms() -> u32 {
 }
 
 #[exception]
-fn SysTick() {
-    unsafe {
-        NOW_MS = NOW_MS.wrapping_add(1);
-    }
+unsafe fn SysTick() {
+    NOW_MS = NOW_MS.wrapping_add(1);
 }
 
 #[exception]
-fn HardFault(ef: &ExceptionFrame) -> ! {
-    let l = unsafe { extract(&mut L) };
+unsafe fn HardFault(ef: &ExceptionFrame) -> ! {
+    let l = extract(&mut L);
     write!(l, "hard fault at {:?}", ef);
     panic!("HardFault at {:#?}", ef);
 }
 
 #[exception]
-fn DefaultHandler(irqn: i16) {
-    let l = unsafe { extract(&mut L) };
+unsafe fn DefaultHandler(irqn: i16) {
+    let l = extract(&mut L);
     write!(l, "Interrupt: {}", irqn);
     panic!("Unhandled exception (IRQn = {})", irqn);
 }

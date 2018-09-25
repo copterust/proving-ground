@@ -95,18 +95,16 @@ unsafe fn extract<T>(opt: &'static mut Option<T>) -> &'static mut T {
 }
 
 #[exception]
-fn SysTick() {
-    unsafe {
-        NOW_MS = NOW_MS.wrapping_add(1);
-        if (NOW_MS.wrapping_sub(LAST_SNAPSHOT_MS)) > 2000 {
-            LAST_SNAPSHOT_MS = NOW_MS;
-            let l = extract(&mut L);
-            write!(
-                l,
-                "Tick: {:?}ms; last: {:?}ms\r\n",
-                NOW_MS, LAST_SNAPSHOT_MS
-            );
-        }
+unsafe fn SysTick() {
+    NOW_MS = NOW_MS.wrapping_add(1);
+    if (NOW_MS.wrapping_sub(LAST_SNAPSHOT_MS)) > 2000 {
+        LAST_SNAPSHOT_MS = NOW_MS;
+        let l = extract(&mut L);
+        write!(
+            l,
+            "Tick: {:?}ms; last: {:?}ms\r\n",
+            NOW_MS, LAST_SNAPSHOT_MS
+        );
     }
 }
 

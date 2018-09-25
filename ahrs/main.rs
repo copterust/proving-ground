@@ -199,10 +199,8 @@ fn now_ms() -> u32 {
 }
 
 #[exception]
-fn SysTick() {
-    unsafe {
-        NOW_MS = NOW_MS.wrapping_add(1);
-    }
+unsafe fn SysTick() {
+    NOW_MS = NOW_MS.wrapping_add(1);
 }
 
 #[exception]
