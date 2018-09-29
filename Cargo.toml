@@ -31,6 +31,7 @@ nb = {version = "0.1.1", "optional" = true}
 stm32f30x = {version = "0.7.1", optional = true}
 mpu9250 = {version = "0.6.4", optional = true}
 dcmimu = {version = "0.1.3", optional = true}
+lsm303dlhc = {git = "https://github.com/japaric/lsm303dlhc", optional = true}
 
 [dependencies.ehal]
 features = ["unproven"]
@@ -39,7 +40,7 @@ package = "embedded-hal"
 optional = true
 
 [dependencies.hal]
-version = "0.8.3"
+version = "0.9.1"
 package = "alt-stm32f30x-hal"
 optional = true
 
@@ -49,9 +50,10 @@ with_device = ["stm32f30x/rt"]
 with_hal = ["with_device", "nb", "ehal", "hal"]
 with_mpu = ["with_hal", "mpu9250"]
 with_dcmimu = ["with_mpu", "dcmimu"]
+with_lsm = ["with_hal", "lsm303dlhc"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
-all = ["with_dcmimu"]
+all = ["with_dcmimu", "with_lsm"]
 
 [[bin]]
 name = "mini"
@@ -117,3 +119,8 @@ required-features = ["with_hal"]
 name = "ahrs"
 path = "ahrs/main.rs"
 required-features = ["with_dcmimu"]
+
+[[bin]]
+name = "lsm303"
+path = "lsm303/main.rs"
+required-features = ["with_lsm"]
