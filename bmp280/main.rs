@@ -43,7 +43,7 @@ fn main() -> ! {
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     let scl = gpiob.pb8.alternating(gpio::AF4);
     let sda = gpiob.pb9.alternating(gpio::AF4);
-    let i2c = hal::i2c::I2c::i2c1(device.I2C1, (scl, sda), 1.mhz(), clocks, &mut rcc.apb1);
+    let i2c = device.I2C1.i2c((scl, sda), 1.mhz(), clocks);
 
     let mut ps = bmp280::new(i2c).unwrap();
     write!(l, "ID: {}\r\n", ps.id());

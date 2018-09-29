@@ -7,12 +7,12 @@ use panic_abort;
 
 use core::fmt::{self, Write};
 
+use cortex_m_rt::{entry, exception, ExceptionFrame};
 use hal::gpio;
 use hal::prelude::*;
 use hal::serial;
 use hal::time::Bps;
 use nb;
-use cortex_m_rt::{entry, exception, ExceptionFrame};
 
 mod vl53l0x;
 
@@ -43,7 +43,7 @@ fn main() -> ! {
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     let scl = gpiob.pb8.alternating(gpio::AF4);
     let sda = gpiob.pb9.alternating(gpio::AF4);
-    let i2c = hal::i2c::I2c::i2c1(device.I2C1, (scl, sda), 1.mhz(), clocks, &mut rcc.apb1);
+    let i2c = device.I2C1.i2c((scl, sda), 1.mhz(), clocks);
 
     let mut tof = vl53l0x::new(i2c).unwrap();
     write!(l, "WHO_AM_I: {}\r\n", tof.who_am_i());
