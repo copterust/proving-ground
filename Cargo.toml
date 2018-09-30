@@ -31,7 +31,7 @@ nb = {version = "0.1.1", "optional" = true}
 stm32f30x = {version = "0.7.1", optional = true}
 mpu9250 = {version = "0.6.4", optional = true}
 dcmimu = {version = "0.1.3", optional = true}
-lsm303dlhc = {git = "https://github.com/japaric/lsm303dlhc", optional = true}
+lsm303c = {git = "https://github.com/copterust/lsm303c", optional = true}
 
 [dependencies.ehal]
 features = ["unproven"]
@@ -50,7 +50,7 @@ with_device = ["stm32f30x/rt"]
 with_hal = ["with_device", "nb", "ehal", "hal"]
 with_mpu = ["with_hal", "mpu9250"]
 with_dcmimu = ["with_mpu", "dcmimu"]
-with_lsm = ["with_hal", "lsm303dlhc"]
+with_lsm = ["with_hal", "lsm303c"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
 all = ["with_dcmimu", "with_lsm"]

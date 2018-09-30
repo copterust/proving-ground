@@ -14,7 +14,7 @@ use hal::stm32f30x::interrupt;
 use hal::time::Bps;
 use nb;
 
-use lsm303dlhc::Lsm303dlhc;
+use lsm303c::Lsm303c;
 
 static mut L: Option<Logger<hal::serial::Tx<hal::stm32f30x::USART1>>> = None;
 static mut RX: Option<hal::serial::Rx<hal::stm32f30x::USART1>> = None;
@@ -53,7 +53,7 @@ fn main() -> ! {
     let i2c = device.I2C1.i2c((gpiob.pb6, gpiob.pb7), 400.khz(), clocks);
     write!(l, "i2c ok\r\n");
     // lsm
-    let mut lsm303 = Lsm303dlhc::new(i2c).expect("lsm error");
+    let mut lsm303 = Lsm303c::new(i2c, l).expect("lsm error");
     write!(l, "lsm ok\r\n");
     // done
     unsafe { cortex_m::interrupt::enable() };
