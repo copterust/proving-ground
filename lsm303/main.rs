@@ -53,7 +53,7 @@ fn main() -> ! {
     let i2c = device.I2C1.i2c((gpiob.pb6, gpiob.pb7), 400.khz(), clocks);
     write!(l, "i2c ok\r\n");
     // lsm
-    let mut lsm303 = Lsm303c::new(i2c, l).expect("lsm error");
+    let mut lsm303 = Lsm303c::default(i2c).expect("lsm error");
     write!(l, "lsm ok\r\n");
     // done
     unsafe { cortex_m::interrupt::enable() };
@@ -61,16 +61,17 @@ fn main() -> ! {
     nvic.enable(ser_int);
     write!(l, "All ok; Press 'q' to toggle verbosity!\r\n");
     loop {
-        let maccel = lsm303.accel();
-        let mmag = lsm303.mag();
+        let maccel = lsm303.unscaled_accel();
+        let mmag = lsm303.unscaled_mag();
         let mtemp = lsm303.temp();
+        let rtemp = lsm303.raw_temp().unwrap();
         match (maccel, mmag, mtemp) {
             (Ok(accel), Ok(mag), Ok(temp)) => {
                 if unsafe { !QUIET } {
                     write!(
                         l,
-                        "lsm: mag({},{},{}); a({},{},{}); t({});\r\n",
-                        mag.x, mag.y, mag.z, accel.x, accel.y, accel.z, temp
+                        "lsm: mag({},{},{}); a({},{},{}); t({}, {});\r\n",
+                        mag.x, mag.y, mag.z, accel.x, accel.y, accel.z, temp, rtemp
                     );
                 }
             }
