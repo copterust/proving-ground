@@ -126,3 +126,8 @@ required-features = ["with_dcmimu"]
 name = "lsm303"
 path = "lsm303/main.rs"
 required-features = ["with_lsm"]
+
+[[bin]]
+name = "lsm_mpu"
+path = "lsm_mpu/main.rs"
+required-features = ["with_lsm", "with_mpu"]
