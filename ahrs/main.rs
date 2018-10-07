@@ -16,7 +16,7 @@ use nb;
 use stm32f30x::interrupt;
 
 use dcmimu::DCMIMU;
-use mpu9250::Mpu9250;
+use mpu9250::{self, Mpu9250};
 
 static mut L: Option<Logger<hal::serial::Tx<hal::stm32f30x::USART1>>> = None;
 static mut RX: Option<hal::serial::Rx<hal::stm32f30x::USART1>> = None;
@@ -65,7 +65,13 @@ fn main() -> ! {
         clocks,
     );
     write!(l, "spi ok\r\n");
-    let mut mpu = Mpu9250::imu_default(spi, ncs, &mut delay).expect("mpu error");
+    let mut mpu = Mpu9250::imu(
+        spi,
+        ncs,
+        &mut delay,
+        mpu9250::MpuConfig::imu().accel_scale(mpu9250::AccelScale::_4G),
+    )
+    .expect("mpu error");
     write!(l, "mpu ok\r\n");
     let mut accel_biases = mpu.calibrate_at_rest(&mut delay).expect("calib error");
     // Correct axis for gravity;
