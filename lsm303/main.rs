@@ -61,28 +61,24 @@ fn main() -> ! {
     nvic.enable(ser_int);
     write!(l, "All ok; Press 'q' to toggle verbosity!\r\n");
     loop {
-        let maccel = lsm303.unscaled_accel();
-        let mmag = lsm303.unscaled_mag();
-        let mtemp = lsm303.temp();
-        let rtemp = lsm303.raw_temp().unwrap();
-        match (maccel, mmag, mtemp) {
-            (Ok(accel), Ok(mag), Ok(temp)) => {
+        match lsm303.all() {
+            Ok(meas) => {
                 if unsafe { !QUIET } {
                     write!(
                         l,
-                        "lsm: mag({},{},{}); a({},{},{}); t({}, {});\r\n",
-                        mag.x, mag.y, mag.z, accel.x, accel.y, accel.z, temp, rtemp
+                        "lsm: mag({},{},{}); a({},{},{}); t({});\r\n",
+                        meas.mag.x,
+                        meas.mag.y,
+                        meas.mag.z,
+                        meas.accel.x,
+                        meas.accel.y,
+                        meas.accel.z,
+                        meas.temp
                     );
                 }
             }
-            (Err(e), _, _) => {
-                write!(l, "Err accel: {:?}", e);
-            }
-            (_, Err(e), _) => {
-                write!(l, "Err mag: {:?}", e);
-            }
-            (_, _, Err(e)) => {
-                write!(l, "Err temp: {:?}", e);
+            Err(e) => {
+                write!(l, "Err meas: {:?}", e);
             }
         }
     }

@@ -29,9 +29,11 @@ cortex-m = {version = "0.5.7", features = ["inline-asm", "const-fn"]}
 cortex-m-rt = "0.6.4"
 nb = {version = "0.1.1", "optional" = true}
 stm32f30x = {version = "0.7.1", optional = true}
-mpu9250 = {version = "0.6.4", optional = true}
+mpu9250 = {version = "0.7.3", optional = true}
+# mpu9250 = {path = "../mpu9250", optional = true}
 dcmimu = {version = "0.1.3", optional = true}
-lsm303c = {git = "https://github.com/copterust/lsm303c", optional = true}
+lsm303c = {version = "0.1.1", optional = true}
+# lsm303c = {path = "../lsm303c", optional = true}
 
 [dependencies.ehal]
 features = ["unproven"]
