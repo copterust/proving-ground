@@ -33,6 +33,8 @@ mpu9250 = {version = "0.7.3", optional = true}
 # mpu9250 = {path = "../mpu9250", optional = true}
 dcmimu = {version = "0.1.3", optional = true}
 lsm303c = {version = "0.1.1", optional = true}
+bmp280 = {version = "0.0.1", optional = true, package="bmp280-ehal"}
+shared-bus = {version = "0.1.2", optional = true, features = ["cortexm"]}
 # lsm303c = {path = "../lsm303c", optional = true}
 
 [dependencies.ehal]
@@ -53,6 +55,8 @@ with_hal = ["with_device", "nb", "ehal", "hal"]
 with_mpu = ["with_hal", "mpu9250"]
 with_dcmimu = ["with_mpu", "dcmimu"]
 with_lsm = ["with_hal", "lsm303c"]
+with_bmp = ["with_hal", "bmp280"]
+with_shared_bus = ["with_hal", "shared-bus"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
 all = ["with_dcmimu", "with_lsm"]
@@ -115,7 +119,7 @@ required-features = ["with_mpu"]
 [[bin]]
 name = "bmp280"
 path = "bmp280/main.rs"
-required-features = ["with_hal"]
+required-features = ["with_bmp"]
 
 [[bin]]
 name = "ahrs"
@@ -131,3 +135,8 @@ required-features = ["with_lsm"]
 name = "lsm_mpu"
 path = "lsm_mpu/main.rs"
 required-features = ["with_lsm", "with_mpu"]
+
+[[bin]]
+name = "shared_i2c"
+path = "shared_i2c/main.rs"
+required-features = ["with_shared_bus", "with_lsm"]

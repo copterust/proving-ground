@@ -7,14 +7,12 @@ use panic_abort;
 
 use core::fmt::{self, Write};
 
+use bmp280;
 use cortex_m_rt::{entry, exception, ExceptionFrame};
-use hal::gpio;
 use hal::prelude::*;
 use hal::serial;
 use hal::time::Bps;
 use nb;
-
-mod bmp280;
 
 #[entry]
 fn main() -> ! {
@@ -25,27 +23,29 @@ fn main() -> ! {
         .cfgr
         .sysclk(64.mhz())
         .pclk1(32.mhz())
-        .pclk2(36.mhz())
+        .pclk2(32.mhz())
         .freeze(&mut flash.acr);
 
     // serial
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let mut serial = device
         .USART1
-        .serial((gpioa.pa9, gpioa.pa10), Bps(9600), clocks);
+        .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
     serial.listen(serial::Event::Rxne);
-    let (tx, mut rx) = serial.split();
-
+    let (mut tx, mut rx) = serial.split();
+    // COBS frame
+    tx.write(0x00).unwrap();
     let mut l = Logger { tx };
     write!(l, "\r\nBMP280 demo\r\n");
 
     // i2c
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
-    let scl = gpiob.pb8.alternating(gpio::AF4);
-    let sda = gpiob.pb9.alternating(gpio::AF4);
-    let i2c = device.I2C1.i2c((scl, sda), 1.mhz(), clocks);
+    let scl = gpiob.pb6;
+    let sda = gpiob.pb7;
+    let i2c = device.I2C1.i2c((scl, sda), 400.khz(), clocks);
+    write!(l, "i2c ok\r\n");
 
-    let mut ps = bmp280::new(i2c).unwrap();
+    let mut ps = bmp280::BMP280::new(i2c).unwrap();
     write!(l, "ID: {}\r\n", ps.id());
     ps.reset();
     write!(l, "ID after reset: {}\r\n", ps.id());
@@ -74,8 +74,8 @@ fn main() -> ! {
     loop {
         match rx.read() {
             Ok(_b) => {
-                write!(l, "Temperature: {}\r\n", ps.read_temp());
-                write!(l, "Pressure: {}\r\n", ps.read_pres());
+                write!(l, "Temperature: {}\r\n", ps.temp());
+                write!(l, "Pressure: {}\r\n", ps.pressure());
                 ps.set_control(bmp280::Control {
                     osrs_t: bmp280::Oversampling::x1,
                     osrs_p: bmp280::Oversampling::x1,
