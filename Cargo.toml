@@ -139,4 +139,4 @@ required-features = ["with_lsm", "with_mpu"]
 [[bin]]
 name = "shared_i2c"
 path = "shared_i2c/main.rs"
-required-features = ["with_shared_bus", "with_lsm"]
+required-features = ["with_shared_bus", "with_lsm", "with_bmp"]
