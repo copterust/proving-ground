@@ -91,6 +91,46 @@ impl<I2C: ehal::blocking::i2c::WriteRead> VL53L0x<I2C> {
 	    return true;
     }
 
+    fn get_spad_info(&mut self) -> (u8, u8) {
+        self.write_byte(0x80, 0x01);
+        self.write_byte(0xFF, 0x01);
+        self.write_byte(0x00, 0x00);
+
+        self.write_byte(0xFF, 0x06);
+        let mut tmp83 = self.read_byte(0x83);
+        self.write_byte(0x83, tmp83 | 0x04);
+        self.write_byte(0xFF, 0x07);
+        self.write_byte(0x81, 0x01);
+
+        self.write_byte(0x80, 0x01);
+
+        self.write_byte(0x94, 0x6b);
+        self.write_byte(0x83, 0x00);
+
+        while self.read_byte(0x83) == 0x00 {
+            // TODO check timeout
+            // usleep(1);
+        }
+    
+        self.write_byte(0x83, 0x01);
+        let tmp = self.read_byte(0x92);
+
+        let count: u8 = tmp & 0x7f;
+        let type_is_aperture: u8 = (tmp >> 7) & 0x01;
+
+        self.write_byte(0x81, 0x00);
+        self.write_byte(0xFF, 0x06);
+        tmp83 = self.read_byte(0x83);
+        self.write_byte(0x83, tmp83 & !0x04);
+        self.write_byte(0xFF, 0x01);
+        self.write_byte(0x00, 0x01);
+
+        self.write_byte(0xFF, 0x00);
+        self.write_byte(0x80, 0x00);
+
+        return (count, type_is_aperture);
+    }
+
     fn init_hardware(&mut self) {
         // Enable the sensor
         
@@ -126,15 +166,11 @@ impl<I2C: ehal::blocking::i2c::WriteRead> VL53L0x<I2C> {
         // VL53L0X_DataInit() end
 
         // VL53L0X_StaticInit() begin
-/*
 
-    /*  TODO
-        uint8_t spadCount;
-        bool spadTypeIsAperture;
-        if (!self.getSPADInfo(&spadCount, &spadTypeIsAperture)) {
-            throw(std::runtime_error("Failed retrieving SPAD info!"));
-        }
-    */
+        // TODO fail to initialize on timeout of this
+        let (_spad_count, _spad_type_is_aperture) = self.get_spad_info();
+        /*
+
         // The SPAD map (RefGoodSpadMap) is read by VL53L0X_get_info_from_device() in the API,
         // but the same data seems to be more easily readable from GLOBAL_CONFIG_SPAD_ENABLES_REF_0 through _6, so read it from there
         let mut ref_spad_map: [u8; 6];
