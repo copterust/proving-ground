@@ -375,47 +375,51 @@ where
 
         // -- VL53L0X_SetGpioConfig() end
 /*
-
+        TODO
         self.measurement_timing_budget_microseconds = self.get_measurement_timing_budget();
-                // "Disable MSRC and TCC by default"
-                // MSRC = Minimum Signal Rate Check
-                // TCC = Target CentreCheck
-                // -- VL53L0X_SetSequenceStepEnable() begin
+*/
+        // "Disable MSRC and TCC by default"
+        // MSRC = Minimum Signal Rate Check
+        // TCC = Target CentreCheck
+        // -- VL53L0X_SetSequenceStepEnable() begin
+
+        self.write_register(Register::SYSTEM_SEQUENCE_CONFIG, 0xE8);
         
-                self.write_register(SYSTEM_SEQUENCE_CONFIG, 0xE8);
-        
-                // -- VL53L0X_SetSequenceStepEnable() end
-        
-                // "Recalculate timing budget"
-                self.set_measurement_timing_budget(self.measurement_timing_budget_microseconds);
-        
-                // VL53L0X_StaticInit() end
-        
-                // VL53L0X_PerformRefCalibration() begin (VL53L0X_perform_ref_calibration())
-        
-                // -- VL53L0X_perform_vhv_calibration() begin
-        
-                self.write_register(SYSTEM_SEQUENCE_CONFIG, 0x01);
-                if (!self.perform_single_ref_calibration(0x40)) {
-                    throw(std::runtime_error("Failed performing ref/vhv calibration!"));
-                }
-        
-                // -- VL53L0X_perform_vhv_calibration() end
-        
-                // -- VL53L0X_perform_phase_calibration() begin
-        
-                self.write_register(SYSTEM_SEQUENCE_CONFIG, 0x02);
-                if (!self.perform_single_ref_calibration(0x00)) {
-                    throw(std::runtime_error("Failed performing ref/phase calibration!"));
-                }
-        
-                // -- VL53L0X_perform_phase_calibration() end
-        
-                // "restore the previous Sequence Config"
-                self.write_register(SYSTEM_SEQUENCE_CONFIG, 0xE8);
-        
-                // VL53L0X_PerformRefCalibration() end
-            }
+        // -- VL53L0X_SetSequenceStepEnable() end
+
+        // "Recalculate timing budget"
+        // TODO
+        // self.set_measurement_timing_budget(self.measurement_timing_budget_microseconds);
+
+        // VL53L0X_StaticInit() end
+
+        // VL53L0X_PerformRefCalibration() begin (VL53L0X_perform_ref_calibration())
+
+        // -- VL53L0X_perform_vhv_calibration() begin
+
+        self.write_register(Register::SYSTEM_SEQUENCE_CONFIG, 0x01);
+// TODO
+//        if (!self.perform_single_ref_calibration(0x40)) {
+//            throw(std::runtime_error("Failed performing ref/vhv calibration!"));
+//        }
+
+        // -- VL53L0X_perform_vhv_calibration() end
+
+        // -- VL53L0X_perform_phase_calibration() begin
+
+        self.write_register(Register::SYSTEM_SEQUENCE_CONFIG, 0x02);
+// TODO
+//        if (!self.perform_single_ref_calibration(0x00)) {
+//            throw(std::runtime_error("Failed performing ref/phase calibration!"));
+//        }
+
+        // -- VL53L0X_perform_phase_calibration() end
+
+        // "restore the previous Sequence Config"
+        self.write_register(SYSTEM_SEQUENCE_CONFIG, 0xE8);
+
+        // VL53L0X_PerformRefCalibration() end
+    }
         */
     }
 
