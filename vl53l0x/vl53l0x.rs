@@ -238,6 +238,145 @@ where
 
         // The SPAD map (RefGoodSpadMap) is read by VL53L0X_get_info_from_device() in the API,
         // but the same data seems to be more easily readable from GLOBAL_CONFIG_SPAD_ENABLES_REF_0 through _6, so read it from there
+        let mut ref_spad_map: [u8; 6] = self.read6(Register::GLOBAL_CONFIG_SPAD_ENABLES_REF_0);
+
+        // -- VL53L0X_set_reference_spads() begin (assume NVM values are valid)
+
+        self.write_byte(0xFF, 0x01);
+        self.write_register(Register::DYNAMIC_SPAD_REF_EN_START_OFFSET, 0x00);
+        self.write_register(Register::DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD, 0x2C);
+        self.write_byte(0xFF, 0x00);
+        self.write_register(Register::GLOBAL_CONFIG_REF_EN_START_SELECT, 0xB4);
+
+        // 12 is the first aperture spad
+        let first_spad_to_enable = if spad_type_is_aperture > 0 { 12 } else { 0 };
+        let mut spads_enabled: u8 = 0;
+
+        for i in 0..48 {
+            if i < first_spad_to_enable || spads_enabled == spad_count {
+                // This bit is lower than the first one that should be enabled, or (reference_spad_count) bits have already been enabled, so zero this bit
+                ref_spad_map[i / 8] &= !(1 << (i % 8));
+            } else if (ref_spad_map[i / 8] >> (i % 8)) & 0x1 > 0 {
+                spads_enabled = spads_enabled + 1;
+            }
+        }
+
+        self.write6(Register::GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map);
+
+        // -- VL53L0X_set_reference_spads() end
+
+        // -- VL53L0X_load_tuning_settings() begin
+        // DefaultTuningSettings from vl53l0x_tuning.h
+
+        self.write_byte(0xFF, 0x01);
+        self.write_byte(0x00, 0x00);
+
+        self.write_byte(0xFF, 0x00);
+        self.write_byte(0x09, 0x00);
+        self.write_byte(0x10, 0x00);
+        self.write_byte(0x11, 0x00);
+
+        self.write_byte(0x24, 0x01);
+        self.write_byte(0x25, 0xFF);
+        self.write_byte(0x75, 0x00);
+
+        self.write_byte(0xFF, 0x01);
+        self.write_byte(0x4E, 0x2C);
+        self.write_byte(0x48, 0x00);
+        self.write_byte(0x30, 0x20);
+
+        self.write_byte(0xFF, 0x00);
+        self.write_byte(0x30, 0x09);
+        self.write_byte(0x54, 0x00);
+        self.write_byte(0x31, 0x04);
+        self.write_byte(0x32, 0x03);
+        self.write_byte(0x40, 0x83);
+        self.write_byte(0x46, 0x25);
+        self.write_byte(0x60, 0x00);
+        self.write_byte(0x27, 0x00);
+        self.write_byte(0x50, 0x06);
+        self.write_byte(0x51, 0x00);
+        self.write_byte(0x52, 0x96);
+        self.write_byte(0x56, 0x08);
+        self.write_byte(0x57, 0x30);
+        self.write_byte(0x61, 0x00);
+        self.write_byte(0x62, 0x00);
+        self.write_byte(0x64, 0x00);
+        self.write_byte(0x65, 0x00);
+        self.write_byte(0x66, 0xA0);
+
+        self.write_byte(0xFF, 0x01);
+        self.write_byte(0x22, 0x32);
+        self.write_byte(0x47, 0x14);
+        self.write_byte(0x49, 0xFF);
+        self.write_byte(0x4A, 0x00);
+
+        self.write_byte(0xFF, 0x00);
+        self.write_byte(0x7A, 0x0A);
+        self.write_byte(0x7B, 0x00);
+        self.write_byte(0x78, 0x21);
+
+        self.write_byte(0xFF, 0x01);
+        self.write_byte(0x23, 0x34);
+        self.write_byte(0x42, 0x00);
+        self.write_byte(0x44, 0xFF);
+        self.write_byte(0x45, 0x26);
+        self.write_byte(0x46, 0x05);
+        self.write_byte(0x40, 0x40);
+        self.write_byte(0x0E, 0x06);
+        self.write_byte(0x20, 0x1A);
+        self.write_byte(0x43, 0x40);
+
+        self.write_byte(0xFF, 0x00);
+        self.write_byte(0x34, 0x03);
+        self.write_byte(0x35, 0x44);
+
+        self.write_byte(0xFF, 0x01);
+        self.write_byte(0x31, 0x04);
+        self.write_byte(0x4B, 0x09);
+        self.write_byte(0x4C, 0x05);
+        self.write_byte(0x4D, 0x04);
+
+        self.write_byte(0xFF, 0x00);
+        self.write_byte(0x44, 0x00);
+        self.write_byte(0x45, 0x20);
+        self.write_byte(0x47, 0x08);
+        self.write_byte(0x48, 0x28);
+        self.write_byte(0x67, 0x00);
+        self.write_byte(0x70, 0x04);
+        self.write_byte(0x71, 0x01);
+        self.write_byte(0x72, 0xFE);
+        self.write_byte(0x76, 0x00);
+        self.write_byte(0x77, 0x00);
+
+        self.write_byte(0xFF, 0x01);
+        self.write_byte(0x0D, 0x01);
+
+        self.write_byte(0xFF, 0x00);
+        self.write_byte(0x80, 0x01);
+        self.write_byte(0x01, 0xF8);
+
+        self.write_byte(0xFF, 0x01);
+        self.write_byte(0x8E, 0x01);
+        self.write_byte(0x00, 0x01);
+        self.write_byte(0xFF, 0x00);
+        self.write_byte(0x80, 0x00);
+
+        // -- VL53L0X_load_tuning_settings() end
+
+        // "Set interrupt config to new sample ready"
+        // -- VL53L0X_SetGpioConfig() begin
+
+        self.write_register(Register::SYSTEM_INTERRUPT_CONFIG_GPIO, 0x04);
+        // active low
+        let high = self.read_register(Register::GPIO_HV_MUX_ACTIVE_HIGH);
+        self.write_register(Register::GPIO_HV_MUX_ACTIVE_HIGH, high & !0x10);
+        self.write_register(Register::SYSTEM_INTERRUPT_CLEAR, 0x01);
+
+        // -- VL53L0X_SetGpioConfig() end
+/*
+
+        self.measurement_timing_budget_microseconds = self.get_measurement_timing_budget();
 
         let _ref_spad_map: [u8; 6] = self.read6(Register::GLOBAL_CONFIG_SPAD_ENABLES_REF_0);
         /*
@@ -459,10 +598,11 @@ enum Register {
     MSRC_CONFIG_CONTROL = 0x60,
     SYSTEM_SEQUENCE_CONFIG = 0x01,
     FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT = 0x44,
-    DYNAMIC_SPAD_REF_EN_START_OFFSET = 0x4F,
-    DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD = 0x4E,
-    GLOBAL_CONFIG_REF_EN_START_SELECT = 0xB6,
-    GLOBAL_CONFIG_SPAD_ENABLES_REF_0 = 0xB0,
-    RESULT_RANGE_STATUS = 0x14,
-    SYSTEM_INTERRUPT_CLEAR = 0x0B,
+	GLOBAL_CONFIG_SPAD_ENABLES_REF_0 = 0xB0,
+	DYNAMIC_SPAD_REF_EN_START_OFFSET = 0x4F,
+	DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD = 0x4E,
+	GLOBAL_CONFIG_REF_EN_START_SELECT = 0xB6,
+	SYSTEM_INTERRUPT_CONFIG_GPIO = 0x0A,
+	GPIO_HV_MUX_ACTIVE_HIGH = 0x84,
+	SYSTEM_INTERRUPT_CLEAR = 0x0B,
 }
