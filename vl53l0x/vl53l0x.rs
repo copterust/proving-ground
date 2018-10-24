@@ -9,7 +9,16 @@ pub struct VL53L0x<I2C: ehal::blocking::i2c::WriteRead> {
     stop_variable: u8,
 }
 
-pub fn new<I2C, E>(i2c: I2C) -> Result<VL53L0x<I2C>, E>
+/// MPU Error
+#[derive(Debug, Copy, Clone)]
+pub enum Error<E> {
+    /// WHO_AM_I returned invalid value (returned value is argument).
+    InvalidDevice(u8),
+    /// Underlying bus error.
+    BusError(E),
+}
+
+pub fn new<I2C, E>(i2c: I2C) -> Result<VL53L0x<I2C>, Error<E>>
 where
     I2C: ehal::blocking::i2c::WriteRead<Error = E>,
 {
@@ -20,7 +29,8 @@ where
         stop_variable: 0,
     };
 
-    if chip.who_am_i() == 0xEE {
+    let wai = chip.who_am_i();
+    if wai == 0xEE {
         chip.init_hardware();
         // FIXME: return an error/optional
         /*
@@ -29,10 +39,11 @@ where
         chip.reset();
         chip.set_high_i2c_voltage();
         chip.set_standard_i2c_mode(); // TODO: make configurable
-        */
+         */
+        Ok(chip)
+    } else {
+        Err(Error::InvalidDevice(wai))
     }
-
-    Ok(chip)
 }
 
 impl<I2C: ehal::blocking::i2c::WriteRead> VL53L0x<I2C> {
@@ -111,7 +122,7 @@ impl<I2C: ehal::blocking::i2c::WriteRead> VL53L0x<I2C> {
             // TODO check timeout
             // usleep(1);
         }
-    
+
         self.write_byte(0x83, 0x01);
         let tmp = self.read_byte(0x92);
 
