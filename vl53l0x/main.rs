@@ -1,4 +1,3 @@
-#![deny(warnings)]
 #![no_std]
 #![no_main]
 
@@ -45,7 +44,7 @@ fn main() -> ! {
     let sda = gpiob.pb9.alternating(gpio::AF4);
     let i2c = device.I2C1.i2c((scl, sda), 1.mhz(), clocks);
 
-    let mut tof = vl53l0x::new(i2c).unwrap();
+    let mut tof = vl53l0x::VL53L0x::new(i2c).unwrap();
     write!(l, "WHO_AM_I: {}\r\n", tof.who_am_i());
     write!(l, "RevisionID: {}\r\n", tof.revision_id);
 
