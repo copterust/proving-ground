@@ -83,6 +83,14 @@ impl<I2C: ehal::blocking::i2c::WriteRead> VL53L0x<I2C> {
         data[0]
     }
 
+    fn write6(&mut self, reg: Register, bytes: [u8; 6]) {
+        let mut buf: [u8; 6] = [0, 0, 0, 0, 0, 0];
+        let _ = self
+            .com
+            .write_read(ADDRESS, &[reg as u8, bytes[0], bytes[1], bytes[2],
+                bytes[3], bytes[4], bytes[5]], &mut buf);
+    }
+
     fn write_register16(&mut self, reg: Register, word: u16) {
         let mut buffer = [0];
         let msb = (word >> 8) as u8;
@@ -211,9 +219,8 @@ impl<I2C: ehal::blocking::i2c::WriteRead> VL53L0x<I2C> {
                 spads_enabled = spads_enabled + 1;
             }
         }
-/*
 
-        self.write6(Register::GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map, 6);
+        self.write6(Register::GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map);
 
         // -- VL53L0X_set_reference_spads() end
 
@@ -325,6 +332,7 @@ impl<I2C: ehal::blocking::i2c::WriteRead> VL53L0x<I2C> {
         self.write_register(SYSTEM_INTERRUPT_CLEAR, 0x01);
 
         // -- VL53L0X_SetGpioConfig() end
+/*
 
         self.measurement_timing_budget_microseconds = self.get_measurement_timing_budget();
 
