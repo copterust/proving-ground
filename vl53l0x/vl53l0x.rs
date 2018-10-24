@@ -185,34 +185,35 @@ impl<I2C: ehal::blocking::i2c::WriteRead> VL53L0x<I2C> {
         // VL53L0X_StaticInit() begin
 
         // TODO fail to initialize on timeout of this
-        let (_spad_count, _spad_type_is_aperture) = self.get_spad_info();
+        let (spad_count, spad_type_is_aperture) = self.get_spad_info();
 
         // The SPAD map (RefGoodSpadMap) is read by VL53L0X_get_info_from_device() in the API,
         // but the same data seems to be more easily readable from GLOBAL_CONFIG_SPAD_ENABLES_REF_0 through _6, so read it from there
-        let _ref_spad_map: [u8; 6] = self.read6(Register::GLOBAL_CONFIG_SPAD_ENABLES_REF_0);
-/*
+        let mut ref_spad_map: [u8; 6] = self.read6(Register::GLOBAL_CONFIG_SPAD_ENABLES_REF_0);
+
         // -- VL53L0X_set_reference_spads() begin (assume NVM values are valid)
 
         self.write_byte(0xFF, 0x01);
-        self.write_register(DYNAMIC_SPAD_REF_EN_START_OFFSET, 0x00);
-        self.write_register(DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD, 0x2C);
+        self.write_register(Register::DYNAMIC_SPAD_REF_EN_START_OFFSET, 0x00);
+        self.write_register(Register::DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD, 0x2C);
         self.write_byte(0xFF, 0x00);
-        self.write_register(GLOBAL_CONFIG_REF_EN_START_SELECT, 0xB4);
+        self.write_register(Register::GLOBAL_CONFIG_REF_EN_START_SELECT, 0xB4);
 
         // 12 is the first aperture spad
-        let first_spad_to_enable = spad_type_is_aperture ? 12 : 0;
+        let first_spad_to_enable = if spad_type_is_aperture > 0 { 12 } else { 0 };
         let mut spads_enabled: u8 = 0;
 
-        for (let mut i: u8 = 0; i < 48; i++) {
-            if (i < first_spad_to_enable || spads_enabled == spad_count) {
+        for i in 0..48 {
+            if i < first_spad_to_enable || spads_enabled == spad_count {
                 // This bit is lower than the first one that should be enabled, or (reference_spad_count) bits have already been enabled, so zero this bit
-                ref_spad_map[i / 8] &= ~(1 << (i % 8));
-            } else if ((ref_spad_map[i / 8] >> (i % 8)) & 0x1) {
-                spads_enabled++;
+                ref_spad_map[i / 8] &= !(1 << (i % 8));
+            } else if (ref_spad_map[i / 8] >> (i % 8)) & 0x1 > 0 {
+                spads_enabled = spads_enabled + 1;
             }
         }
+/*
 
-        self.write_register_multiple(GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map, 6);
+        self.write6(Register::GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map, 6);
 
         // -- VL53L0X_set_reference_spads() end
 
@@ -410,4 +411,7 @@ enum Register {
     SYSTEM_SEQUENCE_CONFIG = 0x01,
     FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT = 0x44,
 	GLOBAL_CONFIG_SPAD_ENABLES_REF_0 = 0xB0,
+	DYNAMIC_SPAD_REF_EN_START_OFFSET = 0x4F,
+	DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD = 0x4E,
+	GLOBAL_CONFIG_REF_EN_START_SELECT = 0xB6,
 }
