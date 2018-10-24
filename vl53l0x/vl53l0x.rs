@@ -131,6 +131,12 @@ impl<I2C: ehal::blocking::i2c::WriteRead> VL53L0x<I2C> {
         return (count, type_is_aperture);
     }
 
+    fn read6(&mut self, reg: Register) -> [u8; 6] {
+        let mut data: [u8; 6] = [0, 0, 0, 0, 0, 0];
+        let _ = self.com.write_read(ADDRESS, &[reg as u8], &mut data);
+        data
+    }
+
     fn init_hardware(&mut self) {
         // Enable the sensor
         
@@ -169,13 +175,11 @@ impl<I2C: ehal::blocking::i2c::WriteRead> VL53L0x<I2C> {
 
         // TODO fail to initialize on timeout of this
         let (_spad_count, _spad_type_is_aperture) = self.get_spad_info();
-        /*
 
         // The SPAD map (RefGoodSpadMap) is read by VL53L0X_get_info_from_device() in the API,
         // but the same data seems to be more easily readable from GLOBAL_CONFIG_SPAD_ENABLES_REF_0 through _6, so read it from there
-        let mut ref_spad_map: [u8; 6];
-        self.read_register_multiple(GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map, 6);
-
+        let _ref_spad_map: [u8; 6] = self.read6(Register::GLOBAL_CONFIG_SPAD_ENABLES_REF_0);
+/*
         // -- VL53L0X_set_reference_spads() begin (assume NVM values are valid)
 
         self.write_byte(0xFF, 0x01);
@@ -394,4 +398,5 @@ enum Register {
     MSRC_CONFIG_CONTROL = 0x60,
     SYSTEM_SEQUENCE_CONFIG = 0x01,
     FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT = 0x44,
+	GLOBAL_CONFIG_SPAD_ENABLES_REF_0 = 0xB0,
 }
