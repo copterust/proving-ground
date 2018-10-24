@@ -374,24 +374,23 @@ where
         self.write_register(Register::SYSTEM_INTERRUPT_CLEAR, 0x01);
 
         // -- VL53L0X_SetGpioConfig() end
-/*
 
         self.measurement_timing_budget_microseconds = self.get_measurement_timing_budget();
 
         let _ref_spad_map: [u8; 6] = self.read6(Register::GLOBAL_CONFIG_SPAD_ENABLES_REF_0);
         /*
                 // -- VL53L0X_set_reference_spads() begin (assume NVM values are valid)
-
+        
                 self.write_byte(0xFF, 0x01);
                 self.write_register(DYNAMIC_SPAD_REF_EN_START_OFFSET, 0x00);
                 self.write_register(DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD, 0x2C);
                 self.write_byte(0xFF, 0x00);
                 self.write_register(GLOBAL_CONFIG_REF_EN_START_SELECT, 0xB4);
-
+        
                 // 12 is the first aperture spad
                 let first_spad_to_enable = spad_type_is_aperture ? 12 : 0;
                 let mut spads_enabled: u8 = 0;
-
+        
                 for (let mut i: u8 = 0; i < 48; i++) {
                     if (i < first_spad_to_enable || spads_enabled == spad_count) {
                         // This bit is lower than the first one that should be enabled, or (reference_spad_count) bits have already been enabled, so zero this bit
@@ -400,31 +399,31 @@ where
                         spads_enabled++;
                     }
                 }
-
+        
                 self.write_register_multiple(GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map, 6);
-
+        
                 // -- VL53L0X_set_reference_spads() end
-
+        
                 // -- VL53L0X_load_tuning_settings() begin
                 // DefaultTuningSettings from vl53l0x_tuning.h
-
+        
                 self.write_byte(0xFF, 0x01);
                 self.write_byte(0x00, 0x00);
-
+        
                 self.write_byte(0xFF, 0x00);
                 self.write_byte(0x09, 0x00);
                 self.write_byte(0x10, 0x00);
                 self.write_byte(0x11, 0x00);
-
+        
                 self.write_byte(0x24, 0x01);
                 self.write_byte(0x25, 0xFF);
                 self.write_byte(0x75, 0x00);
-
+        
                 self.write_byte(0xFF, 0x01);
                 self.write_byte(0x4E, 0x2C);
                 self.write_byte(0x48, 0x00);
                 self.write_byte(0x30, 0x20);
-
+        
                 self.write_byte(0xFF, 0x00);
                 self.write_byte(0x30, 0x09);
                 self.write_byte(0x54, 0x00);
@@ -444,18 +443,18 @@ where
                 self.write_byte(0x64, 0x00);
                 self.write_byte(0x65, 0x00);
                 self.write_byte(0x66, 0xA0);
-
+        
                 self.write_byte(0xFF, 0x01);
                 self.write_byte(0x22, 0x32);
                 self.write_byte(0x47, 0x14);
                 self.write_byte(0x49, 0xFF);
                 self.write_byte(0x4A, 0x00);
-
+        
                 self.write_byte(0xFF, 0x00);
                 self.write_byte(0x7A, 0x0A);
                 self.write_byte(0x7B, 0x00);
                 self.write_byte(0x78, 0x21);
-
+        
                 self.write_byte(0xFF, 0x01);
                 self.write_byte(0x23, 0x34);
                 self.write_byte(0x42, 0x00);
@@ -466,17 +465,17 @@ where
                 self.write_byte(0x0E, 0x06);
                 self.write_byte(0x20, 0x1A);
                 self.write_byte(0x43, 0x40);
-
+        
                 self.write_byte(0xFF, 0x00);
                 self.write_byte(0x34, 0x03);
                 self.write_byte(0x35, 0x44);
-
+        
                 self.write_byte(0xFF, 0x01);
                 self.write_byte(0x31, 0x04);
                 self.write_byte(0x4B, 0x09);
                 self.write_byte(0x4C, 0x05);
                 self.write_byte(0x4D, 0x04);
-
+        
                 self.write_byte(0xFF, 0x00);
                 self.write_byte(0x44, 0x00);
                 self.write_byte(0x45, 0x20);
@@ -488,71 +487,71 @@ where
                 self.write_byte(0x72, 0xFE);
                 self.write_byte(0x76, 0x00);
                 self.write_byte(0x77, 0x00);
-
+        
                 self.write_byte(0xFF, 0x01);
                 self.write_byte(0x0D, 0x01);
-
+        
                 self.write_byte(0xFF, 0x00);
                 self.write_byte(0x80, 0x01);
                 self.write_byte(0x01, 0xF8);
-
+        
                 self.write_byte(0xFF, 0x01);
                 self.write_byte(0x8E, 0x01);
                 self.write_byte(0x00, 0x01);
                 self.write_byte(0xFF, 0x00);
                 self.write_byte(0x80, 0x00);
-
+        
                 // -- VL53L0X_load_tuning_settings() end
-
+        
                 // "Set interrupt config to new sample ready"
                 // -- VL53L0X_SetGpioConfig() begin
-
+        
                 self.write_register(SYSTEM_INTERRUPT_CONFIG_GPIO, 0x04);
                 // active low
                 self.write_register(GPIO_HV_MUX_ACTIVE_HIGH, self.read_register(GPIO_HV_MUX_ACTIVE_HIGH) & ~0x10);
                 self.write_register(SYSTEM_INTERRUPT_CLEAR, 0x01);
-
+        
                 // -- VL53L0X_SetGpioConfig() end
-
+        
                 self.measurement_timing_budget_microseconds = self.get_measurement_timing_budget();
-
+        
                 // "Disable MSRC and TCC by default"
                 // MSRC = Minimum Signal Rate Check
                 // TCC = Target CentreCheck
                 // -- VL53L0X_SetSequenceStepEnable() begin
-
+        
                 self.write_register(SYSTEM_SEQUENCE_CONFIG, 0xE8);
-
+        
                 // -- VL53L0X_SetSequenceStepEnable() end
-
+        
                 // "Recalculate timing budget"
                 self.set_measurement_timing_budget(self.measurement_timing_budget_microseconds);
-
+        
                 // VL53L0X_StaticInit() end
-
+        
                 // VL53L0X_PerformRefCalibration() begin (VL53L0X_perform_ref_calibration())
-
+        
                 // -- VL53L0X_perform_vhv_calibration() begin
-
+        
                 self.write_register(SYSTEM_SEQUENCE_CONFIG, 0x01);
                 if (!self.perform_single_ref_calibration(0x40)) {
                     throw(std::runtime_error("Failed performing ref/vhv calibration!"));
                 }
-
+        
                 // -- VL53L0X_perform_vhv_calibration() end
-
+        
                 // -- VL53L0X_perform_phase_calibration() begin
-
+        
                 self.write_register(SYSTEM_SEQUENCE_CONFIG, 0x02);
                 if (!self.perform_single_ref_calibration(0x00)) {
                     throw(std::runtime_error("Failed performing ref/phase calibration!"));
                 }
-
+        
                 // -- VL53L0X_perform_phase_calibration() end
-
+        
                 // "restore the previous Sequence Config"
                 self.write_register(SYSTEM_SEQUENCE_CONFIG, 0xE8);
-
+        
                 // VL53L0X_PerformRefCalibration() end
             }
         */
@@ -571,7 +570,7 @@ where
             let mut buffer = [0];
             let _ = self.com.write_read(ADDRESS, &[reg, byte], &mut buffer);
         }
-
+    
         fn read_byte_raw(&mut self, reg: u8) -> u8 {
             // FIXME:
             //  * remove this function
@@ -581,7 +580,7 @@ where
             let _ = self.com.write_read(ADDRESS, &[reg], &mut data);
             data[0]
         }
-
+    
         fn write_byte(&mut self, reg: Register, byte: u8) {
             let mut buffer = [0];
             let _ = self
@@ -598,11 +597,11 @@ enum Register {
     MSRC_CONFIG_CONTROL = 0x60,
     SYSTEM_SEQUENCE_CONFIG = 0x01,
     FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT = 0x44,
-	GLOBAL_CONFIG_SPAD_ENABLES_REF_0 = 0xB0,
-	DYNAMIC_SPAD_REF_EN_START_OFFSET = 0x4F,
-	DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD = 0x4E,
-	GLOBAL_CONFIG_REF_EN_START_SELECT = 0xB6,
-	SYSTEM_INTERRUPT_CONFIG_GPIO = 0x0A,
-	GPIO_HV_MUX_ACTIVE_HIGH = 0x84,
-	SYSTEM_INTERRUPT_CLEAR = 0x0B,
+    GLOBAL_CONFIG_SPAD_ENABLES_REF_0 = 0xB0,
+    DYNAMIC_SPAD_REF_EN_START_OFFSET = 0x4F,
+    DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD = 0x4E,
+    GLOBAL_CONFIG_REF_EN_START_SELECT = 0xB6,
+    SYSTEM_INTERRUPT_CONFIG_GPIO = 0x0A,
+    GPIO_HV_MUX_ACTIVE_HIGH = 0x84,
+    SYSTEM_INTERRUPT_CLEAR = 0x0B,
 }
