@@ -13,7 +13,7 @@ use hal::serial;
 use hal::time::Bps;
 use nb;
 
-mod vl53l0x;
+use vl53l0x;
 
 #[entry]
 fn main() -> ! {

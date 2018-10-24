@@ -32,10 +32,11 @@ stm32f30x = {version = "0.7.1", optional = true}
 mpu9250 = {version = "0.7.3", optional = true}
 # mpu9250 = {path = "../mpu9250", optional = true}
 dcmimu = {version = "0.1.3", optional = true}
-lsm303c = {version = "0.1.4", optional = true}
+lsm303c = {version = "0.1.5", optional = true}
 # lsm303c = {path = "../lsm303c", optional = true}
 bmp280 = {version = "0.0.1", optional = true, package="bmp280-ehal"}
 shared-bus = {version = "0.1.2", optional = true, features = ["cortexm"]}
+vl53l0x = {git = "https://github.com/copterust/vl53l0x", optional = true}
 
 
 [dependencies.ehal]
@@ -58,6 +59,7 @@ with_dcmimu = ["with_mpu", "dcmimu"]
 with_lsm = ["with_hal", "lsm303c"]
 with_bmp = ["with_hal", "bmp280"]
 with_shared_bus = ["with_hal", "shared-bus"]
+with_vl53l0x = ["with_hal", "vl53l0x"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
 all = ["with_dcmimu", "with_lsm"]
@@ -95,7 +97,7 @@ required-features = ["with_hal"]
 [[bin]]
 name = "vl53l0x"
 path = "vl53l0x/main.rs"
-required-features = ["with_hal"]
+required-features = ["with_vl53l0x"]
 
 [[bin]]
 name = "raw_sensors"
