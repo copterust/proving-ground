@@ -20,3 +20,17 @@ fn asl_to_baro(h: f32) -> f32 {
 fn baro_to_asl(p: f32) -> f32 {
     (1.0 - (p / 101325.0).powf(0.190295)) * 44330.0
 }
+
+/// Ground-truth AGL to rangefinder measurement
+///
+/// TBD:
+/// * Measure real function 
+///
+/// Input:
+/// * h: above the ground level
+///
+/// Output:
+/// * h': corresponding rangefinder measurement
+fn agl_to_range(h: f32) -> f32 {
+    h
+}
