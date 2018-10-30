@@ -37,6 +37,7 @@ lsm303c = {version = "0.1.5", optional = true}
 bmp280 = {version = "0.0.1", optional = true, package="bmp280-ehal"}
 shared-bus = {version = "0.1.2", optional = true, features = ["cortexm"]}
 vl53l0x = {git = "https://github.com/copterust/vl53l0x", optional = true}
+# vl53l0x = {path = "../vl53l0x", optional = true}
 
 
 [dependencies.ehal]
