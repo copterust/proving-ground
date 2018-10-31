@@ -55,7 +55,7 @@ optional = true
 
 [features]
 no_device = ["panic-abort", "cortex-m-rt", "cortex-m"]
-with_device = ["no_device", "stm32f30x/rt"]
+with_device = ["panic-abort", "cortex-m-rt", "cortex-m", "stm32f30x/rt"]
 with_hal = ["with_device", "nb", "ehal", "hal"]
 with_mpu = ["with_hal", "mpu9250"]
 with_dcmimu = ["with_mpu", "dcmimu"]
