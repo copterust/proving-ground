@@ -24,10 +24,10 @@ lto = true
 incremental = false # nalgebra
 
 [dependencies]
-panic-abort = "0.2.0"
-cortex-m = {version = "0.5.7", features = ["inline-asm", "const-fn"]}
-cortex-m-rt = "0.6.5"
-nb = {version = "0.1.1", "optional" = true}
+panic-abort = {version = "0.2.0", optional=true}
+cortex-m = {version = "0.5.7", optional=true, features = ["inline-asm", "const-fn"]}
+cortex-m-rt = {version = "0.6.5", optional = true}
+nb = {version = "0.1.1", optional = true}
 stm32f30x = {version = "0.7.1", optional = true}
 mpu9250 = {version = "0.7.3", optional = true}
 # mpu9250 = {path = "../mpu9250", optional = true}
@@ -39,7 +39,7 @@ shared-bus = {version = "0.1.2", optional = true, features = ["cortexm"]}
 vl53l0x = {git = "https://github.com/copterust/vl53l0x", optional = true}
 # vl53l0x = {path = "../vl53l0x", optional = true}
 nalgebra = {version = "0.16.4", optional = true, default-features = false}
-
+libm = {version = "0.1.2", optional = true}
 
 [dependencies.ehal]
 features = ["unproven"]
@@ -53,8 +53,8 @@ package = "alt-stm32f30x-hal"
 optional = true
 
 [features]
-no_device = []
-with_device = ["stm32f30x/rt"]
+no_device = ["panic-abort", "cortex-m-rt", "cortex-m"]
+with_device = ["no_device", "stm32f30x/rt"]
 with_hal = ["with_device", "nb", "ehal", "hal"]
 with_mpu = ["with_hal", "mpu9250"]
 with_dcmimu = ["with_mpu", "dcmimu"]
@@ -62,10 +62,10 @@ with_lsm = ["with_hal", "lsm303c"]
 with_bmp = ["with_hal", "bmp280"]
 with_shared_bus = ["with_hal", "shared-bus"]
 with_vl53l0x = ["with_hal", "vl53l0x"]
-with_nalgebra = ["nalgebra"]
+with_math = ["nalgebra", "libm"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
-all = ["with_dcmimu", "with_lsm", "with_nalgebra"]
+all = ["with_dcmimu", "with_lsm", "with_math"]
 
 [[bin]]
 name = "mini"
@@ -150,5 +150,4 @@ required-features = ["with_shared_bus", "with_lsm", "with_bmp"]
 [[bin]]
 name = "altitude"
 path = "altitude/main.rs"
-required-features = ["with_nalgebra"]
-
+required-features = ["with_math"]

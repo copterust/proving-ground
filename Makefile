@@ -5,15 +5,17 @@ FEATURES := $(if $(fea),"--features=$(fea)",)
 release :=
 MODE := $(if $(release),release,debug)
 RELEASE_FLAG := $(if $(release),--release,)
-TARGET := ./target/thumbv7em-none-eabihf/$(MODE)
-BIN := $(TARGET)/$(NAME)
+target :=
+TARGET := $(if $(target),"$(target)",thumbv7em-none-eabihf)
+TARGET_PATH := ./target/$(TARGET)/$(MODE)
+BIN := $(TARGET_PATH)/$(NAME)
 
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
 TTY := /dev/ttyUSB0
 endif
 ifeq ($(UNAME), Darwin)
-TTY := /dev/tty.wchusbserial1420
+TTY := /dev/tty.wchusbserial1410
 endif
 
 $(BIN): build
@@ -22,7 +24,7 @@ $(BIN).bin: $(BIN)
 	arm-none-eabi-objcopy -S -O binary $(BIN) $(BIN).bin
 
 build:
-	cargo -v build $(RELEASE_FLAG) --bin $(NAME) $(FEATURES)
+	cargo -v build $(RELEASE_FLAG) --target $(TARGET) --bin $(NAME) $(FEATURES)
 
 flash: $(BIN).bin
 	python2 ./loader/stm32loader.py -p $(TTY) -f F3 -e -w $(BIN).bin
