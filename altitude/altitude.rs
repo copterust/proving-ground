@@ -1,5 +1,5 @@
 use nalgebra as na;
-use libm::fpow;
+use libm::powf;
 
 /// Convert above the sea level to Pascals
 ///
@@ -91,7 +91,7 @@ impl ASL_EKF {
         let s = agl_to_range(asl - baro_to_asl(self.baseline_pressure));
         let b = asl_to_baro(asl);
         let h = na::Matrix2x1::new(b, s);
-        let dpdx = -0.120131 * fpow(1.0 - 2.2577e-7 * x[0], 4.25588);
+        let dpdx = -0.120131 * powf(1.0 - 2.2577e-7 * x[0], 4.25588);
         let dsdx = 0.933;
         let h_big = na::Vector2::new(dpdx, dsdx);
         (h, h_big)
