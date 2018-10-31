@@ -40,6 +40,7 @@ vl53l0x = {git = "https://github.com/copterust/vl53l0x", optional = true}
 # vl53l0x = {path = "../vl53l0x", optional = true}
 nalgebra = {version = "0.16.4", optional = true, default-features = false}
 libm = {version = "0.1.2", optional = true}
+rand = {version = "0.5.5", optional = true}
 
 [dependencies.ehal]
 features = ["unproven"]
@@ -62,10 +63,10 @@ with_lsm = ["with_hal", "lsm303c"]
 with_bmp = ["with_hal", "bmp280"]
 with_shared_bus = ["with_hal", "shared-bus"]
 with_vl53l0x = ["with_hal", "vl53l0x"]
-with_math = ["nalgebra", "libm"]
+with_math = ["nalgebra", "libm", "rand"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
-all = ["with_dcmimu", "with_lsm", "with_math"]
+all = ["with_dcmimu", "with_lsm"]
 
 [[bin]]
 name = "mini"

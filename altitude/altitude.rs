@@ -1,5 +1,5 @@
-use nalgebra as na;
 use libm::powf;
+use nalgebra as na;
 
 /// Convert above the sea level to Pascals
 ///
@@ -34,20 +34,20 @@ fn baro_to_asl(p: f32) -> f32 {
 ///
 /// Output:
 /// * h': corresponding rangefinder measurement
-fn agl_to_range(h: f32) -> f32 {
-    h
+fn agl_to_range(agl: f32) -> f32 {
+    0.933 * agl - 2.894
+    // h
 }
 
 /// Class for fusing range and barometric sensors
 pub struct ASL_EKF {
     baseline_pressure: f32,
-    p_pre: na::Matrix1<f32>, // Previous prediction noise covariance
-    x: na::Matrix1<f32>, // Matrix of n states, where n = 1
+    p_pre: na::Matrix1<f32>,  // Previous prediction noise covariance
+    x: na::Matrix1<f32>,      // Matrix of n states, where n = 1
     p_post: na::Matrix1<f32>, // Matrix of n multiplied by pval
-    q: na::Matrix1<f32>, // Matrix of size n
-    r: na::Matrix2<f32>, // Two observations
-    i: na::Matrix1<f32>, // of size n
-
+    q: na::Matrix1<f32>,      // Matrix of size n
+    r: na::Matrix2<f32>,      // Two observations
+    i: na::Matrix1<f32>,      // of size n
 }
 
 impl ASL_EKF {
@@ -74,7 +74,9 @@ impl ASL_EKF {
         self.p_pre = f * self.p_post * f.transpose() + self.q;
         let (h, h_big) = self.h(self.x);
         let a = self.p_pre * h_big.transpose();
-        let b = ((h_big * self.p_pre) * h_big.transpose() + self.r).try_inverse().unwrap();
+        let b = ((h_big * self.p_pre) * h_big.transpose() + self.r)
+            .try_inverse()
+            .unwrap();
         let g_big = a * b;
         self.x += g_big * (z - h/*.transpose()*/)/*.transpose()*/;
         self.p_post = (self.i - g_big * h_big) * self.p_pre;
@@ -96,5 +98,4 @@ impl ASL_EKF {
         let h_big = na::Vector2::new(dpdx, dsdx);
         (h, h_big)
     }
-
 }
