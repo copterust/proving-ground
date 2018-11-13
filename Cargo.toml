@@ -25,7 +25,7 @@ incremental = false # nalgebra
 
 [dependencies]
 panic-abort = {version = "0.3.1", optional=true}
-cortex-m = {version = "0.5.7", optional=true, features = ["inline-asm", "const-fn"]}
+cortex-m = {version = "0.5.8", optional=true, features = ["inline-asm", "const-fn"]}
 cortex-m-rt = {version = "0.6.5", optional = true}
 nb = {version = "0.1.1", optional = true}
 stm32f30x = {version = "0.7.1", optional = true}
