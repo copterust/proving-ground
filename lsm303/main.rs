@@ -186,7 +186,7 @@ fn panic(panic_info: &PanicInfo) -> ! {
                     ).unwrap();
                 }
                 (None, Some(msg)) => {
-                    write!(l, "panic: {:?}", msg);
+                    write!(l, "panic: {:?}", msg).unwrap();
                 }
                 (None, None) => {
                     write!(l, "panic occured, no info available").unwrap();
