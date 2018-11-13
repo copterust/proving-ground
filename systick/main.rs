@@ -40,12 +40,12 @@ fn main() -> ! {
         L = Some(Logger { tx });
     }
     let l = unsafe { extract(&mut L) };
-    write!(l, "logger ok\r\n");
+    write!(l, "logger ok\r\n").unwrap();
     let ticks = clocks.sysclk().0 / 1000; // 1 ms?
     let mut syst = core.SYST;
     syt_tick_config(&mut syst, ticks);
-    write!(l, "Ticks: {}\r\n", ticks);
-    write!(l, "Waiting for interrupt; will print every ~2s\r\n");
+    write!(l, "Ticks: {}\r\n", ticks).unwrap();
+    write!(l, "Waiting for interrupt; will print every ~2s\r\n").unwrap();
     loop {
         cortex_m::asm::wfi();
     }
@@ -104,7 +104,7 @@ unsafe fn SysTick() {
             l,
             "Tick: {:?}ms; last: {:?}ms\r\n",
             NOW_MS, LAST_SNAPSHOT_MS
-        );
+        ).unwrap();
     }
 }
 

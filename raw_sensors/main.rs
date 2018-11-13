@@ -49,7 +49,7 @@ fn main() -> ! {
         RX = Some(rx);
     };
     let l = unsafe { extract(&mut L) };
-    write!(l, "logger ok\r\n");
+    write!(l, "logger ok\r\n").unwrap();
     let mut delay = delay::Delay::new(core.SYST, clocks);
     // SPI1
     let ncs = gpiob.pb9.output().push_pull();
@@ -60,23 +60,23 @@ fn main() -> ! {
         1.mhz(),
         clocks,
     );
-    write!(l, "spi ok\r\n");
+    write!(l, "spi ok\r\n").unwrap();
     let mut mpu = match Mpu9250::imu_default(spi, ncs, &mut delay) {
         Ok(m) => m,
         Err(e) => {
-            write!(l, "Mpu init error: {:?}", e);
+            write!(l, "Mpu init error: {:?}", e).unwrap();
             panic!("mpu err");
         }
     };
-    write!(l, "mpu ok\r\n");
+    write!(l, "mpu ok\r\n").unwrap();
     let accel_biases = match mpu.calibrate_at_rest(&mut delay) {
         Ok(ab) => ab,
         Err(e) => {
-            write!(l, "Mpu calib error: {:?}", e);
+            write!(l, "Mpu calib error: {:?}", e).unwrap();
             panic!("mpu err");
         }
     };
-    write!(l, "calibration ok: {:?}\r\n", accel_biases);
+    write!(l, "calibration ok: {:?}\r\n", accel_biases).unwrap();
     let mut syst = delay.free();
     unsafe { cortex_m::interrupt::enable() };
     let reload = (clocks.sysclk().0 / 1000) - 1;
@@ -91,7 +91,7 @@ fn main() -> ! {
         l,
         "All ok, now: {:?}; Press 'q' to toggle verbosity!\r\n",
         prev_t_ms
-    );
+    ).unwrap();
     loop {
         let t_ms = now_ms();
         let dt_ms = t_ms.wrapping_sub(prev_t_ms);
@@ -105,11 +105,11 @@ fn main() -> ! {
                         l,
                         "IMU: t:{}ms; dt:{}ms; g({};{};{}); a({};{};{})\r\n",
                         t_ms, dt_ms, gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z
-                    );
+                    ).unwrap();
                 }
             }
             Err(e) => {
-                write!(l, "Err: {:?}; {:?}", t_ms, e);
+                write!(l, "Err: {:?}; {:?}", t_ms, e).unwrap();
             }
         }
     }
@@ -162,7 +162,7 @@ fn usart_exti25() {
                 }
             } else {
                 // echo byte as is
-                write!(l, "{}", b as char);
+                write!(l, "{}", b as char).unwrap();
             }
         }
         Err(nb::Error::WouldBlock) => {}
@@ -177,7 +177,7 @@ fn usart_exti25() {
                 rx.clear_noise_error();
             }
             _ => {
-                write!(l, "read error: {:?}", e);
+                write!(l, "read error: {:?}", e).unwrap();
             }
         },
     };
@@ -195,13 +195,13 @@ unsafe fn SysTick() {
 #[exception]
 unsafe fn HardFault(ef: &ExceptionFrame) -> ! {
     let l = extract(&mut L);
-    write!(l, "hard fault at {:?}", ef);
+    write!(l, "hard fault at {:?}", ef).unwrap();
     panic!("HardFault at {:#?}", ef);
 }
 
 #[exception]
 unsafe fn DefaultHandler(irqn: i16) {
     let l = extract(&mut L);
-    write!(l, "Interrupt: {}", irqn);
+    write!(l, "Interrupt: {}", irqn).unwrap();
     panic!("Unhandled exception (IRQn = {})", irqn);
 }

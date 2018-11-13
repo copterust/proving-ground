@@ -33,7 +33,7 @@ fn main() -> ! {
     // COBS frame
     tx.write(0x00).unwrap();
     let mut l = Logger { tx };
-    write!(l, "starting loop...\r\n");
+    write!(l, "starting loop...\r\n").unwrap();
     loop {
         match rx.read() {
             Ok(b) => {
@@ -44,7 +44,7 @@ fn main() -> ! {
                     rx.clear_overrun_error();
                 }
                 _ => {
-                    write!(l, "read error: {:?}", e);
+                    write!(l, "read error: {:?}", e).unwrap();
                 }
             },
             Err(nb::Error::WouldBlock) => {}

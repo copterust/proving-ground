@@ -48,37 +48,37 @@ fn main() -> ! {
         RX = Some(rx);
     };
     let l = unsafe { extract(&mut L) };
-    write!(l, "logger ok\r\n");
+    write!(l, "logger ok\r\n").unwrap();
     // I2C
     let i2c = device.I2C1.i2c((gpiob.pb6, gpiob.pb7), 400.khz(), clocks);
-    write!(l, "i2c ok\r\n");
+    write!(l, "i2c ok\r\n").unwrap();
     // lsm
     let mut lsm303 = Lsm303c::default(i2c).expect("lsm error");
-    write!(l, "lsm ok\r\n");
+    write!(l, "lsm ok\r\n").unwrap();
     // done
     unsafe { cortex_m::interrupt::enable() };
     let mut nvic = core.NVIC;
     nvic.enable(ser_int);
-    write!(l, "All ok; Press 'q' to toggle verbosity!\r\n");
+    write!(l, "All ok; Press 'q' to toggle verbosity!\r\n").unwrap();
     loop {
         match lsm303.mag() {
             Ok(meas) => {
                 if unsafe { !QUIET } {
-                    write!(l, "lsm: mag({},{},{})\r\n", meas.x, meas.y, meas.z,);
+                    write!(l, "lsm: mag({},{},{})\r\n", meas.x, meas.y, meas.z,).unwrap();
                 }
             }
             Err(e) => {
-                write!(l, "Err meas: {:?}", e);
+                write!(l, "Err meas: {:?}", e).unwrap();
             }
         };
         match lsm303.unscaled_mag() {
             Ok(meas) => {
                 if unsafe { !QUIET } {
-                    write!(l, "lsm: unscmag({},{},{})\r\n", meas.x, meas.y, meas.z,);
+                    write!(l, "lsm: unscmag({},{},{})\r\n", meas.x, meas.y, meas.z,).unwrap();
                 }
             }
             Err(e) => {
-                write!(l, "Err meas: {:?}", e);
+                write!(l, "Err meas: {:?}", e).unwrap();
             }
         }
     }
@@ -131,7 +131,7 @@ fn usart_exti25() {
                 }
             } else {
                 // echo byte as is
-                write!(l, "{}", b as char);
+                write!(l, "{}", b as char).unwrap();
             }
         }
         Err(nb::Error::WouldBlock) => {}
@@ -146,7 +146,7 @@ fn usart_exti25() {
                 rx.clear_noise_error();
             }
             _ => {
-                write!(l, "read error: {:?}", e);
+                write!(l, "read error: {:?}", e).unwrap();
             }
         },
     };
@@ -175,7 +175,7 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         location.file(),
                         location.line(),
                         msg
-                    );
+                    ).unwrap();
                 }
                 (Some(location), None) => {
                     write!(
@@ -183,13 +183,13 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         "panic in file '{}' at line {}",
                         location.file(),
                         location.line()
-                    );
+                    ).unwrap();
                 }
                 (None, Some(msg)) => {
                     write!(l, "panic: {:?}", msg);
                 }
                 (None, None) => {
-                    write!(l, "panic occured, no info available");
+                    write!(l, "panic occured, no info available").unwrap();
                 }
             }
         }

@@ -49,14 +49,14 @@ fn main() -> ! {
         RX = Some(rx);
     };
     let l = unsafe { extract(&mut L) };
-    write!(l, "logger ok\r\n");
+    write!(l, "logger ok\r\n").unwrap();
     let mut delay = delay::Delay::new(core.SYST, clocks);
     // I2C
     let i2c = device.I2C1.i2c((gpiob.pb6, gpiob.pb7), 400.khz(), clocks);
-    write!(l, "i2c ok\r\n");
+    write!(l, "i2c ok\r\n").unwrap();
     // lsm
     let mut lsm303 = Lsm303c::default(i2c).expect("lsm error");
-    write!(l, "lsm ok\r\n");
+    write!(l, "lsm ok\r\n").unwrap();
     // SPI1
     let ncs = gpiob.pb9.output().push_pull();
     let spi = device.SPI1.spi(
@@ -66,13 +66,13 @@ fn main() -> ! {
         1.mhz(),
         clocks,
     );
-    write!(l, "spi ok\r\n");
+    write!(l, "spi ok\r\n").unwrap();
     let mut mpu = Mpu9250::marg_default(spi, ncs, &mut delay).expect("mpu error");
     // done
     unsafe { cortex_m::interrupt::enable() };
     let mut nvic = core.NVIC;
     nvic.enable(ser_int);
-    write!(l, "All ok; Press 'q' to toggle verbosity!\r\n");
+    write!(l, "All ok; Press 'q' to toggle verbosity!\r\n").unwrap();
     loop {
         let mlsm_meas = lsm303.all();
         let mmpu_meas = mpu.all();
@@ -89,7 +89,7 @@ fn main() -> ! {
                         lsm_meas.accel.y,
                         lsm_meas.accel.z,
                         lsm_meas.temp
-                    );
+                    ).unwrap();
                     write!(
                         l,
                         "mpu: mag({},{},{}); a({},{},{}); t({});\r\n",
@@ -100,14 +100,14 @@ fn main() -> ! {
                         mpu_meas.accel.y,
                         mpu_meas.accel.z,
                         mpu_meas.temp
-                    );
+                    ).unwrap();
                 }
             }
             (Err(e), _) => {
-                write!(l, "Err lsm meas: {:?}", e);
+                write!(l, "Err lsm meas: {:?}", e).unwrap();
             }
             (_, Err(e)) => {
-                write!(l, "Err mpu meas: {:?}", e);
+                write!(l, "Err mpu meas: {:?}", e).unwrap();
             }
         }
     }
@@ -160,7 +160,7 @@ fn usart_exti25() {
                 }
             } else {
                 // echo byte as is
-                write!(l, "{}", b as char);
+                write!(l, "{}", b as char).unwrap();
             }
         }
         Err(nb::Error::WouldBlock) => {}
@@ -175,7 +175,7 @@ fn usart_exti25() {
                 rx.clear_noise_error();
             }
             _ => {
-                write!(l, "read error: {:?}", e);
+                write!(l, "read error: {:?}", e).unwrap();
             }
         },
     };
@@ -204,7 +204,7 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         location.file(),
                         location.line(),
                         msg
-                    );
+                    ).unwrap();
                 }
                 (Some(location), None) => {
                     write!(
@@ -212,13 +212,13 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         "panic in file '{}' at line {}",
                         location.file(),
                         location.line()
-                    );
+                    ).unwrap();
                 }
                 (None, Some(msg)) => {
-                    write!(l, "panic: {:?}", msg);
+                    write!(l, "panic: {:?}", msg).unwrap();
                 }
                 (None, None) => {
-                    write!(l, "panic occured, no info available");
+                    write!(l, "panic occured, no info available").unwrap();
                 }
             }
         }

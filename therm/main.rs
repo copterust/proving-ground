@@ -37,7 +37,7 @@ fn main() -> ! {
     // COBS frame
     tx.write(0x00).unwrap();
     let mut l = Logger { tx };
-    write!(l, "logger ok\r\n");
+    write!(l, "logger ok\r\n").unwrap();
     let mut delay = delay::Delay::new(core.SYST, clocks);
     // SPI1
     let ncs = gpiob.pb9.output().push_pull();
@@ -52,26 +52,26 @@ fn main() -> ! {
     );
     let mut mpu = Mpu9250::imu_default(spi, ncs, &mut delay).unwrap();
 
-    write!(l, "starting loop...\r\n");
+    write!(l, "starting loop...\r\n").unwrap();
 
     let mut flag = true;
     loop {
         if flag {
             match mpu.temp() {
                 Ok(t) => {
-                    write!(l, "Temp: {:?}\r\n", t);
+                    write!(l, "Temp: {:?}\r\n", t).unwrap();
                 }
                 Err(e) => {
-                    write!(l, "Error: {:?}\r\n", e);
+                    write!(l, "Error: {:?}\r\n", e).unwrap();
                 }
             }
         } else {
             match mpu.raw_temp() {
                 Ok(t) => {
-                    write!(l, "Raw Temp: {:?}\r\n", t);
+                    write!(l, "Raw Temp: {:?}\r\n", t).unwrap();
                 }
                 Err(e) => {
-                    write!(l, "Error: {:?}\r\n", e);
+                    write!(l, "Error: {:?}\r\n", e).unwrap();
                 }
             }
         }

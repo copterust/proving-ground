@@ -50,18 +50,18 @@ fn main() -> ! {
         RX = Some(rx);
     };
     let l = unsafe { extract(&mut L) };
-    write!(l, "logger ok\r\n");
+    write!(l, "logger ok\r\n").unwrap();
     // I2C
     let i2c = device.I2C1.i2c((gpiob.pb6, gpiob.pb7), 400.khz(), clocks);
-    write!(l, "i2c ok\r\n");
+    write!(l, "i2c ok\r\n").unwrap();
     let bus = SharedBus::new(i2c);
-    write!(l, "i2c shared\r\n");
+    write!(l, "i2c shared\r\n").unwrap();
     // lsm
     let mut lsm303 = Lsm303c::default(bus.acquire()).expect("lsm error");
-    write!(l, "lsm ok\r\n");
+    write!(l, "lsm ok\r\n").unwrap();
     // bmp
     let mut bmp = BMP280::new(bus.acquire()).expect("bmp error");
-    write!(l, "bmp created\r\n");
+    write!(l, "bmp created\r\n").unwrap();
     bmp.reset();
     bmp.set_config(bmp280::Config {
         t_sb: bmp280::Standby::ms250,
@@ -72,12 +72,12 @@ fn main() -> ! {
         osrs_p: bmp280::Oversampling::x1,
         mode: bmp280::PowerMode::Forced,
     });
-    write!(l, "bmp ok\r\n");
+    write!(l, "bmp ok\r\n").unwrap();
     // done
     unsafe { cortex_m::interrupt::enable() };
     let mut nvic = core.NVIC;
     nvic.enable(ser_int);
-    write!(l, "All ok; Press 'q' to toggle verbosity!\r\n");
+    write!(l, "All ok; Press 'q' to toggle verbosity!\r\n").unwrap();
     loop {
         match lsm303.all() {
             Ok(meas) => {
@@ -101,11 +101,11 @@ fn main() -> ! {
                         meas.temp,
                         pressure,
                         temp
-                    );
+                    ).unwrap();
                 }
             }
             Err(e) => {
-                write!(l, "Err meas: {:?}", e);
+                write!(l, "Err meas: {:?}", e).unwrap();
             }
         }
     }
@@ -158,7 +158,7 @@ fn usart_exti25() {
                 }
             } else {
                 // echo byte as is
-                write!(l, "{}", b as char);
+                write!(l, "{}", b as char).unwrap();
             }
         }
         Err(nb::Error::WouldBlock) => {}
@@ -173,7 +173,7 @@ fn usart_exti25() {
                 rx.clear_noise_error();
             }
             _ => {
-                write!(l, "read error: {:?}", e);
+                write!(l, "read error: {:?}", e).unwrap();
             }
         },
     };
@@ -202,7 +202,7 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         location.file(),
                         location.line(),
                         msg
-                    );
+                    ).unwrap();
                 }
                 (Some(location), None) => {
                     write!(
@@ -210,13 +210,13 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         "panic in file '{}' at line {}",
                         location.file(),
                         location.line()
-                    );
+                    ).unwrap();
                 }
                 (None, Some(msg)) => {
-                    write!(l, "panic: {:?}", msg);
+                    write!(l, "panic: {:?}", msg).unwrap();
                 }
                 (None, None) => {
-                    write!(l, "panic occured, no info available");
+                    write!(l, "panic occured, no info available").unwrap();
                 }
             }
         }

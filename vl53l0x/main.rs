@@ -49,33 +49,33 @@ fn main() -> ! {
         RX = Some(rx);
     };
     let l = unsafe { extract(&mut L) };
-    write!(l, "\r\nVL53L0x demo\r\n");
+    write!(l, "\r\nVL53L0x demo\r\n").unwrap();
 
     // i2c
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     let scl = gpiob.pb8.alternating(gpio::AF4);
     let sda = gpiob.pb9.alternating(gpio::AF4);
     let i2c = device.I2C1.i2c((scl, sda), 1.mhz(), clocks);
-    write!(l, "\ri2c\r\n");
+    write!(l, "\ri2c\r\n").unwrap();
     let mut tof = vl53l0x::VL53L0x::new(i2c).expect("vl");
-    write!(l, "vl53l0x ok\r\n");
+    write!(l, "vl53l0x ok\r\n").unwrap();
     unsafe { cortex_m::interrupt::enable() };
     let mut nvic = core.NVIC;
     nvic.enable(ser_int);
-    write!(l, "ready to set meas budget \r\n");
+    write!(l, "ready to set meas budget \r\n").unwrap();
     tof.set_measurement_timing_budget(200000).expect("timbudg");
-    write!(l, "meas budget set; start cont \r\n");
+    write!(l, "meas budget set; start cont \r\n").unwrap();
     tof.start_continuous(0).expect("start cont");
-    write!(l, "All ok; Press 'q' to toggle verbosity!\r\n");
+    write!(l, "All ok; Press 'q' to toggle verbosity!\r\n").unwrap();
     loop {
         match tof.read_range_continuous_millimeters() {
             Ok(meas) => {
                 if unsafe { !QUIET } {
-                    write!(l, "vl: millis {}\r\n", meas);
+                    write!(l, "vl: millis {}\r\n", meas).unwrap();
                 }
             }
             Err(e) => {
-                write!(l, "Err meas: {:?}\r\n", e);
+                write!(l, "Err meas: {:?}\r\n", e).unwrap();
             }
         };
     }
@@ -128,7 +128,7 @@ fn usart_exti25() {
                 }
             } else {
                 // echo byte as is
-                write!(l, "{}", b as char);
+                write!(l, "{}", b as char).unwrap();
             }
         }
         Err(nb::Error::WouldBlock) => {}
@@ -143,7 +143,7 @@ fn usart_exti25() {
                 rx.clear_noise_error();
             }
             _ => {
-                write!(l, "read error: {:?}", e);
+                write!(l, "read error: {:?}", e).unwrap();
             }
         },
     };
@@ -172,7 +172,7 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         location.file(),
                         location.line(),
                         msg
-                    );
+                    ).unwrap();
                 }
                 (Some(location), None) => {
                     write!(
@@ -180,13 +180,13 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         "panic in file '{}' at line {}",
                         location.file(),
                         location.line()
-                    );
+                    ).unwrap();
                 }
                 (None, Some(msg)) => {
-                    write!(l, "panic: {:?}", msg);
+                    write!(l, "panic: {:?}", msg).unwrap();
                 }
                 (None, None) => {
-                    write!(l, "panic occured, no info available");
+                    write!(l, "panic occured, no info available").unwrap();
                 }
             }
         }

@@ -53,7 +53,7 @@ fn main() -> ! {
         RX = Some(rx);
     };
     let l = unsafe { extract(&mut L) };
-    write!(l, "logger ok\r\n");
+    write!(l, "logger ok\r\n").unwrap();
     let mut delay = delay::Delay::new(core.SYST, clocks);
     // SPI1
     let ncs = gpiob.pb9.output().push_pull();
@@ -64,7 +64,7 @@ fn main() -> ! {
         1.mhz(),
         clocks,
     );
-    write!(l, "spi ok\r\n");
+    write!(l, "spi ok\r\n").unwrap();
     let mut mpu = Mpu9250::imu(
         spi,
         ncs,
@@ -72,11 +72,11 @@ fn main() -> ! {
         mpu9250::MpuConfig::imu().accel_scale(mpu9250::AccelScale::_4G),
     )
     .expect("mpu error");
-    write!(l, "mpu ok\r\n");
+    write!(l, "mpu ok\r\n").unwrap();
     let mut accel_biases = mpu.calibrate_at_rest(&mut delay).expect("calib error");
     // Correct axis for gravity;
     accel_biases.z -= mpu9250::G;
-    write!(l, "calibration ok: {:?}\r\n", accel_biases);
+    write!(l, "calibration ok: {:?}\r\n", accel_biases).unwrap();
 
     let mut dcmimu = DCMIMU::new();
     let mut syst = delay.free();
@@ -90,7 +90,7 @@ fn main() -> ! {
         l,
         "All ok, now: {:?}; Press 'q' to toggle logging!\r\n",
         prev_t_ms
-    );
+    ).unwrap();
     loop {
         match mpu.all() {
             Ok(meas) => {
@@ -110,11 +110,11 @@ fn main() -> ! {
                         rad_to_degrees(dcm.roll),
                         rad_to_degrees(dcm.yaw),
                         rad_to_degrees(dcm.pitch)
-                    );
+                    ).unwrap();
                 }
             }
             Err(e) => {
-                write!(l, "Err: {:?}\r\n", e);
+                write!(l, "Err: {:?}\r\n", e).unwrap();
             }
         }
     }
@@ -171,7 +171,7 @@ fn usart_exti25() {
                 }
             } else {
                 // echo byte as is
-                write!(l, "{}", b as char);
+                write!(l, "{}", b as char).unwrap();
             }
         }
         Err(nb::Error::WouldBlock) => {}
@@ -186,7 +186,7 @@ fn usart_exti25() {
                 rx.clear_noise_error();
             }
             _ => {
-                write!(l, "read error: {:?}", e);
+                write!(l, "read error: {:?}", e).unwrap();
             }
         },
     };
@@ -232,7 +232,7 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         location.file(),
                         location.line(),
                         msg
-                    );
+                    ).unwrap();
                 }
                 (Some(location), None) => {
                     write!(
@@ -240,13 +240,13 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         "panic in file '{}' at line {}",
                         location.file(),
                         location.line()
-                    );
+                    ).unwrap();
                 }
                 (None, Some(msg)) => {
-                    write!(l, "panic: {:?}", msg);
+                    write!(l, "panic: {:?}", msg).unwrap();
                 }
                 (None, None) => {
-                    write!(l, "panic occured, no info available");
+                    write!(l, "panic occured, no info available").unwrap();
                 }
             }
         }

@@ -38,7 +38,7 @@ fn main() -> ! {
     // COBS frame
     tx.write(0x00).unwrap();
     let mut l = Logger { tx };
-    write!(l, "logger ok\r\n");
+    write!(l, "logger ok\r\n").unwrap();
     let mut delay = delay::Delay::new(core.SYST, clocks);
     // SPI1
     let ncs = gpiob.pb9.output().push_pull();
@@ -66,12 +66,12 @@ fn main() -> ! {
         l,
         "factory sensitivity adjustments: {:?}\r\n",
         mag_sensitivity
-    );
+    ).unwrap();
 
     write!(
         l,
         "Mag Calibration: Wave device in a figure eight until done!\r\n"
-    );
+    ).unwrap();
     delay.delay_ms(200u32);
 
     for _ in 0..sample_count {
@@ -101,7 +101,7 @@ fn main() -> ! {
                 }
             }
             Err(e) => {
-                write!(l, "err: {:?}\r\n", e);
+                write!(l, "err: {:?}\r\n", e).unwrap();
             }
         }
         delay.delay_ms(5u32);
@@ -135,7 +135,7 @@ fn main() -> ! {
         l,
         "loop done; bias: ({}, {}, {}); scale: ({}, {}, {})\r\n",
         mag_bias_x, mag_bias_y, mag_bias_z, final_mag_scale_x, final_mag_scale_y, final_mag_scale_z
-    );
+    ).unwrap();
     loop {}
 }
 

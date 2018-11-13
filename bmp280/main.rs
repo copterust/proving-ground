@@ -36,46 +36,46 @@ fn main() -> ! {
     // COBS frame
     tx.write(0x00).unwrap();
     let mut l = Logger { tx };
-    write!(l, "\r\nBMP280 demo\r\n");
+    write!(l, "\r\nBMP280 demo\r\n").unwrap();
 
     // i2c
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     let scl = gpiob.pb6;
     let sda = gpiob.pb7;
     let i2c = device.I2C1.i2c((scl, sda), 400.khz(), clocks);
-    write!(l, "i2c ok\r\n");
+    write!(l, "i2c ok\r\n").unwrap();
 
     let mut ps = bmp280::BMP280::new(i2c).unwrap();
-    write!(l, "ID: {}\r\n", ps.id());
+    write!(l, "ID: {}\r\n", ps.id()).unwrap();
     ps.reset();
-    write!(l, "ID after reset: {}\r\n", ps.id());
-    write!(l, "Status: {}\r\n", ps.status());
-    write!(l, "{:?}\r\n", ps.control());
+    write!(l, "ID after reset: {}\r\n", ps.id()).unwrap();
+    write!(l, "Status: {}\r\n", ps.status()).unwrap();
+    write!(l, "{:?}\r\n", ps.control()).unwrap();
     ps.set_control(bmp280::Control {
         osrs_t: bmp280::Oversampling::x1,
         osrs_p: bmp280::Oversampling::x4,
         mode: bmp280::PowerMode::Normal,
     });
-    write!(l, "After write {:?}\r\n", ps.control());
+    write!(l, "After write {:?}\r\n", ps.control()).unwrap();
     ps.reset();
-    write!(l, "After reset {:?}\r\n", ps.control());
-    write!(l, "{:?}\r\n", ps.config());
+    write!(l, "After reset {:?}\r\n", ps.control()).unwrap();
+    write!(l, "{:?}\r\n", ps.config()).unwrap();
     ps.set_config(bmp280::Config {
         t_sb: bmp280::Standby::ms250,
         filter: bmp280::Filter::c8,
     });
-    write!(l, "After write {:?}\r\n", ps.config());
+    write!(l, "After write {:?}\r\n", ps.config()).unwrap();
     ps.set_control(bmp280::Control {
         osrs_t: bmp280::Oversampling::x1,
         osrs_p: bmp280::Oversampling::x1,
         mode: bmp280::PowerMode::Forced,
     });
-    write!(l, "Press any key to meausure\r\n");
+    write!(l, "Press any key to meausure\r\n").unwrap();
     loop {
         match rx.read() {
             Ok(_b) => {
-                write!(l, "Temperature: {}\r\n", ps.temp());
-                write!(l, "Pressure: {}\r\n", ps.pressure());
+                write!(l, "Temperature: {}\r\n", ps.temp()).unwrap();
+                write!(l, "Pressure: {}\r\n", ps.pressure()).unwrap();
                 ps.set_control(bmp280::Control {
                     osrs_t: bmp280::Oversampling::x1,
                     osrs_p: bmp280::Oversampling::x1,
@@ -87,7 +87,7 @@ fn main() -> ! {
                     rx.clear_overrun_error();
                 }
                 _ => {
-                    write!(l, "read error: {:?}", e);
+                    write!(l, "read error: {:?}", e).unwrap();
                 }
             },
             Err(nb::Error::WouldBlock) => {}
