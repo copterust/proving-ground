@@ -1,5 +1,3 @@
-cargo-features = ["rename-dependency"]
-
 [package]
 name = "proving_ground"
 description = "Examples of tiny programs for stm32f30x MCUs"
@@ -152,3 +150,8 @@ required-features = ["with_shared_bus", "with_lsm", "with_bmp"]
 name = "altitude"
 path = "altitude/main.rs"
 required-features = ["with_math"]
+
+[[bin]]
+name = "serial_redirect"
+path = "serial_redirect/main.rs"
+required-features = ["with_hal"]
