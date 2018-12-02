@@ -40,14 +40,12 @@ fn main() -> ! {
 
     let mut usart3 = device
         .USART3
-        .serial((gpiob.pb10, gpiob.pb11), Bps(115200), clocks);
+        .serial((gpiob.pb10, gpiob.pb11), Bps(9600), clocks);
 
     usart3.listen(serial::Event::Rxne);
     usart2.listen(serial::Event::Rxne);
-    unsafe { cortex_m::interrupt::enable() };
-    let mut nvic = core.NVIC;
-    nvic.enable(usart2.get_interrupt());
-    nvic.enable(usart3.get_interrupt());
+    let us2_int = usart2.get_interrupt();
+    let us3_int = usart3.get_interrupt();
 
     let (mut tx2, rx2) = usart2.split();
     let (tx3, rx3) = usart3.split();
@@ -60,7 +58,12 @@ fn main() -> ! {
         TX_GPS = Some(tx3);
     };
     let l = unsafe { extract(&mut L) };
+    write!(l, "logger ok...\r\n").unwrap();
     write!(l, "starting loop...\r\n").unwrap();
+    unsafe { cortex_m::interrupt::enable() };
+    let mut nvic = core.NVIC;
+    nvic.enable(us2_int);
+    nvic.enable(us3_int);
 
     loop {
         cortex_m::asm::wfi();
@@ -128,8 +131,6 @@ fn usart_gps() {
         },
     };
 }
-
-
 
 struct Logger<W: ehal::serial::Write<u8>> {
     tx: W,
