@@ -25,22 +25,34 @@ fn main() -> ! {
         .sysclk(64.mhz())
         .pclk1(32.mhz())
         .freeze(&mut flash.acr);
-    let (ch1, ch2, ch3, ch4, mut tim) =
+    let (ch1, ch2, ch3, ch4, mut tim1) =
         timer::tim2::Timer::new(device.TIM2, 1.mhz(), clocks, &mut rcc.apb1).take_all();
+    let (ch5, ch6, _, _, mut tim2) =
+        timer::tim3::Timer::new(device.TIM3, 1.mhz(), clocks, &mut rcc.apb1).take_all();
+
     let mut motor_pa0 = gpioa.pa0.pull_type(PullUp).to_pwm(ch1, MediumSpeed);
     let mut motor_pa1 = gpioa.pa1.pull_type(PullUp).to_pwm(ch2, MediumSpeed);
     let mut motor_pa2 = gpioa.pa2.pull_type(PullUp).to_pwm(ch3, MediumSpeed);
     let mut motor_pa3 = gpioa.pa3.pull_type(PullUp).to_pwm(ch4, MediumSpeed);
+    let mut motor_pa6 = gpioa.pa6.pull_type(PullUp).to_pwm(ch5, MediumSpeed);
+    let mut motor_pa7 = gpioa.pa7.pull_type(PullUp).to_pwm(ch6, MediumSpeed);
+
     motor_pa0.enable();
     motor_pa1.enable();
     motor_pa2.enable();
     motor_pa3.enable();
-    tim.enable();
+    motor_pa6.enable();
+    motor_pa7.enable();
+
+    tim1.enable();
+    tim2.enable();
 
     motor_pa0.set_duty(20);
     motor_pa1.set_duty(20);
     motor_pa2.set_duty(20);
     motor_pa3.set_duty(20);
+    motor_pa6.set_duty(20);
+    motor_pa7.set_duty(20);
 
     loop {
         tick_delay(25000);
