@@ -26,8 +26,8 @@ fn main() -> ! {
         .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let mut serial = device
-        .USART1
-        .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
+        .USART2
+        .serial((gpioa.pa2, gpioa.pa15), Bps(115200), clocks);
     serial.listen(serial::Event::Rxne);
     let (mut tx, mut rx) = serial.split();
     // COBS frame

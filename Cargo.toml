@@ -39,6 +39,12 @@ vl53l0x = {git = "https://github.com/copterust/vl53l0x", optional = true}
 nalgebra = {version = "0.16.4", optional = true, default-features = false}
 libm = {version = "0.1.2", optional = true}
 rand = {version = "0.5.5", optional = true}
+cortex-m-semihosting = {version = "0.3.2", optional = true}
+
+[dependencies.panic-semihosting]
+features = ["exit"]
+version = "0.5.1"
+optional = true
 
 [dependencies.ehal]
 features = ["unproven"]
@@ -62,6 +68,7 @@ with_bmp = ["with_hal", "bmp280"]
 with_shared_bus = ["with_hal", "shared-bus"]
 with_vl53l0x = ["with_hal", "vl53l0x"]
 with_math = ["nalgebra", "libm", "rand"]
+with_semihosting = ["cortex-m-semihosting", "panic-semihosting"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
 all = ["with_dcmimu", "with_lsm"]
@@ -155,3 +162,13 @@ required-features = ["with_math"]
 name = "serial_redirect"
 path = "serial_redirect/main.rs"
 required-features = ["with_hal"]
+
+[[bin]]
+name = "nucled"
+path = "nucled/main.rs"
+required-features = ["with_hal"]
+
+[[bin]]
+name = "semi"
+path = "semi/main.rs"
+required-features = ["with_device", "with_semihosting"]

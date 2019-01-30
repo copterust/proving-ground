@@ -18,9 +18,9 @@ fn main() -> ! {
     let mut flash = device.FLASH.constrain();
     let mut rcc = device.RCC.constrain();
 
-    let gpioc = device.GPIOC.split(&mut rcc.ahb);
-    let mut beeper = gpioc
-        .pc14
+    let gpiob = device.GPIOB.split(&mut rcc.ahb);
+    let mut beeper = gpiob
+        .pb3
         .pull_type(gpio::PullUp)
         .output()
         .output_type(gpio::PushPull);

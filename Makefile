@@ -31,6 +31,12 @@ flash: $(BIN).bin
 
 load: flash
 
+boad: build
+	bobbin -v load $(RELEASE_FLAG) --target $(TARGET) --bin $(NAME) $(FEATURES)
+
+brun: boad
+	bobbin -v run --bin $(NAME) $(FEATURES)
+
 clean:
 	cargo -v clean
 
