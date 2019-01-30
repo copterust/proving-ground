@@ -34,8 +34,11 @@ load: flash
 boad: build
 	bobbin -v load $(RELEASE_FLAG) --target $(TARGET) --bin $(NAME) $(FEATURES)
 
-brun: boad
+brun: build
 	bobbin -v run --bin $(NAME) $(FEATURES)
+
+crun: build
+	cargo -v run --bin $(NAME) $(FEATURES)
 
 clean:
 	cargo -v clean
