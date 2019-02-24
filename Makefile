@@ -43,4 +43,7 @@ crun: build
 clean:
 	cargo -v clean
 
+gdbload: build
+	sh -c "openocd & arm-none-eabi-gdb -q $(BIN) & wait"
+
 .PHONY: build
