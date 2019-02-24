@@ -1,5 +1,9 @@
 bin :=
 NAME := $(bin)
+ifndef NAME
+$(error Set bin to build, e.g. 'bin=mini')
+endif
+
 fea := $(shell grep "\[\[bin\]\]" -A3 Cargo.toml | grep $(NAME) -A2 | grep required | awk -F'[][]' '{print $$2}')
 FEATURES := $(if $(fea),"--features=$(fea)",)
 release :=
@@ -9,6 +13,12 @@ target :=
 TARGET := $(if $(target),"$(target)",thumbv7em-none-eabihf)
 TARGET_PATH := ./target/$(TARGET)/$(MODE)
 BIN := $(TARGET_PATH)/$(NAME)
+mem :=
+MEM := $(if $(mem),$(mem),128k)
+
+ifeq (,$(wildcard memory.$(MEM)))
+$(error File memory.$(MEM) do not exist, create if you want to use different memory settings)
+endif
 
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
@@ -23,7 +33,11 @@ $(BIN): build
 $(BIN).bin: $(BIN)
 	arm-none-eabi-objcopy -S -O binary $(BIN) $(BIN).bin
 
-build:
+# not using memory.x: to allow overriding
+memory:
+	cp memory.$(MEM) memory.x
+
+build: memory
 	cargo -v build $(RELEASE_FLAG) --target $(TARGET) --bin $(NAME) $(FEATURES)
 
 flash: $(BIN).bin
@@ -42,6 +56,7 @@ crun: build
 
 clean:
 	cargo -v clean
+	rm memory.x
 
 gdbload: build
 	sh -c "openocd & arm-none-eabi-gdb -q $(BIN) & wait"

@@ -1,17 +1,11 @@
 [target.thumbv7em-none-eabihf]
-runner = 'arm-none-eabi-gdb'
-rustflags = [
-  "-C", "link-arg=-Tlink.x",
-  "-C", "linker=rust-lld",
-]
+# uncomment this to make `cargo run` execute programs on QEMU
+#runner = "qemu-system-arm -cpu cortex-m4f -machine stm32f303 -nographic -semihosting-config enable=on,target=native -kernel"
 
-[target.thumbv7em-none-eabi]
-runner = 'arm-none-eabi-gdb'
 rustflags = [
+  # LLD (shipped with the Rust toolchain) is used as the default linker
   "-C", "link-arg=-Tlink.x",
-  "-C", "linker=rust-lld",
 ]
-
 
 [build]
-target = "thumbv7em-none-eabihf"
+target = "thumbv7em-none-eabihf" # Cortex-M4F and Cortex-M7F (with FPU)
