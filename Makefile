@@ -54,6 +54,9 @@ brun: build
 crun: build
 	cargo -v run --bin $(NAME) $(FEATURES)
 
+bloat:
+	cargo -v bloat --bin $(NAME) $(FEATURES) $(RELEASE_FLAG) --crates
+
 clean:
 	cargo -v clean
 	rm memory.x
