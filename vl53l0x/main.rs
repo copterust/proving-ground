@@ -116,8 +116,8 @@ impl<W: ehal::serial::Write<u8>> fmt::Write for Logger<W> {
     }
 }
 
-interrupt!(USART1_EXTI25, usart_exti25);
-fn usart_exti25() {
+#[interrupt]
+fn USART1_EXTI25() {
     let rx = unsafe { extract(&mut RX) };
     let l = unsafe { extract(&mut L) };
     match rx.read() {
@@ -172,7 +172,8 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         location.file(),
                         location.line(),
                         msg
-                    ).unwrap();
+                    )
+                    .unwrap();
                 }
                 (Some(location), None) => {
                     write!(
@@ -180,7 +181,8 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         "panic in file '{}' at line {}",
                         location.file(),
                         location.line()
-                    ).unwrap();
+                    )
+                    .unwrap();
                 }
                 (None, Some(msg)) => {
                     write!(l, "panic: {:?}", msg).unwrap();

@@ -91,7 +91,8 @@ fn main() -> ! {
         l,
         "All ok, now: {:?}; Press 'q' to toggle verbosity!\r\n",
         prev_t_ms
-    ).unwrap();
+    )
+    .unwrap();
     loop {
         let t_ms = now_ms();
         let dt_ms = t_ms.wrapping_sub(prev_t_ms);
@@ -105,7 +106,8 @@ fn main() -> ! {
                         l,
                         "IMU: t:{}ms; dt:{}ms; g({};{};{}); a({};{};{})\r\n",
                         t_ms, dt_ms, gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z
-                    ).unwrap();
+                    )
+                    .unwrap();
                 }
             }
             Err(e) => {
@@ -150,8 +152,8 @@ impl<W: ehal::serial::Write<u8>> fmt::Write for Logger<W> {
     }
 }
 
-interrupt!(USART1_EXTI25, usart_exti25);
-fn usart_exti25() {
+#[interrupt]
+fn USART1_EXTI25() {
     let rx = unsafe { extract(&mut RX) };
     let l = unsafe { extract(&mut L) };
     match rx.read() {

@@ -7,11 +7,11 @@ use core::fmt::{self, Write};
 use core::intrinsics;
 use core::panic::PanicInfo;
 
+use cortex_m_rt::{entry, exception, ExceptionFrame};
 use hal::prelude::*;
 use hal::serial;
 use hal::time::Bps;
 use nb;
-use cortex_m_rt::{entry, exception, ExceptionFrame};
 use stm32f30x::interrupt;
 
 static mut L: Option<Logger<hal::serial::Tx<hal::stm32f30x::USART2>>> = None;
@@ -77,9 +77,8 @@ unsafe fn extract<T>(opt: &'static mut Option<T>) -> &'static mut T {
     }
 }
 
-
-interrupt!(USART2_EXTI26, usart_console);
-fn usart_console() {
+#[interrupt]
+fn USART2_EXTI26() {
     let rx = unsafe { extract(&mut RX_CONSOLE) };
     let l = unsafe { extract(&mut L) };
     match rx.read() {
@@ -105,8 +104,8 @@ fn usart_console() {
     };
 }
 
-interrupt!(USART3_EXTI28, usart_gps);
-fn usart_gps() {
+#[interrupt]
+fn USART3_EXTI28() {
     let rx = unsafe { extract(&mut RX_GPS) };
     let l = unsafe { extract(&mut L) };
     match rx.read() {
@@ -183,7 +182,8 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         location.file(),
                         location.line(),
                         msg
-                    ).unwrap();
+                    )
+                    .unwrap();
                 }
                 (Some(location), None) => {
                     write!(
@@ -191,7 +191,8 @@ fn panic(panic_info: &PanicInfo) -> ! {
                         "panic in file '{}' at line {}",
                         location.file(),
                         location.line()
-                    ).unwrap();
+                    )
+                    .unwrap();
                 }
                 (None, Some(msg)) => {
                     write!(l, "panic: {:?}", msg).unwrap();
