@@ -7,11 +7,11 @@ use panic_abort;
 
 use core::fmt::{self, Write};
 
+use cortex_m_rt::{entry, exception, ExceptionFrame};
 use hal::prelude::*;
 use hal::serial;
 use hal::time::Bps;
 use nb;
-use cortex_m_rt::{entry, exception, ExceptionFrame};
 
 #[entry]
 fn main() -> ! {
@@ -25,9 +25,10 @@ fn main() -> ! {
         .pclk2(36.mhz())
         .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
+    // USART1
     let mut serial = device
-        .USART2
-        .serial((gpioa.pa2, gpioa.pa15), Bps(115200), clocks);
+        .USART1
+        .serial((gpioa.pa9, gpioa.pa10), Bps(9600), clocks);
     serial.listen(serial::Event::Rxne);
     let (mut tx, mut rx) = serial.split();
     // COBS frame

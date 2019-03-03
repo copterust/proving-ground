@@ -25,7 +25,7 @@ ifeq ($(UNAME), Linux)
 TTY := /dev/ttyUSB0
 endif
 ifeq ($(UNAME), Darwin)
-TTY := /dev/tty.wchusbserial1410
+TTY := /dev/tty.usbserial-1410
 endif
 
 $(BIN): build
