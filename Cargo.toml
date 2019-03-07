@@ -27,7 +27,7 @@ cortex-m = {version = "0.5.8", optional=true, features = ["inline-asm", "const-f
 cortex-m-rt = {version = "0.6.7", optional = true}
 nb = {version = "0.1.1", optional = true}
 stm32f30x = {version = "0.8.0", optional = true}
-mpu9250 = {version = "0.9.0", optional = true}
+mpu9250 = {version = "0.9.4", optional = true}
 # mpu9250 = {path = "../mpu9250", optional = true}
 dcmimu = {version = "0.1.3", optional = true}
 lsm303c = {version = "0.1.5", optional = true}
@@ -53,7 +53,7 @@ package = "embedded-hal"
 optional = true
 
 [dependencies.hal]
-version = "0.13.0"
+version = "0.14.0"
 # path = "../alt-stm32f30x-hal"
 # git = "https://github.com/copterust/alt-stm32f30x-hal"
 # rev = "08fe718af0cf652bc689b1e8d5bfa822785f3c92"
