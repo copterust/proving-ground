@@ -49,12 +49,51 @@ fn main() -> ! {
 
     hprintln!("delay ok").unwrap();
     // MPU
-    let mut mpu = Mpu9250::imu_default(spi, ncs, &mut delay).unwrap();
+    let mut mpu = Mpu9250::marg_default(spi, ncs, &mut delay).unwrap();
+    hprintln!("mpu ok").unwrap();
+    for _ in 1..10 {
+        match mpu.all() {
+            Ok(a) => {
+                hprintln!(
+                    "[a:({:?},{:?},{:?}),g:({:?},{:?},{:?}),m:({:?},{:?},{:?}),]",
+                    a.accel.x,
+                    a.accel.y,
+                    a.accel.z,
+                    a.gyro.x,
+                    a.gyro.y,
+                    a.gyro.z,
+                    a.mag.x,
+                    a.mag.y,
+                    a.mag.z,
+                )
+                .unwrap();
+            }
+            Err(e) => {
+                hprintln!("e");
+            }
+        }
+    }
+
+    hprintln!("running calibration...").unwrap();
+    let accel_biases = mpu.calibrate_at_rest(&mut delay).unwrap();
+    hprintln!("calibration ok: {:?}", accel_biases).unwrap();
 
     loop {
-        match mpu.accel() {
-            Ok(accel) => {
-                hprintln!("{:?}; {:?}; {:?}", accel.x, accel.y, accel.z).unwrap();
+        match mpu.all() {
+            Ok(a) => {
+                hprintln!(
+                    "[a:({:?},{:?},{:?}),g:({:?},{:?},{:?}),m:({:?},{:?},{:?}),]",
+                    a.accel.x,
+                    a.accel.y,
+                    a.accel.z,
+                    a.gyro.x,
+                    a.gyro.y,
+                    a.gyro.z,
+                    a.mag.x,
+                    a.mag.y,
+                    a.mag.z,
+                )
+                .unwrap();
             }
             Err(e) => {
                 hprintln!("e");
