@@ -7,32 +7,37 @@ use panic_abort;
 
 // use core::fmt::{self, Write};
 
+use asm_delay::AsmDelay;
 use cortex_m_rt::{entry, exception, ExceptionFrame};
 use cortex_m_semihosting::hprintln;
 use hal::prelude::*;
+use hal::serial;
 use hal::time::Bps;
-use hal::{delay, serial};
 use nb;
 
-use mpu9250::Mpu9250;
+use mpu9250::{Mpu9250, MpuConfig};
 
 #[entry]
 #[inline(never)]
 fn main() -> ! {
+    let freq = 72.mhz();
     let device = hal::stm32f30x::Peripherals::take().unwrap();
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
     let clocks = rcc
         .cfgr
-        .sysclk(64.mhz())
+        .sysclk(freq)
         .pclk1(32.mhz())
         .pclk2(32.mhz())
         .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
-
-    let mut delay = delay::Delay::new(core.SYST, clocks);
+    let mut pa1 = gpioa
+        .pa1
+        .output()
+        .output_speed(hal::gpio::HighSpeed)
+        .pull_type(hal::gpio::PullDown);
 
     // SPI1
     let ncs = gpiob.pb0.output().push_pull();
@@ -46,12 +51,28 @@ fn main() -> ! {
         clocks,
     );
     hprintln!("spi ok").unwrap();
-
+    let mut delay = AsmDelay::new(freq);
     hprintln!("delay ok").unwrap();
     // MPU
-    let mut mpu = Mpu9250::marg_default(spi, ncs, &mut delay).unwrap();
+    let mmpu =
+        Mpu9250::marg_with_reinit(spi, ncs, &mut delay, &mut MpuConfig::marg(), |spi, ncs| {
+            let (dev_spi, (scl, miso, mosi)) = spi.free();
+            let new_spi = dev_spi.spi((scl, miso, mosi), mpu9250::MODE, 20.mhz(), clocks);
+            Some((new_spi, ncs))
+        });
+    // .unwrap();
+    let mut mpu = match mmpu {
+        Ok(m) => m,
+        Err(e) => {
+            hprintln!("err: {:?}", e);
+            panic!("oops")
+        }
+    };
     hprintln!("mpu ok").unwrap();
+
+    pa1.set_low();
     for _ in 1..10 {
+        pa1.toggle();
         match mpu.all() {
             Ok(a) => {
                 hprintln!(
@@ -79,6 +100,7 @@ fn main() -> ! {
     hprintln!("calibration ok: {:?}", accel_biases).unwrap();
 
     loop {
+        pa1.toggle();
         match mpu.all() {
             Ok(a) => {
                 hprintln!(
@@ -98,7 +120,7 @@ fn main() -> ! {
             Err(e) => {
                 hprintln!("e");
             }
-        }
+        };
     }
 }
 

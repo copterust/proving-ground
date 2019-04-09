@@ -23,11 +23,12 @@ incremental = false # nalgebra
 
 [dependencies]
 panic-abort = {version = "0.3.1", optional=true}
+asm-delay = "0.5.1"
 cortex-m = {version = "0.5.8", optional=true, features = ["inline-asm", "const-fn"]}
 cortex-m-rt = {version = "0.6.7", optional = true}
 nb = {version = "0.1.1", optional = true}
 stm32f30x = {version = "0.8.0", optional = true}
-mpu9250 = {version = "0.9.5", optional = true}
+mpu9250 = {version = "0.10.1", optional = true}
 # mpu9250 = {path = "../mpu9250", optional = true}
 dcmimu = {version = "0.1.3", optional = true}
 lsm303c = {version = "0.1.5", optional = true}
@@ -121,6 +122,17 @@ required-features = ["with_mpu"]
 name = "semi_sensors"
 path = "semi_sensors/main.rs"
 required-features = ["with_mpu", "with_semihosting"]
+
+[[bin]]
+name = "pin_sensors"
+path = "pin_sensors/main.rs"
+required-features = ["with_mpu"]
+
+[[bin]]
+name = "cycle_sensors"
+path = "cycle_sensors/main.rs"
+required-features = ["with_mpu", "with_semihosting"]
+
 
 [[bin]]
 name = "systick"
