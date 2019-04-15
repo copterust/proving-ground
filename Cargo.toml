@@ -63,8 +63,7 @@ optional = true
 features = ["rt"]
 
 [dependencies.won2010]
-# git = "https://github.com/copterust/won2010"
-path = "../won2010"
+git = "https://github.com/copterust/won2010"
 default-features = false
 optional = true
 
