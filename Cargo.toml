@@ -39,7 +39,7 @@ vl53l0x = {version = "0.2.0", optional = true}
 # vl53l0x = {path = "../vl53l0x", optional = true}
 nalgebra = {version = "0.16.4", optional = true, default-features = false}
 libm = {version = "0.1.2", optional = true}
-rand = {version = "0.5.5", optional = true}
+rand = {version = "0.5.5", optional = true, default-features = false}
 cortex-m-semihosting = {version = "0.3.2", optional = true}
 
 [dependencies.panic-semihosting]
@@ -62,6 +62,12 @@ package = "alt-stm32f30x-hal"
 optional = true
 features = ["rt"]
 
+[dependencies.won2010]
+# git = "https://github.com/copterust/won2010"
+path = "../won2010"
+default-features = false
+optional = true
+
 [features]
 no_device = ["panic-abort", "cortex-m-rt", "cortex-m"]
 with_device = ["panic-abort", "cortex-m-rt", "cortex-m", "stm32f30x/rt"]
@@ -74,6 +80,7 @@ with_shared_bus = ["with_hal", "shared-bus"]
 with_vl53l0x = ["with_hal", "vl53l0x"]
 with_math = ["nalgebra", "libm", "rand"]
 with_semihosting = ["cortex-m-semihosting", "panic-semihosting"]
+with_won2010 = ["won2010"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
 all = ["with_dcmimu", "with_lsm"]
@@ -198,3 +205,8 @@ required-features = ["with_device", "with_semihosting"]
 name = "dma_serial"
 path = "dma_serial/main.rs"
 required-features = ["with_hal"]
+
+[[bin]]
+name = "wonca"
+path = "wonca/main.rs"
+required-features = [ "with_mpu", "with_won2010", "with_math" ]
