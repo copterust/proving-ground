@@ -6,10 +6,10 @@
 #[allow(unused)]
 use panic_abort;
 
+use cortex_m_rt::{entry, exception, ExceptionFrame};
 use hal::gpio::{MediumSpeed, PullUp};
 use hal::prelude::*;
 use hal::timer;
-use cortex_m_rt::{entry, exception, ExceptionFrame};
 
 use cortex_m::asm;
 
@@ -26,9 +26,9 @@ fn main() -> ! {
         .pclk1(32.mhz())
         .freeze(&mut flash.acr);
     let (ch1, ch2, ch3, ch4, mut tim1) =
-        timer::tim2::Timer::new(device.TIM2, 1.mhz(), clocks, &mut rcc.apb1).take_all();
+        timer::tim2::Timer::new(device.TIM2, 1.mhz(), clocks).take_all();
     let (ch5, ch6, _, _, mut tim2) =
-        timer::tim3::Timer::new(device.TIM3, 1.mhz(), clocks, &mut rcc.apb1).take_all();
+        timer::tim3::Timer::new(device.TIM3, 1.mhz(), clocks).take_all();
 
     let mut motor_pa0 = gpioa.pa0.pull_type(PullUp).to_pwm(ch1, MediumSpeed);
     let mut motor_pa1 = gpioa.pa1.pull_type(PullUp).to_pwm(ch2, MediumSpeed);

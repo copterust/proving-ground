@@ -29,7 +29,7 @@ fn main() -> ! {
         .sysclk(64.mhz())
         .pclk1(32.mhz())
         .freeze(&mut flash.acr);
-    let mut tim4 = tim4::Timer::new(device.TIM4, 8888.hz(), clocks, &mut rcc.apb1);
+    let mut tim4 = tim4::Timer::new(device.TIM4, 8888.hz(), clocks);
     let mut b = true;
     loop {
         tim4.start(1.hz());

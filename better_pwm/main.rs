@@ -26,7 +26,7 @@ fn main() -> ! {
         .sysclk(64.mhz())
         .pclk1(32.mhz())
         .freeze(&mut flash.acr);
-    let tim = timer::tim4::Timer::new(device.TIM4, 1.mhz(), clocks, &mut rcc.apb1);
+    let tim = timer::tim4::Timer::new(device.TIM4, 1.mhz(), clocks);
     let (ch, mut tim) = tim.take_ch3();
     let mut pwm = pin.to_pwm(ch, gpio::MediumSpeed);
     pwm.enable();
