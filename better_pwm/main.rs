@@ -21,14 +21,13 @@ fn main() -> ! {
     let mut rcc = device.RCC.constrain();
 
     let pin = device.GPIOB.split(&mut rcc.ahb).pb8.pull_type(gpio::PullUp);
-    let clocks = rcc
-        .cfgr
-        .sysclk(64.mhz())
-        .pclk1(32.mhz())
-        .freeze(&mut flash.acr);
+    let clocks = rcc.cfgr
+                    .sysclk(64.mhz())
+                    .pclk1(32.mhz())
+                    .freeze(&mut flash.acr);
     let tim = timer::tim4::Timer::new(device.TIM4, 1.mhz(), clocks);
-    let (ch, mut tim) = tim.take_ch3();
-    let mut pwm = pin.to_pwm(ch, gpio::MediumSpeed);
+    let (channels, mut tim) = tim.use_pwm();
+    let mut pwm = pin.to_pwm(channels.2, gpio::MediumSpeed);
     pwm.enable();
     tim.enable();
 
