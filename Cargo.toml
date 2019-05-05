@@ -54,8 +54,8 @@ package = "embedded-hal"
 optional = true
 
 [dependencies.hal]
-# version = "0.18.0"
-path = "../alt-stm32f30x-hal"
+version = "0.19.0"
+# path = "../alt-stm32f30x-hal"
 # git = "https://github.com/copterust/alt-stm32f30x-hal"
 # rev = "08fe718af0cf652bc689b1e8d5bfa822785f3c92"
 package = "alt-stm32f30x-hal"
