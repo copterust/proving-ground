@@ -1,0 +1,5 @@
+indent_style = "Visual"
+binop_separator = "Front"
+wrap_comments = true
+comment_width = 80
+max_width = 80
