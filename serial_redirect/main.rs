@@ -8,39 +8,37 @@ use core::intrinsics;
 use core::panic::PanicInfo;
 
 use cortex_m_rt::{entry, exception, ExceptionFrame};
+use hal::pac::interrupt;
 use hal::prelude::*;
 use hal::serial;
 use hal::time::Bps;
 use nb;
-use stm32f30x::interrupt;
 
-static mut L: Option<Logger<hal::serial::Tx<hal::stm32f30x::USART2>>> = None;
-static mut RX_CONSOLE: Option<hal::serial::Rx<hal::stm32f30x::USART2>> = None;
+static mut L: Option<Logger<hal::serial::Tx<hal::pac::USART2>>> = None;
+static mut RX_CONSOLE: Option<hal::serial::Rx<hal::pac::USART2>> = None;
 
-static mut RX_GPS: Option<hal::serial::Rx<hal::stm32f30x::USART3>> = None;
-static mut TX_GPS: Option<hal::serial::Tx<hal::stm32f30x::USART3>> = None;
+static mut RX_GPS: Option<hal::serial::Rx<hal::pac::USART3>> = None;
+static mut TX_GPS: Option<hal::serial::Tx<hal::pac::USART3>> = None;
 
 #[entry]
 fn main() -> ! {
-    let device = hal::stm32f30x::Peripherals::take().unwrap();
+    let device = hal::pac::Peripherals::take().unwrap();
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc
-        .cfgr
-        .sysclk(64.mhz())
-        .pclk1(32.mhz())
-        .pclk2(36.mhz())
-        .freeze(&mut flash.acr);
+    let clocks = rcc.cfgr
+                    .sysclk(64.mhz())
+                    .pclk1(32.mhz())
+                    .pclk2(36.mhz())
+                    .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
-    let mut usart2 = device
-        .USART2
-        .serial((gpioa.pa14, gpioa.pa15), Bps(115200), clocks);
+    let mut usart2 =
+        device.USART2
+              .serial((gpioa.pa14, gpioa.pa15), Bps(115200), clocks);
 
-    let mut usart3 = device
-        .USART3
-        .serial((gpiob.pb10, gpiob.pb11), Bps(9600), clocks);
+    let mut usart3 = device.USART3
+                           .serial((gpiob.pb10, gpiob.pb11), Bps(9600), clocks);
 
     usart3.listen(serial::Event::Rxne);
     usart2.listen(serial::Event::Rxne);
@@ -176,23 +174,17 @@ fn panic(panic_info: &PanicInfo) -> ! {
             let payload = panic_info.payload().downcast_ref::<&str>();
             match (panic_info.location(), payload) {
                 (Some(location), Some(msg)) => {
-                    write!(
-                        l,
-                        "\r\npanic in file '{}' at line {}: {:?}\r\n",
-                        location.file(),
-                        location.line(),
-                        msg
-                    )
-                    .unwrap();
+                    write!(l,
+                           "\r\npanic in file '{}' at line {}: {:?}\r\n",
+                           location.file(),
+                           location.line(),
+                           msg).unwrap();
                 }
                 (Some(location), None) => {
-                    write!(
-                        l,
-                        "panic in file '{}' at line {}",
-                        location.file(),
-                        location.line()
-                    )
-                    .unwrap();
+                    write!(l,
+                           "panic in file '{}' at line {}",
+                           location.file(),
+                           location.line()).unwrap();
                 }
                 (None, Some(msg)) => {
                     write!(l, "panic: {:?}", msg).unwrap();

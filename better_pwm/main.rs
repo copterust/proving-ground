@@ -16,7 +16,7 @@ use cortex_m::asm;
 
 #[entry]
 fn main() -> ! {
-    let device = hal::stm32f30x::Peripherals::take().unwrap();
+    let device = hal::pac::Peripherals::take().unwrap();
     let mut flash = device.FLASH.constrain();
     let mut rcc = device.RCC.constrain();
 

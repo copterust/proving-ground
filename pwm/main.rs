@@ -8,11 +8,11 @@ use panic_abort;
 
 use cortex_m::asm;
 use cortex_m_rt::{entry, exception, ExceptionFrame};
-use stm32f30x;
+use stm32f3::stm32f303 as pac;
 
 #[entry]
 fn main() -> ! {
-    let prphs = stm32f30x::Peripherals::take().unwrap();
+    let prphs = pac::Peripherals::take().unwrap();
     // Turn on PORTB
     prphs.RCC.ahbenr.write(|w| w.iopben().enabled());
     // Turn on TIM4

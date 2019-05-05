@@ -8,8 +8,8 @@ use core::intrinsics;
 use core::panic::PanicInfo;
 
 use cortex_m_rt::{entry, exception, ExceptionFrame};
+use hal::pac::interrupt;
 use hal::prelude::*;
-use hal::stm32f30x::interrupt;
 use hal::time::Bps;
 use hal::{delay, serial};
 use nb;
@@ -17,28 +17,27 @@ use nb;
 use lsm303c::Lsm303c;
 use mpu9250::Mpu9250;
 
-static mut L: Option<Logger<hal::serial::Tx<hal::stm32f30x::USART1>>> = None;
-static mut RX: Option<hal::serial::Rx<hal::stm32f30x::USART1>> = None;
+static mut L: Option<Logger<hal::serial::Tx<hal::pac::USART1>>> = None;
+static mut RX: Option<hal::serial::Rx<hal::pac::USART1>> = None;
 static mut QUIET: bool = true;
 const TURN_QUIET: u8 = 'q' as u8;
 
 #[entry]
 fn main() -> ! {
-    let device = hal::stm32f30x::Peripherals::take().unwrap();
+    let device = hal::pac::Peripherals::take().unwrap();
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc
-        .cfgr
-        .sysclk(64.mhz())
-        .pclk1(32.mhz())
-        .pclk2(32.mhz())
-        .freeze(&mut flash.acr);
+    let clocks = rcc.cfgr
+                    .sysclk(64.mhz())
+                    .pclk1(32.mhz())
+                    .pclk2(32.mhz())
+                    .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
-    let mut serial = device
-        .USART1
-        .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
+    let mut serial =
+        device.USART1
+              .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
     let ser_int = serial.get_interrupt();
     serial.listen(serial::Event::Rxne);
     let (mut tx, rx) = serial.split();
@@ -59,15 +58,14 @@ fn main() -> ! {
     write!(l, "lsm ok\r\n").unwrap();
     // SPI1
     let ncs = gpiob.pb9.output().push_pull();
-    let spi = device.SPI1.spi(
-        // scl_sck, ad0_sd0_miso, sda_sdi_mosi,
-        (gpiob.pb3, gpiob.pb4, gpiob.pb5),
-        mpu9250::MODE,
-        1.mhz(),
-        clocks,
-    );
+    let spi = device.SPI1.spi(// scl_sck, ad0_sd0_miso, sda_sdi_mosi,
+                              (gpiob.pb3, gpiob.pb4, gpiob.pb5),
+                              mpu9250::MODE,
+                              1.mhz(),
+                              clocks);
     write!(l, "spi ok\r\n").unwrap();
-    let mut mpu = Mpu9250::marg_default(spi, ncs, &mut delay).expect("mpu error");
+    let mut mpu =
+        Mpu9250::marg_default(spi, ncs, &mut delay).expect("mpu error");
     // done
     unsafe { cortex_m::interrupt::enable() };
     let mut nvic = core.NVIC;
@@ -79,30 +77,24 @@ fn main() -> ! {
         match (mlsm_meas, mmpu_meas) {
             (Ok(lsm_meas), Ok(mpu_meas)) => {
                 if unsafe { !QUIET } {
-                    write!(
-                        l,
-                        "lsm: mag({},{},{}); a({},{},{}); t({});\r\n",
-                        lsm_meas.mag.x,
-                        lsm_meas.mag.y,
-                        lsm_meas.mag.z,
-                        lsm_meas.accel.x,
-                        lsm_meas.accel.y,
-                        lsm_meas.accel.z,
-                        lsm_meas.temp
-                    )
-                    .unwrap();
-                    write!(
-                        l,
-                        "mpu: mag({},{},{}); a({},{},{}); t({});\r\n",
-                        mpu_meas.mag.x,
-                        mpu_meas.mag.y,
-                        mpu_meas.mag.z,
-                        mpu_meas.accel.x,
-                        mpu_meas.accel.y,
-                        mpu_meas.accel.z,
-                        mpu_meas.temp
-                    )
-                    .unwrap();
+                    write!(l,
+                           "lsm: mag({},{},{}); a({},{},{}); t({});\r\n",
+                           lsm_meas.mag.x,
+                           lsm_meas.mag.y,
+                           lsm_meas.mag.z,
+                           lsm_meas.accel.x,
+                           lsm_meas.accel.y,
+                           lsm_meas.accel.z,
+                           lsm_meas.temp).unwrap();
+                    write!(l,
+                           "mpu: mag({},{},{}); a({},{},{}); t({});\r\n",
+                           mpu_meas.mag.x,
+                           mpu_meas.mag.y,
+                           mpu_meas.mag.z,
+                           mpu_meas.accel.x,
+                           mpu_meas.accel.y,
+                           mpu_meas.accel.z,
+                           mpu_meas.temp).unwrap();
                 }
             }
             (Err(e), _) => {
@@ -200,23 +192,17 @@ fn panic(panic_info: &PanicInfo) -> ! {
             let payload = panic_info.payload().downcast_ref::<&str>();
             match (panic_info.location(), payload) {
                 (Some(location), Some(msg)) => {
-                    write!(
-                        l,
-                        "\r\npanic in file '{}' at line {}: {:?}\r\n",
-                        location.file(),
-                        location.line(),
-                        msg
-                    )
-                    .unwrap();
+                    write!(l,
+                           "\r\npanic in file '{}' at line {}: {:?}\r\n",
+                           location.file(),
+                           location.line(),
+                           msg).unwrap();
                 }
                 (Some(location), None) => {
-                    write!(
-                        l,
-                        "panic in file '{}' at line {}",
-                        location.file(),
-                        location.line()
-                    )
-                    .unwrap();
+                    write!(l,
+                           "panic in file '{}' at line {}",
+                           location.file(),
+                           location.line()).unwrap();
                 }
                 (None, Some(msg)) => {
                     write!(l, "panic: {:?}", msg).unwrap();

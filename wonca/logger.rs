@@ -4,7 +4,7 @@ use nalgebra::Vector3;
 
 use nb;
 
-type Stream = hal::serial::Tx<hal::stm32f30x::USART2>;
+type Stream = hal::serial::Tx<hal::pac::USART2>;
 type Stdout = Logger<Stream>;
 
 static mut STDOUT: Option<Stdout> = None;

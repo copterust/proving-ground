@@ -6,38 +6,35 @@
 use panic_abort;
 
 use core::f32::{INFINITY, NEG_INFINITY};
-use core::fmt::{self, Write};
+use core::fmt::Write;
 
 use cortex_m_rt::{entry, exception, ExceptionFrame};
 use hal::delay;
 use hal::prelude::*;
 use hal::time::Bps;
-use nb;
 
 use mpu9250::Mpu9250;
 
 #[entry]
 fn main() -> ! {
-    let device = hal::stm32f30x::Peripherals::take().unwrap();
+    let device = hal::pac::Peripherals::take().unwrap();
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc
-        .cfgr
-        .sysclk(64.mhz())
-        .pclk1(32.mhz())
-        .pclk2(36.mhz())
-        .freeze(&mut flash.acr);
+    let clocks = rcc.cfgr
+                    .sysclk(64.mhz())
+                    .pclk1(32.mhz())
+                    .pclk2(36.mhz())
+                    .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
 
-    let serial = device
-        .USART1
-        .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
+    let serial = device.USART1
+                       .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
     let (mut tx, _rx) = serial.split();
     // COBS frame
     tx.write(0x00).unwrap();
-    let mut l = Logger { tx };
+    let mut l = tx;
     write!(l, "logger ok\r\n").unwrap();
     let mut delay = delay::Delay::new(core.SYST, clocks);
     // SPI1
@@ -45,12 +42,10 @@ fn main() -> ! {
     let scl_sck = gpiob.pb3;
     let sda_sdi_mosi = gpiob.pb5;
     let ad0_sdo_miso = gpiob.pb4;
-    let spi = device.SPI1.spi(
-        (scl_sck, ad0_sdo_miso, sda_sdi_mosi),
-        mpu9250::MODE,
-        1.mhz(),
-        clocks,
-    );
+    let spi = device.SPI1.spi((scl_sck, ad0_sdo_miso, sda_sdi_mosi),
+                              mpu9250::MODE,
+                              1.mhz(),
+                              clocks);
     let mut mpu = Mpu9250::marg_default(spi, ncs, &mut delay).unwrap();
 
     let sample_count = 500;
@@ -62,11 +57,9 @@ fn main() -> ! {
     let mut mag_min_z: f32 = INFINITY;
 
     let mag_sensitivity = mpu.mag_sensitivity_adjustments();
-    write!(
-        l,
-        "factory sensitivity adjustments: {:?}\r\n",
-        mag_sensitivity
-    ).unwrap();
+    write!(l,
+           "factory sensitivity adjustments: {:?}\r\n",
+           mag_sensitivity).unwrap();
 
     write!(
         l,
@@ -131,40 +124,15 @@ fn main() -> ! {
     let final_mag_scale_y = avg_rad / (mag_scale_y);
     let final_mag_scale_z = avg_rad / (mag_scale_z);
 
-    write!(
-        l,
-        "loop done; bias: ({}, {}, {}); scale: ({}, {}, {})\r\n",
-        mag_bias_x, mag_bias_y, mag_bias_z, final_mag_scale_x, final_mag_scale_y, final_mag_scale_z
-    ).unwrap();
+    write!(l,
+           "loop done; bias: ({}, {}, {}); scale: ({}, {}, {})\r\n",
+           mag_bias_x,
+           mag_bias_y,
+           mag_bias_z,
+           final_mag_scale_x,
+           final_mag_scale_y,
+           final_mag_scale_z).unwrap();
     loop {}
-}
-
-struct Logger<W: ehal::serial::Write<u8>> {
-    tx: W,
-}
-impl<W: ehal::serial::Write<u8>> fmt::Write for Logger<W> {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        for c in s.chars() {
-            match self.write_char(c) {
-                Ok(_) => {}
-                Err(_) => {}
-            }
-        }
-        match self.tx.flush() {
-            Ok(_) => {}
-            Err(_) => {}
-        };
-
-        Ok(())
-    }
-
-    fn write_char(&mut self, s: char) -> fmt::Result {
-        match nb::block!(self.tx.write(s as u8)) {
-            Ok(_) => {}
-            Err(_) => {}
-        }
-        Ok(())
-    }
 }
 
 #[exception]

@@ -24,16 +24,15 @@ const G: f32 = 9.80665;
 
 #[entry]
 fn main() -> ! {
-    let device = hal::stm32f30x::Peripherals::take().unwrap();
+    let device = hal::pac::Peripherals::take().unwrap();
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc
-        .cfgr
-        .sysclk(64.mhz())
-        .pclk1(32.mhz())
-        .pclk2(32.mhz())
-        .freeze(&mut flash.acr);
+    let clocks = rcc.cfgr
+                    .sysclk(64.mhz())
+                    .pclk1(32.mhz())
+                    .pclk2(32.mhz())
+                    .freeze(&mut flash.acr);
 
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
@@ -53,9 +52,9 @@ fn main() -> ! {
         bps: 115200,
     };
 
-    let serial = usart_conf
-        .dev
-        .serial((usart_conf.tx, usart_conf.rx), Bps(usart_conf.bps), clocks);
+    let serial = usart_conf.dev.serial((usart_conf.tx, usart_conf.rx),
+                                       Bps(usart_conf.bps),
+                                       clocks);
     let (tx, _) = serial.split();
 
     logger::set_stdout(tx);
@@ -67,12 +66,11 @@ fn main() -> ! {
 
     // SPI1
     let cs_mpu = spi_conf.cs_mpu.output().push_pull();
-    let spi = spi_conf.dev.spi(
-        (spi_conf.scl, spi_conf.miso, spi_conf.mosi),
-        mpu9250::MODE,
-        1.mhz(),
-        clocks,
-    );
+    let spi = spi_conf.dev
+                      .spi((spi_conf.scl, spi_conf.miso, spi_conf.mosi),
+                           mpu9250::MODE,
+                           1.mhz(),
+                           clocks);
 
     println!("- spi");
 
@@ -138,14 +136,15 @@ fn main() -> ! {
             println!("Calibration result: {:?}", adj);
             for pos in 0..6 {
                 let r = Vector3::from(readings[pos]);
-                let a = Vector3::new(
-                    adj[0].estimate(r[0]),
-                    adj[1].estimate(r[1]),
-                    adj[2].estimate(r[2]),
-                );
+                let a = Vector3::new(adj[0].estimate(r[0]),
+                                     adj[1].estimate(r[1]),
+                                     adj[2].estimate(r[2]));
                 let err = (G - a.norm()).abs();
                 println!(" - orig reading: {} = {}", Vs(r), r.norm());
-                println!("   adjusted:     {} = {}, error: {}", Vs(a), a.norm(), err);
+                println!("   adjusted:     {} = {}, error: {}",
+                         Vs(a),
+                         a.norm(),
+                         err);
             }
         } else {
             println!("Calibration failed, try again.");
@@ -154,8 +153,7 @@ fn main() -> ! {
 }
 
 fn lerp<A>(a: f32, x: A, y: A) -> A
-where
-    A: core::ops::Mul<f32, Output = A> + core::ops::Add<A, Output = A>,
+    where A: core::ops::Mul<f32, Output = A> + core::ops::Add<A, Output = A>
 {
     x * (1.0 - a) + y * a
 }

@@ -15,7 +15,7 @@ use cortex_m_rt::{entry, exception, ExceptionFrame};
 
 #[entry]
 fn main() -> ! {
-    let device = hal::stm32f30x::Peripherals::take().unwrap();
+    let device = hal::pac::Peripherals::take().unwrap();
     // let core = cortex_m::Peripherals::take().unwrap();
     // let mut flash = device.FLASH.constrain();
     let mut rcc = device.RCC.constrain();
@@ -28,11 +28,10 @@ fn main() -> ! {
     // let mut delay = delay::Delay::new(core.SYST, clocks);
 
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
-    let mut beeper = gpiob
-        .pb3
-        .pull_type(gpio::PullNone)
-        .output()
-        .output_type(gpio::PushPull);
+    let mut beeper = gpiob.pb3
+                          .pull_type(gpio::PullNone)
+                          .output()
+                          .output_type(gpio::PushPull);
     // let mut b = true;
     beeper.set_high();
     loop {

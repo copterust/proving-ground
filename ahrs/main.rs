@@ -3,53 +3,52 @@
 #![no_main]
 #![feature(core_intrinsics)]
 
-use core::fmt::{self, Write};
+use core::fmt::Write;
 use core::intrinsics;
 use core::panic::PanicInfo;
 
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m_rt::{entry, exception, ExceptionFrame};
+use hal::pac::interrupt;
 use hal::prelude::*;
 use hal::time::Bps;
 use hal::{delay, serial};
 use nb;
-use stm32f30x::interrupt;
 
 use dcmimu::DCMIMU;
 use mpu9250::{self, Mpu9250};
 
-static mut L: Option<Logger<hal::serial::Tx<hal::stm32f30x::USART1>>> = None;
-static mut RX: Option<hal::serial::Rx<hal::stm32f30x::USART1>> = None;
+static mut L: Option<hal::serial::Tx<hal::pac::USART1>> = None;
+static mut RX: Option<hal::serial::Rx<hal::pac::USART1>> = None;
 static mut QUIET: bool = false;
 const TURN_QUIET: u8 = 'q' as u8;
 static mut NOW_MS: u32 = 0;
 
 #[entry]
 fn main() -> ! {
-    let device = hal::stm32f30x::Peripherals::take().unwrap();
+    let device = hal::pac::Peripherals::take().unwrap();
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
 
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc
-        .cfgr
-        .sysclk(64.mhz())
-        .pclk1(32.mhz())
-        .pclk2(32.mhz())
-        .freeze(&mut flash.acr);
+    let clocks = rcc.cfgr
+                    .sysclk(64.mhz())
+                    .pclk1(32.mhz())
+                    .pclk2(32.mhz())
+                    .freeze(&mut flash.acr);
 
-    let mut serial = device
-        .USART1
-        .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
+    let mut serial =
+        device.USART1
+              .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
     let ser_int = serial.get_interrupt();
     serial.listen(serial::Event::Rxne);
     let (mut tx, rx) = serial.split();
     // COBS frame
     tx.write(0x00).unwrap();
     unsafe {
-        L = Some(Logger { tx });
+        L = Some(tx);
         RX = Some(rx);
     };
     let l = unsafe { extract(&mut L) };
@@ -57,13 +56,11 @@ fn main() -> ! {
     let mut delay = delay::Delay::new(core.SYST, clocks);
     // SPI1
     let ncs = gpiob.pb9.output().push_pull();
-    let spi = device.SPI1.spi(
-        // scl_sck, ad0_sd0_miso, sda_sdi_mosi,
-        (gpiob.pb3, gpiob.pb4, gpiob.pb5),
-        mpu9250::MODE,
-        1.mhz(),
-        clocks,
-    );
+    let spi = device.SPI1.spi(// scl_sck, ad0_sd0_miso, sda_sdi_mosi,
+                              (gpiob.pb3, gpiob.pb4, gpiob.pb5),
+                              mpu9250::MODE,
+                              1.mhz(),
+                              clocks);
     write!(l, "spi ok\r\n").unwrap();
     let mut mpu = Mpu9250::imu(
         spi,
@@ -73,7 +70,8 @@ fn main() -> ! {
     )
     .expect("mpu error");
     write!(l, "mpu ok\r\n").unwrap();
-    let mut accel_biases = mpu.calibrate_at_rest(&mut delay).expect("calib error");
+    let mut accel_biases =
+        mpu.calibrate_at_rest(&mut delay).expect("calib error");
     // Correct axis for gravity;
     accel_biases.z -= mpu9250::G;
     write!(l, "calibration ok: {:?}\r\n", accel_biases).unwrap();
@@ -86,12 +84,9 @@ fn main() -> ! {
     nvic.enable(ser_int);
 
     let mut prev_t_ms = now_ms();
-    write!(
-        l,
-        "All ok, now: {:?}; Press 'q' to toggle logging!\r\n",
-        prev_t_ms
-    )
-    .unwrap();
+    write!(l,
+           "All ok, now: {:?}; Press 'q' to toggle logging!\r\n",
+           prev_t_ms).unwrap();
     loop {
         match mpu.all() {
             Ok(meas) => {
@@ -101,18 +96,16 @@ fn main() -> ! {
                 let dt_ms = t_ms.wrapping_sub(prev_t_ms);
                 prev_t_ms = t_ms;
                 let dt_s = (dt_ms as f32) / 1000.;
-                let dcm =
-                    dcmimu.update((gyro.x, gyro.y, gyro.z), (accel.x, accel.y, accel.z), dt_s);
+                let dcm = dcmimu.update((gyro.x, gyro.y, gyro.z),
+                                        (accel.x, accel.y, accel.z),
+                                        dt_s);
                 if unsafe { !QUIET } {
-                    write!(
-                        l,
-                        "IMU: dt={}s; roll={}; yaw={}; pitch={}\r\n",
-                        dt_s,
-                        rad_to_degrees(dcm.roll),
-                        rad_to_degrees(dcm.yaw),
-                        rad_to_degrees(dcm.pitch)
-                    )
-                    .unwrap();
+                    write!(l,
+                           "IMU: dt={}s; roll={}; yaw={}; pitch={}\r\n",
+                           dt_s,
+                           rad_to_degrees(dcm.roll),
+                           rad_to_degrees(dcm.yaw),
+                           rad_to_degrees(dcm.pitch)).unwrap();
                 }
             }
             Err(e) => {
@@ -130,34 +123,6 @@ unsafe fn extract<T>(opt: &'static mut Option<T>) -> &'static mut T {
     match opt {
         Some(ref mut x) => &mut *x,
         None => panic!("extract"),
-    }
-}
-
-struct Logger<W: ehal::serial::Write<u8>> {
-    tx: W,
-}
-impl<W: ehal::serial::Write<u8>> fmt::Write for Logger<W> {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        for c in s.chars() {
-            match self.write_char(c) {
-                Ok(_) => {}
-                Err(_) => {}
-            }
-        }
-        match self.tx.flush() {
-            Ok(_) => {}
-            Err(_) => {}
-        };
-
-        Ok(())
-    }
-
-    fn write_char(&mut self, s: char) -> fmt::Result {
-        match nb::block!(self.tx.write(s as u8)) {
-            Ok(_) => {}
-            Err(_) => {}
-        }
-        Ok(())
     }
 }
 
@@ -228,23 +193,17 @@ fn panic(panic_info: &PanicInfo) -> ! {
             let payload = panic_info.payload().downcast_ref::<&str>();
             match (panic_info.location(), payload) {
                 (Some(location), Some(msg)) => {
-                    write!(
-                        l,
-                        "\r\npanic in file '{}' at line {}: {:?}\r\n",
-                        location.file(),
-                        location.line(),
-                        msg
-                    )
-                    .unwrap();
+                    write!(l,
+                           "\r\npanic in file '{}' at line {}: {:?}\r\n",
+                           location.file(),
+                           location.line(),
+                           msg).unwrap();
                 }
                 (Some(location), None) => {
-                    write!(
-                        l,
-                        "panic in file '{}' at line {}",
-                        location.file(),
-                        location.line()
-                    )
-                    .unwrap();
+                    write!(l,
+                           "panic in file '{}' at line {}",
+                           location.file(),
+                           location.line()).unwrap();
                 }
                 (None, Some(msg)) => {
                     write!(l, "panic: {:?}", msg).unwrap();

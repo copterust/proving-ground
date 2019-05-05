@@ -14,15 +14,14 @@ use hal::time::Bps;
 
 #[entry]
 fn main() -> ! {
-    let device = hal::stm32f30x::Peripherals::take().unwrap();
+    let device = hal::pac::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc
-        .cfgr
-        .sysclk(64.mhz())
-        .pclk1(32.mhz())
-        .pclk2(36.mhz())
-        .freeze(&mut flash.acr);
+    let clocks = rcc.cfgr
+                    .sysclk(64.mhz())
+                    .pclk1(32.mhz())
+                    .pclk2(36.mhz())
+                    .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
 
     // let mut afio = device.AFIO.constrain(&mut rcc.apb2);
@@ -33,9 +32,8 @@ fn main() -> ! {
     let channels = device.DMA1.split(&mut rcc.ahb);
 
     // USART1
-    let mut serial = device
-        .USART1
-        .serial((gpioa.pa9, gpioa.pa10), Bps(9600), clocks);
+    let mut serial = device.USART1
+                           .serial((gpioa.pa9, gpioa.pa10), Bps(9600), clocks);
     serial.listen(serial::Event::Rxne);
     serial.listen(serial::Event::Txe);
     let (tx, _) = serial.split();

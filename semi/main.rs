@@ -5,8 +5,6 @@
 // used to provide panic_implementation
 #[allow(unused)]
 use panic_semihosting;
-#[allow(unused)]
-use stm32f30x;
 
 use cortex_m_rt::{entry, exception, ExceptionFrame};
 use cortex_m_semihosting::hprintln;

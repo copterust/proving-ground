@@ -10,7 +10,6 @@ use cortex_m_rt::{entry, exception, ExceptionFrame};
 use hal::prelude::*;
 use hal::time::Bps;
 use hal::{delay, serial};
-use nb;
 
 use mpu9250::{Mpu9250, MpuConfig};
 
@@ -18,24 +17,22 @@ use mpu9250::{Mpu9250, MpuConfig};
 #[inline(never)]
 fn main() -> ! {
     let freq = 72.mhz();
-    let device = hal::stm32f30x::Peripherals::take().unwrap();
+    let device = hal::pac::Peripherals::take().unwrap();
     let mut core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc
-        .cfgr
-        .sysclk(freq)
-        .pclk1(32.mhz())
-        .pclk2(32.mhz())
-        .freeze(&mut flash.acr);
+    let clocks = rcc.cfgr
+                    .sysclk(freq)
+                    .pclk1(32.mhz())
+                    .pclk2(32.mhz())
+                    .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
 
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
-    let mut pa1 = gpioa
-        .pa1
-        .output()
-        .output_speed(hal::gpio::HighSpeed)
-        .pull_type(hal::gpio::PullDown);
+    let mut pa1 = gpioa.pa1
+                       .output()
+                       .output_speed(hal::gpio::HighSpeed)
+                       .pull_type(hal::gpio::PullDown);
 
     let mut delay = asm_delay::AsmDelay::new(freq);
 
@@ -44,12 +41,10 @@ fn main() -> ! {
     let scl_sck = gpiob.pb3;
     let sda_sdi_mosi = gpiob.pb5;
     let ad0_sdo_miso = gpiob.pb4;
-    let spi = device.SPI1.spi(
-        (scl_sck, ad0_sdo_miso, sda_sdi_mosi),
-        mpu9250::MODE,
-        1.mhz(),
-        clocks,
-    );
+    let spi = device.SPI1.spi((scl_sck, ad0_sdo_miso, sda_sdi_mosi),
+                              mpu9250::MODE,
+                              1.mhz(),
+                              clocks);
 
     // MPU
     let mut mpu = Mpu9250::marg_default(spi, ncs, &mut delay).unwrap();
