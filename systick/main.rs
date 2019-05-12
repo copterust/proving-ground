@@ -14,7 +14,7 @@ use hal::time::Bps;
 
 static mut NOW_MS: u32 = 0;
 static mut LAST_SNAPSHOT_MS: u32 = 0;
-static mut L: Option<hal::serial::Tx<hal::pac::USART1>> = None;
+static mut L: Option<hal::serial::Tx<hal::pac::USART2>> = None;
 
 #[entry]
 fn main() -> ! {
@@ -28,8 +28,8 @@ fn main() -> ! {
                     .pclk2(32.mhz())
                     .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
-    let serial = device.USART1
-                       .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
+    let serial = device.USART2
+                       .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
     let (mut tx, _rx) = serial.split();
     // COBS frame
     tx.write(0x00).unwrap();
