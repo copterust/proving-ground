@@ -198,7 +198,7 @@ required-features = ["with_hal"]
 [[bin]]
 name = "semi"
 path = "semi/main.rs"
-required-features = ["with_device", "with_semihosting"]
+required-features = ["with_hal", "with_semihosting"]
 
 [[bin]]
 name = "dma_serial"
