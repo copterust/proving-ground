@@ -23,12 +23,12 @@ incremental = false # nalgebra
 
 [dependencies]
 panic-abort = {version = "0.3.1", optional=true}
-asm-delay = "0.5.1"
+asm-delay = {version = "0.5.3"}
 cortex-m = {version = ">=0.5.8,<0.7", optional=true, features = ["inline-asm", "const-fn"]}
 cortex-m-rt = {version = "0.6.7", optional = true}
 nb = {version = "0.1.1", optional = true}
 stm32f3 = {version = "0.7.0", optional = true}
-mpu9250 = {version = "0.11", optional = true}
+mpu9250 = {version = "0.12", optional = true}
 # mpu9250 = {path = "../mpu9250", optional = true}
 dcmimu = {version = "0.1.3", optional = true}
 lsm303c = {version = "0.1.5", optional = true}
@@ -49,12 +49,12 @@ optional = true
 
 [dependencies.ehal]
 features = ["unproven"]
-version = "0.2.2"
+version = "0.2.3"
 package = "embedded-hal"
 optional = true
 
 [dependencies.hal]
-version = "0.19.0"
+version = "0.20.1"
 # path = "../alt-stm32f30x-hal"
 # git = "https://github.com/copterust/alt-stm32f30x-hal"
 # rev = "08fe718af0cf652bc689b1e8d5bfa822785f3c92"

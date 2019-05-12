@@ -49,9 +49,9 @@ fn main() -> ! {
     // MPU
     let mut mpu = Mpu9250::marg_default(spi, ncs, &mut delay).unwrap();
 
-    pa1.set_low();
+    let _ = pa1.set_low();
     loop {
-        pa1.toggle();
+        let _ = pa1.toggle();
         match mpu.all() {
             Ok(a) => {}
             Err(e) => {}

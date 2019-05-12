@@ -33,7 +33,7 @@ fn main() -> ! {
                           .output()
                           .output_type(gpio::PushPull);
     // let mut b = true;
-    beeper.set_high();
+    let _ = beeper.set_high();
     loop {
         cortex_m::asm::wfi();
     }

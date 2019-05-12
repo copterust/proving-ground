@@ -33,10 +33,10 @@ fn main() -> ! {
         tim4.start(1.hz());
         while let Err(nb::Error::WouldBlock) = tim4.wait() {}
         if b {
-            beeper.set_high();
+            let _ = beeper.set_high();
             b = false;
         } else {
-            beeper.set_low();
+            let _ = beeper.set_low();
             b = true
         }
     }
