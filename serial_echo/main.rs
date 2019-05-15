@@ -5,7 +5,7 @@
 #[allow(unused)]
 use panic_abort;
 
-use core::fmt::{self, Write};
+use core::fmt::Write;
 
 use cortex_m_rt::{entry, exception, ExceptionFrame};
 use hal::prelude::*;
@@ -25,57 +25,29 @@ fn main() -> ! {
                     .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     // USART1
-    let mut serial = device.USART1
-                           .serial((gpioa.pa9, gpioa.pa10), Bps(9600), clocks);
+    let mut serial =
+        device.USART2
+              .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
     serial.listen(serial::Event::Rxne);
     let (mut tx, mut rx) = serial.split();
     // COBS frame
     tx.write(0x00).unwrap();
-    let mut l = Logger { tx };
-    write!(l, "starting loop...\r\n").unwrap();
+    write!(tx, "starting loop...\r\n").unwrap();
     loop {
         match rx.read() {
             Ok(b) => {
-                l.tx.write(b).unwrap();
+                tx.write(b).unwrap();
             }
             Err(nb::Error::Other(e)) => match e {
                 serial::Error::Overrun => {
                     rx.clear_overrun_error();
                 }
                 _ => {
-                    write!(l, "read error: {:?}", e).unwrap();
+                    write!(tx, "read error: {:?}", e).unwrap();
                 }
             },
             Err(nb::Error::WouldBlock) => {}
         };
-    }
-}
-
-struct Logger<W: ehal::serial::Write<u8>> {
-    tx: W,
-}
-impl<W: ehal::serial::Write<u8>> fmt::Write for Logger<W> {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        for c in s.chars() {
-            match self.write_char(c) {
-                Ok(_) => {}
-                Err(_) => {}
-            }
-        }
-        match self.tx.flush() {
-            Ok(_) => {}
-            Err(_) => {}
-        };
-
-        Ok(())
-    }
-
-    fn write_char(&mut self, s: char) -> fmt::Result {
-        match nb::block!(self.tx.write(s as u8)) {
-            Ok(_) => {}
-            Err(_) => {}
-        }
-        Ok(())
     }
 }
 

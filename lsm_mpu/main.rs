@@ -3,7 +3,7 @@
 #![no_main]
 #![feature(core_intrinsics)]
 
-use core::fmt::{self, Write};
+use core::fmt::Write;
 use core::intrinsics;
 use core::panic::PanicInfo;
 
@@ -17,7 +17,7 @@ use nb;
 use lsm303c::Lsm303c;
 use mpu9250::Mpu9250;
 
-static mut L: Option<Logger<hal::serial::Tx<hal::pac::USART1>>> = None;
+static mut L: Option<hal::serial::Tx<hal::pac::USART1>> = None;
 static mut RX: Option<hal::serial::Rx<hal::pac::USART1>> = None;
 static mut QUIET: bool = true;
 const TURN_QUIET: u8 = 'q' as u8;
@@ -44,7 +44,7 @@ fn main() -> ! {
     // COBS frame
     tx.write(0x00).unwrap();
     unsafe {
-        L = Some(Logger { tx });
+        L = Some(tx);
         RX = Some(rx);
     };
     let l = unsafe { extract(&mut L) };
@@ -111,34 +111,6 @@ unsafe fn extract<T>(opt: &'static mut Option<T>) -> &'static mut T {
     match opt {
         Some(ref mut x) => &mut *x,
         None => panic!("extract"),
-    }
-}
-
-struct Logger<W: ehal::serial::Write<u8>> {
-    tx: W,
-}
-impl<W: ehal::serial::Write<u8>> fmt::Write for Logger<W> {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        for c in s.chars() {
-            match self.write_char(c) {
-                Ok(_) => {}
-                Err(_) => {}
-            }
-        }
-        match self.tx.flush() {
-            Ok(_) => {}
-            Err(_) => {}
-        };
-
-        Ok(())
-    }
-
-    fn write_char(&mut self, s: char) -> fmt::Result {
-        match nb::block!(self.tx.write(s as u8)) {
-            Ok(_) => {}
-            Err(_) => {}
-        }
-        Ok(())
     }
 }
 

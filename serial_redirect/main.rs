@@ -3,7 +3,7 @@
 #![no_main]
 #![feature(core_intrinsics)]
 
-use core::fmt::{self, Write};
+use core::fmt::Write;
 use core::intrinsics;
 use core::panic::PanicInfo;
 
@@ -14,7 +14,7 @@ use hal::serial;
 use hal::time::Bps;
 use nb;
 
-static mut L: Option<Logger<hal::serial::Tx<hal::pac::USART2>>> = None;
+static mut L: Option<hal::serial::Tx<hal::pac::USART2>> = None;
 static mut RX_CONSOLE: Option<hal::serial::Rx<hal::pac::USART2>> = None;
 
 static mut RX_GPS: Option<hal::serial::Rx<hal::pac::USART3>> = None;
@@ -50,7 +50,7 @@ fn main() -> ! {
     // COBS frame
     tx2.write(0x00).unwrap();
     unsafe {
-        L = Some(Logger { tx: tx2 });
+        L = Some(tx2);
         RX_CONSOLE = Some(rx2);
         RX_GPS = Some(rx3);
         TX_GPS = Some(tx3);
@@ -127,34 +127,6 @@ fn USART3_EXTI28() {
             }
         },
     };
-}
-
-struct Logger<W: ehal::serial::Write<u8>> {
-    tx: W,
-}
-impl<W: ehal::serial::Write<u8>> fmt::Write for Logger<W> {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        for c in s.chars() {
-            match self.write_char(c) {
-                Ok(_) => {}
-                Err(_) => {}
-            }
-        }
-        match self.tx.flush() {
-            Ok(_) => {}
-            Err(_) => {}
-        };
-
-        Ok(())
-    }
-
-    fn write_char(&mut self, s: char) -> fmt::Result {
-        match nb::block!(self.tx.write(s as u8)) {
-            Ok(_) => {}
-            Err(_) => {}
-        }
-        Ok(())
-    }
 }
 
 #[exception]
