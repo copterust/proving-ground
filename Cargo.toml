@@ -41,6 +41,7 @@ nalgebra = {version = "0.16.4", optional = true, default-features = false}
 libm = {version = "0.1.2", optional = true}
 rand = {version = "0.5.5", optional = true, default-features = false}
 cortex-m-semihosting = {version = "0.3.2", optional = true}
+heapless = {version = "0.4.2", features = ["const-fn", "smaller-atomics"], optional = true}
 
 [dependencies.panic-semihosting]
 features = ["exit"]
@@ -80,9 +81,10 @@ with_vl53l0x = ["with_hal", "vl53l0x"]
 with_math = ["nalgebra", "libm", "rand"]
 with_semihosting = ["cortex-m-semihosting", "panic-semihosting"]
 with_won2010 = ["won2010"]
+with_heapless = ["heapless"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
-all = ["with_dcmimu", "with_lsm"]
+all = ["with_dcmimu", "with_lsm", "with_heapless"]
 
 [[bin]]
 name = "mini"
@@ -209,3 +211,9 @@ required-features = ["with_hal"]
 name = "wonca"
 path = "wonca/main.rs"
 required-features = [ "with_mpu", "with_won2010", "with_math" ]
+
+
+[[bin]]
+name = "feed"
+path = "feed/main.rs"
+required-features = [ "with_dcmimu", "with_semihosting", "with_heapless"]
