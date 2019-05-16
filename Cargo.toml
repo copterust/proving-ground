@@ -30,7 +30,8 @@ nb = {version = "0.1.1", optional = true}
 stm32f3 = {version = "0.7.0", optional = true}
 mpu9250 = {version = "0.12", optional = true}
 # mpu9250 = {path = "../mpu9250", optional = true}
-dcmimu = {version = "0.1.3", optional = true}
+dcmimu = {version = "0.2.1", optional = true}
+ryu = {version = "0.2", optional = true}
 lsm303c = {version = "0.1.5", optional = true}
 # lsm303c = {path = "../lsm303c", optional = true}
 bmp280 = {version = "0.0.1", optional = true, package="bmp280-ehal"}
@@ -82,6 +83,7 @@ with_math = ["nalgebra", "libm", "rand"]
 with_semihosting = ["cortex-m-semihosting", "panic-semihosting"]
 with_won2010 = ["won2010"]
 with_heapless = ["heapless"]
+with_ryu = ["ryu"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
 all = ["with_dcmimu", "with_lsm", "with_heapless"]
@@ -216,4 +218,4 @@ required-features = [ "with_mpu", "with_won2010", "with_math" ]
 [[bin]]
 name = "feed"
 path = "feed/main.rs"
-required-features = [ "with_dcmimu", "with_semihosting", "with_heapless"]
+required-features = [ "with_dcmimu", "with_semihosting", "with_heapless", "with_ryu"]

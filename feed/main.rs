@@ -4,9 +4,10 @@
 #[allow(unused)]
 use panic_semihosting;
 
+use core::str::FromStr;
 use cortex_m_rt::{entry, exception, ExceptionFrame};
 use cortex_m_semihosting::hprintln;
-// use dcmimu::DCMIMU;
+use dcmimu::DCMIMU;
 use hal::prelude::*;
 use hal::serial;
 use hal::time::Bps;
@@ -80,10 +81,10 @@ impl DmaTelemetry<TxReady, TxBusy> {
         DmaTelemetry::with_state(state)
     }
 
-    fn send(self, arg: &[u8]) -> Self {
+    fn send(self, arg: &[f32]) -> Self {
         let ns = match self.state {
             TransferState::Ready((mut buffer, ch, tx)) => {
-                buffer.extend_from_slice(arg);
+                fill_buffer(&mut buffer, arg);
                 TransferState::MaybeBusy(tx.write_all(ch, buffer))
             }
             TransferState::MaybeBusy(transfer) => {
@@ -99,6 +100,16 @@ impl DmaTelemetry<TxReady, TxBusy> {
 
         DmaTelemetry::with_state(ns)
     }
+}
+
+fn fill_buffer(buffer: &mut TxBuffer, arg: &[f32]) {
+    for f in arg.into_iter() {
+        let mut b = ryu::Buffer::new();
+        let s = b.format(*f);
+        buffer.extend_from_slice(s.as_bytes()).unwrap();
+        buffer.push(',' as u8).unwrap();
+    }
+    buffer.push('\n' as u8).unwrap();
 }
 
 #[entry]
@@ -117,16 +128,21 @@ fn main() -> ! {
         device.USART2
               .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
     serial.listen(serial::Event::Rxne);
-    let (mut tx, mut rx) = serial.split();
+    let (tx, mut rx) = serial.split();
     let dma_channels = device.DMA1.split(&mut rcc.ahb);
     let mut cmd = Cmd::new();
     let mut tele = DmaTelemetry::create(dma_channels.7, tx);
+    let mut dcm = DCMIMU::new();
     hprintln!("ready...").unwrap();
     loop {
         match nb::block!(rx.read()) {
             Ok(b) => {
                 if let Some(word) = cmd.push(b) {
-                    tele = tele.send(word);
+                    let v = unsafe { core::str::from_utf8_unchecked(word) };
+                    let (acc, gyro, dt_s, (oy, op, or)) = parse(v);
+                    let (ypr, _biased_gyro) = dcm.update(gyro, acc, dt_s);
+                    let to_send = [ypr.yaw, ypr.pitch, ypr.roll, oy, op, or];
+                    tele = tele.send(&to_send);
                 }
             }
             Err(e) => match e {
@@ -147,14 +163,53 @@ fn main() -> ! {
     }
 }
 
+macro_rules! parse_assign {
+    ($i:ident, $e: expr) => {{
+        $i = f32::from_str($e).unwrap();
+    }};
+}
+
+fn parse(inp: &str)
+         -> ((f32, f32, f32), (f32, f32, f32), f32, (f32, f32, f32)) {
+    let mut ax = 0.;
+    let mut ay = 0.;
+    let mut az = 0.;
+    let mut gx = 0.;
+    let mut gy = 0.;
+    let mut gz = 0.;
+    let mut dt_s = 0.;
+    let mut y = 0.;
+    let mut p = 0.;
+    let mut r = 0.;
+    let mut i = 0;
+    for part in inp.split(" ") {
+        match i {
+            0 => parse_assign!(ax, part),
+            1 => parse_assign!(ay, part),
+            2 => parse_assign!(az, part),
+            3 => parse_assign!(gx, part),
+            4 => parse_assign!(gy, part),
+            5 => parse_assign!(gz, part),
+            6 => parse_assign!(dt_s, part),
+            7 => parse_assign!(y, part),
+            8 => parse_assign!(p, part),
+            9 => parse_assign!(r, part),
+            _ => {}
+        }
+
+        i += 1;
+    }
+    return ((ax, ay, az), (gx, gy, gz), dt_s, (y, p, r));
+}
+
 #[exception]
 fn HardFault(ef: &ExceptionFrame) -> ! {
-    hprintln!("HardFault at {:#?}", ef);
+    hprintln!("HardFault at {:#?}", ef).unwrap();
     panic!("HardFault at {:#?}", ef);
 }
 
 #[exception]
 fn DefaultHandler(irqn: i16) {
-    hprintln!("Unhandled exception (IRQn = {})", irqn);
+    hprintln!("Unhandled exception (IRQn = {})", irqn).unwrap();
     panic!("Unhandled exception (IRQn = {})", irqn);
 }
