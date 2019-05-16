@@ -163,12 +163,6 @@ fn main() -> ! {
     }
 }
 
-macro_rules! parse_assign {
-    ($i:ident, $e: expr) => {{
-        $i = f32::from_str($e).unwrap();
-    }};
-}
-
 fn parse(inp: &str)
          -> ((f32, f32, f32), (f32, f32, f32), f32, (f32, f32, f32)) {
     let mut ax = 0.;
@@ -183,17 +177,18 @@ fn parse(inp: &str)
     let mut r = 0.;
     let mut i = 0;
     for part in inp.split(" ") {
+        let f = f32::from_str(part).unwrap();
         match i {
-            0 => parse_assign!(ax, part),
-            1 => parse_assign!(ay, part),
-            2 => parse_assign!(az, part),
-            3 => parse_assign!(gx, part),
-            4 => parse_assign!(gy, part),
-            5 => parse_assign!(gz, part),
-            6 => parse_assign!(dt_s, part),
-            7 => parse_assign!(y, part),
-            8 => parse_assign!(p, part),
-            9 => parse_assign!(r, part),
+            0 => ax = f,
+            1 => ay = f,
+            2 => az = f,
+            3 => gx = f,
+            4 => gy = f,
+            5 => gz = f,
+            6 => dt_s = f,
+            7 => y = f,
+            8 => p = f,
+            9 => r = f,
             _ => {}
         }
 
