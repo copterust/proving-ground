@@ -15,11 +15,11 @@ incremental = false
 
 [profile.release]
 panic = "abort"
-opt-level = "z"
+opt-level = "z" # 3 # "z"
 codegen-units = 1
 debug = false
 lto = true
-incremental = false # nalgebra
+incremental = false
 
 [dependencies]
 panic-abort = {version = "0.3.1", optional=true}
@@ -71,7 +71,8 @@ optional = true
 
 [features]
 no_device = ["panic-abort", "cortex-m-rt", "cortex-m"]
-with_device = ["panic-abort", "cortex-m-rt", "cortex-m", "stm32f3/rt", "stm32f3/stm32f303"]
+with_rt = ["panic-abort", "cortex-m-rt", "cortex-m", ]
+with_device = ["with_rt", "stm32f3/rt", "stm32f3/stm32f303"]
 with_hal = ["with_device", "nb", "ehal", "hal"]
 with_mpu = ["with_hal", "mpu9250"]
 with_dcmimu = ["with_mpu", "dcmimu"]

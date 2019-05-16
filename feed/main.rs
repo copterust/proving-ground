@@ -15,7 +15,7 @@ use heapless::consts::*;
 use heapless::Vec;
 use nb;
 
-const BUFFER_SIZE: usize = 256;
+const BUFFER_SIZE: usize = 200;
 const CR: u8 = '\r' as u8;
 const LF: u8 = '\n' as u8;
 
@@ -202,12 +202,10 @@ fn parse(inp: &str)
 
 #[exception]
 fn HardFault(ef: &ExceptionFrame) -> ! {
-    hprintln!("HardFault at {:#?}", ef).unwrap();
     panic!("HardFault at {:#?}", ef);
 }
 
 #[exception]
 fn DefaultHandler(irqn: i16) {
-    hprintln!("Unhandled exception (IRQn = {})", irqn).unwrap();
     panic!("Unhandled exception (IRQn = {})", irqn);
 }
