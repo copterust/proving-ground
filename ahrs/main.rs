@@ -96,9 +96,9 @@ fn main() -> ! {
                 let dt_ms = t_ms.wrapping_sub(prev_t_ms);
                 prev_t_ms = t_ms;
                 let dt_s = (dt_ms as f32) / 1000.;
-                let dcm = dcmimu.update((gyro.x, gyro.y, gyro.z),
-                                        (accel.x, accel.y, accel.z),
-                                        dt_s);
+                let (dcm, _biased) = dcmimu.update((gyro.x, gyro.y, gyro.z),
+                                                   (accel.x, accel.y, accel.z),
+                                                   dt_s);
                 if unsafe { !QUIET } {
                     write!(l,
                            "IMU: dt={}s; roll={}; yaw={}; pitch={}\r\n",
