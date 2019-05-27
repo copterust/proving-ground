@@ -1,5 +1,6 @@
 #![no_std]
 #![no_main]
+#![feature(unboxed_closures)]
 
 #[allow(unused)]
 use panic_semihosting;
@@ -15,7 +16,7 @@ use heapless::consts::*;
 use heapless::Vec;
 use nb;
 
-const BUFFER_SIZE: usize = 200;
+const BUFFER_SIZE: usize = 512;
 const CR: u8 = '\r' as u8;
 const LF: u8 = '\n' as u8;
 
@@ -58,33 +59,34 @@ type TxBusy =
     hal::dma::Transfer<hal::dma::R, &'static mut TxBuffer, TxCh, TxUsart>;
 static mut BUFFER: TxBuffer = Vec::new();
 
-#[derive(Debug, Clone, Copy)]
-enum TransferState<Ready, Busy> {
-    Ready(Ready),
-    MaybeBusy(Busy),
+enum TransferState {
+    Ready(TxReady),
+    MaybeBusy(TxBusy),
 }
 
-struct DmaTelemetry<Ready, Busy> {
-    state: TransferState<Ready, Busy>,
+struct DmaTelemetry {
+    state: TransferState,
 }
 
-impl<Ready, Busy> DmaTelemetry<Ready, Busy> {
-    fn with_state(ns: TransferState<Ready, Busy>) -> Self {
+impl DmaTelemetry {
+    fn with_state(ns: TransferState) -> Self {
         DmaTelemetry { state: ns }
     }
 }
 
-impl DmaTelemetry<TxReady, TxBusy> {
+impl DmaTelemetry {
     pub fn create(ch: TxCh, tx: TxUsart) -> Self {
         let bf = unsafe { &mut BUFFER };
         let state = TransferState::Ready((bf, ch, tx));
         DmaTelemetry::with_state(state)
     }
 
-    fn send(self, arg: &[f32]) -> Self {
+    fn send<F>(self, mut buffer_filler: F) -> Self
+        where F: for<'a> FnMut<(&'a mut TxBuffer,), Output = ()>
+    {
         let ns = match self.state {
             TransferState::Ready((mut buffer, ch, tx)) => {
-                fill_buffer(&mut buffer, arg);
+                buffer_filler(&mut buffer);
                 TransferState::MaybeBusy(tx.write_all(ch, buffer))
             }
             TransferState::MaybeBusy(transfer) => {
@@ -100,12 +102,18 @@ impl DmaTelemetry<TxReady, TxBusy> {
 
         match ns {
             TransferState::MaybeBusy(_) => DmaTelemetry::with_state(ns),
-            TransferState::Ready(_) => DmaTelemetry::with_state(ns).send(arg),
+            TransferState::Ready(_) => {
+                DmaTelemetry::with_state(ns).send(buffer_filler)
+            }
         }
     }
 }
 
-fn fill_buffer(buffer: &mut TxBuffer, arg: &[f32]) {
+fn fill_with_bytes(buffer: &mut TxBuffer, arg: &[u8]) {
+    buffer.extend_from_slice(arg).unwrap();
+}
+
+fn fill_with_floats(buffer: &mut TxBuffer, arg: &[f32]) {
     for f in arg.into_iter() {
         let mut b = ryu::Buffer::new();
         let s = b.format(*f);
@@ -145,7 +153,11 @@ fn main() -> ! {
                     let (acc, gyro, dt_s, (oy, op, or)) = parse(v);
                     let (ypr, _biased_gyro) = dcm.update(gyro, acc, dt_s);
                     let to_send = [ypr.yaw, ypr.pitch, ypr.roll, oy, op, or];
-                    tele = tele.send(&to_send);
+                    // let (ax, ay, az) = acc;
+                    // let (gx, gy, gz) = gyro;
+                    // let to_send = [ax, ay, az, gx, gy, gz, dt_s, oy, op, or];
+                    // tele = tele.send(|b| fill_with_bytes(b, word))
+                    tele = tele.send(|b| fill_with_floats(b, &to_send));
                 }
             }
             Err(e) => match e {
@@ -166,6 +178,12 @@ fn main() -> ! {
     }
 }
 
+macro_rules! parse_assign {
+    ($i:ident, $e: expr) => {{
+        $i = f32::from_str($e).unwrap();
+    }};
+}
+
 fn parse(inp: &str)
          -> ((f32, f32, f32), (f32, f32, f32), f32, (f32, f32, f32)) {
     let mut ax = 0.;
@@ -180,18 +198,17 @@ fn parse(inp: &str)
     let mut r = 0.;
     let mut i = 0;
     for part in inp.split(" ") {
-        let f = f32::from_str(part).unwrap();
         match i {
-            0 => ax = f,
-            1 => ay = f,
-            2 => az = f,
-            3 => gx = f,
-            4 => gy = f,
-            5 => gz = f,
-            6 => dt_s = f,
-            7 => y = f,
-            8 => p = f,
-            9 => r = f,
+            0 => parse_assign!(ax, part),
+            1 => parse_assign!(ay, part),
+            2 => parse_assign!(az, part),
+            3 => parse_assign!(gx, part),
+            4 => parse_assign!(gy, part),
+            5 => parse_assign!(gz, part),
+            6 => parse_assign!(dt_s, part),
+            7 => parse_assign!(y, part),
+            8 => parse_assign!(p, part),
+            9 => parse_assign!(r, part),
             _ => {}
         }
 

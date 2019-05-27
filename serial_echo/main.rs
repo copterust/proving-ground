@@ -24,7 +24,7 @@ fn main() -> ! {
                     .pclk2(36.mhz())
                     .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
-    // USART1
+    // USART2
     let mut serial =
         device.USART2
               .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
