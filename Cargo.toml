@@ -15,15 +15,15 @@ incremental = false
 
 [profile.release]
 panic = "abort"
-opt-level = "z" # 3 # "z"
+opt-level = "z"
 codegen-units = 1
-debug = false
+debug = true
 lto = true
 incremental = false
 
 [dependencies]
 panic-abort = {version = "0.3.1", optional=true}
-asm-delay = {version = "0.5.3"}
+asm-delay = {version = "0.7"}
 cortex-m = {version = ">=0.5.8,<0.7", optional=true, features = ["inline-asm", "const-fn"]}
 cortex-m-rt = {version = "0.6.7", optional = true}
 nb = {version = "0.1.1", optional = true}
@@ -56,7 +56,7 @@ package = "embedded-hal"
 optional = true
 
 [dependencies.hal]
-version = "0.20.1"
+version = "0.20"
 # path = "../alt-stm32f30x-hal"
 # git = "https://github.com/copterust/alt-stm32f30x-hal"
 # rev = "08fe718af0cf652bc689b1e8d5bfa822785f3c92"
