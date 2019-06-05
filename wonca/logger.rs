@@ -22,7 +22,10 @@ macro_rules! print {
 }
 
 macro_rules! println {
-    ($($tt:tt)*) => (writeln!(crate::logger::stdout(), $($tt)*).unwrap());
+    ($($tt:tt)*) => ({
+        write!(crate::logger::stdout(), $($tt)*).unwrap();
+        write!(crate::logger::stdout(), "\r\n").unwrap();
+    });
 }
 
 pub struct Logger<W> {
