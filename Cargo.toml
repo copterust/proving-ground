@@ -230,6 +230,11 @@ path = "feed/main.rs"
 required-features = [ "with_dcmimu", "with_semihosting", "with_heapless", "with_ryu"]
 
 [[bin]]
+name = "dma_int"
+path = "dma_int/main.rs"
+required-features = [ "with_rtfm", "with_hal", "with_heapless"]
+
+[[bin]]
 name = "rtfm_int"
 path = "rtfm_int/main.rs"
 required-features = [ "with_rtfm", "with_device", "ehal"]
