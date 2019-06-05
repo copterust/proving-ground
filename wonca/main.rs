@@ -15,8 +15,8 @@ use hal::prelude::*;
 use hal::time::Bps;
 
 use mpu9250::Mpu9250;
-use nalgebra::Real;
 use nalgebra::Vector3;
+use libm::F32Ext;
 
 use logger::{Vs, Write};
 
@@ -39,17 +39,17 @@ fn main() -> ! {
 
     let spi_conf = conf! {
         dev: device.SPI1,
-        scl: gpioa.pa5,
+        scl: gpiob.pb3,
         miso: gpiob.pb4,
         mosi: gpiob.pb5,
-        cs_mpu: gpioa.pa4,
+        cs_mpu: gpiob.pb0,
     };
 
     let usart_conf = conf! {
         dev: device.USART2,
         tx: gpioa.pa2,
         rx: gpioa.pa15,
-        bps: 115200,
+        bps: 460800,
     };
 
     let serial = usart_conf.dev.serial((usart_conf.tx, usart_conf.rx),
@@ -82,9 +82,7 @@ fn main() -> ! {
         }
     };
 
-    println!("- calibrating mpu");
-
-    mpu.calibrate_at_rest(&mut delay).unwrap();
+    println!("- not calibrating mpu");
 
     println!("- calibrating rest position");
 
