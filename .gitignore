@@ -1,5 +1,4 @@
 /target
-/Cargo.lock
 /expls
 /.dir-locals.el
 memory.x
