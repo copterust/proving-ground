@@ -22,6 +22,21 @@ use logger::{Vs, Write};
 
 const G: f32 = 9.80665;
 
+fn accel_error<Dev, Imu>(mpu: &mut Mpu9250<Dev, Imu>, delay: &mut delay::Delay) -> Result<f32, Dev::Error>
+where
+    Dev: mpu9250::Device,
+{
+    let mut i = mpu.accel()?;
+    let mut a = 0.0;
+    for _ in 0..50 {
+        delay.delay_ms(20u8);
+        let j = mpu.accel()?;
+        a += (j - i).norm();
+        i = j;
+    }
+    Ok(a * 0.02)
+}
+
 #[entry]
 fn main() -> ! {
     let device = hal::pac::Peripherals::take().unwrap();
@@ -103,21 +118,29 @@ fn main() -> ! {
 
     println!("Calibrating using g0 = {}", G);
 
+    println!("- calibrating noise");
+    let noise_level = accel_error(&mut mpu, &mut delay).unwrap();
+    println!(" = {}", noise_level);
+
     loop {
         for pos in 0..6 {
             println!("Put device in position {}", pos);
             let mut mov = 0.0;
-            while mov < 2.0 {
+
+            while mov < rest * 2.0 {
                 mov = lerp(0.05, mov, mpu.gyro().unwrap().norm());
                 print!("\r{:5.2}", mov);
                 delay.delay_ms(20u8);
             }
+
             println!("\r- found movement, waiting to settle");
 
-            while mov > rest * 0.5 {
-                mov = lerp(0.05, mov, mpu.gyro().unwrap().norm());
-                print!("\r{:5.2}", mov);
-                delay.delay_ms(20u8);
+            loop {
+                let error = accel_error(&mut mpu, &mut delay).unwrap();
+                print!("\r{}", error);
+                if error < noise_level * 1.0001 {
+                    break;
+                }
             }
 
             println!("\r- measuring, stay put");
