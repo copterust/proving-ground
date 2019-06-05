@@ -107,18 +107,20 @@ fn main() -> ! {
         for pos in 0..6 {
             println!("Put device in position {}", pos);
             let mut mov = 0.0;
-            while mov < 0.5 {
+            while mov < 2.0 {
                 mov = lerp(0.05, mov, mpu.gyro().unwrap().norm());
                 print!("\r{:5.2}", mov);
                 delay.delay_ms(20u8);
             }
             println!("\r- found movement, waiting to settle");
 
-            while mov > rest * 2.0 {
+            while mov > rest * 0.5 {
                 mov = lerp(0.05, mov, mpu.gyro().unwrap().norm());
                 print!("\r{:5.2}", mov);
                 delay.delay_ms(20u8);
             }
+
+            println!("\r- measuring, stay put");
 
             let mut r = mpu.accel().unwrap();
             for _ in 0..50 {
