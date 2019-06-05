@@ -44,6 +44,12 @@ rand = {version = "0.5.5", optional = true, default-features = false}
 cortex-m-semihosting = {version = "0.3.2", optional = true}
 heapless = {version = "0.4.2", features = ["const-fn", "smaller-atomics"], optional = true}
 
+[dependencies.cortex-m-rtfm]
+git = "https://github.com/japaric/cortex-m-rtfm"
+rev = "fafeeb27270ef24fc3852711c6032f65aa7dbcc0"
+features = ["timer-queue"]
+optional = true
+
 [dependencies.panic-semihosting]
 features = ["exit"]
 version = "0.5.1"
@@ -86,9 +92,10 @@ with_semihosting = ["cortex-m-semihosting", "panic-semihosting"]
 with_won2010 = ["won2010"]
 with_heapless = ["heapless"]
 with_ryu = ["ryu"]
+with_rtfm = ["cortex-m-rtfm"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
-all = ["with_dcmimu", "with_lsm", "with_heapless"]
+all = ["with_dcmimu", "with_lsm", "with_heapless", "with_rtfm"]
 
 [[bin]]
 name = "mini"
@@ -221,3 +228,8 @@ required-features = [ "with_mpu", "with_won2010", "with_math" ]
 name = "feed"
 path = "feed/main.rs"
 required-features = [ "with_dcmimu", "with_semihosting", "with_heapless", "with_ryu"]
+
+[[bin]]
+name = "rtfm_int"
+path = "rtfm_int/main.rs"
+required-features = [ "with_rtfm", "with_device", "ehal"]
