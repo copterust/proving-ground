@@ -121,9 +121,12 @@ fn main() -> ! {
             }
 
             let mut r = mpu.accel().unwrap();
-            for _ in 0..10 {
-                r = lerp(0.1, r, mpu.accel().unwrap());
+            for _ in 0..50 {
+                r += mpu.accel().unwrap();
+                delay.delay_ms(20u8);
             }
+
+            r *= 0.02;
 
             println!("\r- ok, readings: {} = {:8.3}", Vs(r), r.norm());
 
