@@ -12,6 +12,7 @@ use hal::prelude::*;
 use hal::time::Bps;
 use heapless::consts::*;
 use heapless::Vec;
+use hal::gpio::{PullUp, PullNone, Output, PushPull, LowSpeed};
 
 type USART = hal::pac::USART1;
 type TxUsart = hal::serial::Tx<USART>;
@@ -78,6 +79,7 @@ fn fill_with_str(buffer: &mut TxBuffer, arg: &str) {
 
 #[app(device = hal::pac)]
 const APP: () = {
+    static mut LED: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>> = ();
     // static mut EXTIH: hal::exti::Exti<hal::exti::EXTI13> = ();
     static mut TELE: Option<DmaTelemetry> = ();
 
@@ -98,30 +100,31 @@ const APP: () = {
                   .serial((gpioa.pa9, gpioa.pa10), Bps(460800), clocks);
         let (mut tx, _) = serial.split();
         write!(tx, "init...\r\n").unwrap();
-        write!(tx,
-               "buka: {:?}/{:?}/{:?}/{:?}\r\n",
-               clocks.hclk(),
-               clocks.pclk1(),
-               clocks.pclk2(),
-               clocks.sysclk()).unwrap();
         let mut syscfg = device.SYSCFG.constrain(&mut rcc.apb2);
         write!(tx, "syscfg...\r\n").unwrap();
         let mut exti = device.EXTI.constrain();
         write!(tx, "exti...\r\n").unwrap();
-        // let interrupt_pin = gpioc.pc13;
-        // exti.EXTI13.bind(interrupt_pin, &mut syscfg);
+        let interrupt_pin = gpioc.pc13
+                            .pull_type(PullUp)
+                            .input();
+
+        exti.EXTI13.bind(interrupt_pin, &mut syscfg);
         write!(tx, "bound...\r\n").unwrap();
 
         let dma_channels = device.DMA1.split(&mut rcc.ahb);
         write!(tx, "dma...\r\n").unwrap();
         let tele = DmaTelemetry::create(dma_channels.4, tx);
         let new_tele = tele.send(|b| fill_with_str(b, "Dma ok!\r\n"));
-        init::LateResources { // EXTIH: exti.EXTI13,
+        let mut led = gpioa.pa5.output().pull_type(PullNone);
+        led.set_high();
+        init::LateResources { LED: led,
                               TELE: Some(new_tele) }
     }
 
-    #[interrupt(binds=EXTI15_10, resources = [TELE])]
+    #[interrupt(binds=EXTI15_10, resources = [LED, TELE])]
     fn handle_mpu(ctx: handle_mpu::Context) {
+        let mut led = ctx.resources.LED;
+        led.set_low();
         let maybe_tele = ctx.resources.TELE.take();
         if let Some(tele) = maybe_tele {
             let new_tele = tele.send(|b| fill_with_str(b, "interrupt!\n"));
