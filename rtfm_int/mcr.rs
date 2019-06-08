@@ -3,7 +3,7 @@ macro_rules! flash {
         for _ in 1..10 {
             $p.bsrr.write(|w| w.bs5().set_bit());
             $d.delay_ms(100u32);
-            $p.bsrr.write(|w| w.bs5().clear_bit());
+            $p.brr.write(|w| w.br5().set_bit());
             $d.delay_ms(100u32);
         }
     };
