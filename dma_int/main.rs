@@ -8,11 +8,11 @@ use panic_abort;
 use core::fmt::Write;
 use rtfm::app;
 
+use hal::gpio::{LowSpeed, Output, PullNone, PullUp, PushPull};
 use hal::prelude::*;
 use hal::time::Bps;
 use heapless::consts::*;
 use heapless::Vec;
-use hal::gpio::{PullUp, PullNone, Output, PushPull, LowSpeed};
 
 type USART = hal::pac::USART1;
 type TxUsart = hal::serial::Tx<USART>;
@@ -80,7 +80,7 @@ fn fill_with_str(buffer: &mut TxBuffer, arg: &str) {
 #[app(device = hal::pac)]
 const APP: () = {
     static mut LED: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>> = ();
-    // static mut EXTIH: hal::exti::Exti<hal::exti::EXTI13> = ();
+    static mut EXTIH: hal::exti::Exti<hal::exti::EXTI13> = ();
     static mut TELE: Option<DmaTelemetry> = ();
 
     #[init]
@@ -104,9 +104,7 @@ const APP: () = {
         write!(tx, "syscfg...\r\n").unwrap();
         let mut exti = device.EXTI.constrain();
         write!(tx, "exti...\r\n").unwrap();
-        let interrupt_pin = gpioc.pc13
-                            .pull_type(PullUp)
-                            .input();
+        let interrupt_pin = gpioc.pc13.pull_type(PullUp).input();
 
         exti.EXTI13.bind(interrupt_pin, &mut syscfg);
         write!(tx, "bound...\r\n").unwrap();
@@ -116,20 +114,22 @@ const APP: () = {
         let tele = DmaTelemetry::create(dma_channels.4, tx);
         let new_tele = tele.send(|b| fill_with_str(b, "Dma ok!\r\n"));
         let mut led = gpioa.pa5.output().pull_type(PullNone);
-        led.set_high();
+        let _ = led.set_high();
+
         init::LateResources { LED: led,
+                              EXTIH: exti.EXTI13,
                               TELE: Some(new_tele) }
     }
 
-    #[interrupt(binds=EXTI15_10, resources = [LED, TELE])]
+    #[interrupt(binds=EXTI15_10, resources = [LED, TELE, EXTIH])]
     fn handle_mpu(ctx: handle_mpu::Context) {
-        let mut led = ctx.resources.LED;
-        led.set_low();
+        let led = ctx.resources.LED;
+        let _ = led.set_low();
         let maybe_tele = ctx.resources.TELE.take();
         if let Some(tele) = maybe_tele {
             let new_tele = tele.send(|b| fill_with_str(b, "interrupt!\n"));
             *ctx.resources.TELE = Some(new_tele);
         }
-        // ctx.resources.EXTIH.unpend();
+        ctx.resources.EXTIH.unpend();
     }
 };
