@@ -11,9 +11,6 @@ use ehal::blocking::delay::DelayMs;
 use rtfm::app;
 use stm32f3::stm32f303;
 
-#[macro_use]
-mod mcr;
-
 #[app(device = stm32f3::stm32f303)]
 const APP: () = {
     static mut DEVICE: stm32f303::Peripherals = ();
@@ -26,20 +23,19 @@ const APP: () = {
         let device: stm32f303::Peripherals = ctx.device;
         let delay = AsmDelay::new(32u32.mhz());
 
+        // pa5 -- led
         device.RCC.ahbenr.modify(|_, w| w.iopaen().set_bit());
         device.GPIOA.moder.modify(|_, w| w.moder5().output());
         device.GPIOA.bsrr.write(|w| w.bs5().clear_bit());
-        // flash!(device.GPIOA, delay);
 
+        // pc13 -- interrupt
         device.RCC.ahbenr.modify(|_, w| w.iopcen().set_bit());
         device.GPIOC.moder.modify(|_, w| w.moder13().input());
         device.GPIOC
               .pupdr
               .modify(|_, w| unsafe { w.pupdr13().bits(0b01) });
-        // flash!(device.GPIOA, delay);
 
         device.RCC.apb2enr.write(|w| w.syscfgen().enabled());
-        // flash!(device.GPIOA, delay);
         device.SYSCFG
               .exticr4
               .modify(|_, w| unsafe { w.exti13().bits(0b010) });
@@ -54,7 +50,12 @@ const APP: () = {
 
     #[interrupt(binds=EXTI15_10, resources = [DEVICE, DELAY])]
     fn int(ctx: int::Context) {
-        flash!(ctx.resources.DEVICE.GPIOA, ctx.resources.DELAY);
+        for _ in 1..3 {
+            ctx.resources.DEVICE.GPIOA.bsrr.write(|w| w.bs5().set_bit());
+            ctx.resources.DELAY.delay_ms(100u32);
+            ctx.resources.DEVICE.GPIOA.brr.write(|w| w.br5().set_bit());
+            ctx.resources.DELAY.delay_ms(100u32);
+        }
         ctx.resources
            .DEVICE
            .EXTI
