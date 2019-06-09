@@ -37,7 +37,7 @@ dependencies = [
 
 [[package]]
 name = "alt-stm32f30x-hal"
-version = "0.20.2"
+version = "0.20.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitrate 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -370,7 +370,7 @@ dependencies = [
 name = "proving_ground"
 version = "0.1.0"
 dependencies = [
- "alt-stm32f30x-hal 0.20.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "alt-stm32f30x-hal 0.20.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "asm-delay 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bmp280-ehal 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cortex-m 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -631,7 +631,7 @@ dependencies = [
 "checksum alga 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d708cb68c7106ed1844de68f50f0157a7788c2909a6926fad5a87546ef6a4ff8"
 "checksum aligned 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d39da9b88ae1a81c03c9c082b8db83f1d0e93914126041962af61034ab44c4a5"
 "checksum aligned 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d3a316c7ea8e1e9ece54862c992def5a7ac14de9f5832b69d71760680efeeefa"
-"checksum alt-stm32f30x-hal 0.20.2 (registry+https://github.com/rust-lang/crates.io-index)" = "dff6b83e65484828f6c2e2a3b083ea20dd699536f3096e33e61e271bd5cdaa08"
+"checksum alt-stm32f30x-hal 0.20.4 (registry+https://github.com/rust-lang/crates.io-index)" = "71656d1ac05096c2ff065d3a8a5a5c49effe1d061dd2d880a16404cadb7f766d"
 "checksum approx 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f0e60b75072ecd4168020818c0107f2857bb6c4e64252d8d3983f6263b40a5c3"
 "checksum as-slice 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "293dac66b274fab06f95e7efb05ec439a6b70136081ea522d270bc351ae5bb27"
 "checksum asm-delay 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0e0c8eec73de29ae94b2aff405a272304bc286204ddb1cdf20d7e2249078ae20"
