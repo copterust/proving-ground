@@ -127,15 +127,16 @@ const APP: () = {
         let led = ctx.resources.LED;
         let maybe_tele = ctx.resources.TELE.take();
         let cb = ctx.resources.CB;
-        let mut some_new_tele = None;
+
         if let Some(tele) = maybe_tele {
+            let mut some_new_tele = None;
             let _ = cb.peek(|buf, _half| {
                 let new_tele = tele.send(|b| fill_with_bytes(b, buf));
                 some_new_tele = Some(new_tele);
             });
-        }
-        if let Some(new_tele) = some_new_tele {
-            *ctx.resources.TELE = Some(new_tele);
+            if let Some(new_tele) = some_new_tele {
+                *ctx.resources.TELE = Some(new_tele);
+            }
         }
 
         let _ = led.set_low();
