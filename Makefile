@@ -61,7 +61,7 @@ clean:
 	cargo -v clean
 	rm memory.x
 
-gdbload: build
+goad: build
 	sh -c "openocd & arm-none-eabi-gdb -q $(BIN) & wait"
 
 .PHONY: build
