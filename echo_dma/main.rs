@@ -5,7 +5,6 @@
 #[allow(unused)]
 use panic_abort;
 
-use core::fmt::Write;
 use rtfm::app;
 
 use hal::gpio::{LowSpeed, Output, PullNone, PushPull};
@@ -14,9 +13,9 @@ use hal::time::Bps;
 use heapless::consts::*;
 use heapless::Vec;
 
-type USART = hal::pac::USART1;
+type USART = hal::pac::USART2;
 type TxUsart = hal::serial::Tx<USART>;
-type TxCh = hal::dma::dma1::C4;
+type TxCh = hal::dma::dma1::C7;
 type TxBuffer = Vec<u8, U256>;
 type TxReady = (&'static mut TxBuffer, TxCh, TxUsart);
 type TxBusy =
@@ -88,7 +87,7 @@ fn fill_with_str(buffer: &mut TxBuffer, arg: &str) {
 const APP: () = {
     static mut LED: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>> = ();
     static mut TELE: Option<DmaTelemetry> = ();
-    static mut CB: hal::dma::CircBuffer<[u8; HALF], hal::dma::dma1::C5> = ();
+    static mut CB: hal::dma::CircBuffer<[u8; HALF], hal::dma::dma1::C6> = ();
 
     #[init]
     fn init(ctx: init::Context) -> init::LateResources {
@@ -100,45 +99,47 @@ const APP: () = {
                         .pclk1(32.mhz())
                         .freeze(&mut flash.acr);
         let gpioa = device.GPIOA.split(&mut rcc.ahb);
-        // USART1
         let serial =
-            device.USART1
-                  .serial((gpioa.pa9, gpioa.pa10), Bps(460800), clocks);
-        let (mut tx, rx) = serial.split();
-        write!(tx, "init...\r\n").unwrap();
-        let mut dma_channels = device.DMA1.split(&mut rcc.ahb);
-        write!(tx, "dma...\r\n").unwrap();
-        let tele = DmaTelemetry::create(dma_channels.4, tx);
+            device.USART2
+            .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
+        let (tx, rx) = serial.split();
+        let dma_channels = device.DMA1.split(&mut rcc.ahb);
+        let tele = DmaTelemetry::create(dma_channels.7, tx);
         let new_tele = tele.send(|b| fill_with_str(b, "Dma ok!\r\n"));
         let mut led = gpioa.pa5.output().pull_type(PullNone);
-        let _ = led.set_high();
-        dma_channels.5.listen(hal::dma::Event::HalfTransfer);
-        dma_channels.5.listen(hal::dma::Event::TransferComplete);
+        let _ = led.set_low();
+        let mut rx_chan = dma_channels.6;
+        rx_chan.listen(hal::dma::Event::HalfTransfer);
+        rx_chan.listen(hal::dma::Event::TransferComplete);
         let ib = unsafe { &mut IN_BUFFER };
-        let cb = rx.circ_read(dma_channels.5, ib);
-
+        let cb = rx.circ_read(rx_chan, ib);
         init::LateResources { LED: led,
                               CB: cb,
                               TELE: Some(new_tele) }
     }
 
-    #[interrupt(binds = DMA1_CH5, resources = [LED, CB, TELE])]
+    #[interrupt(binds = DMA1_CH6, resources = [LED, CB, TELE])]
     fn handle_read(ctx: handle_read::Context) {
         let led = ctx.resources.LED;
+        let _ = led.toggle();
         let maybe_tele = ctx.resources.TELE.take();
         let cb = ctx.resources.CB;
 
         if let Some(tele) = maybe_tele {
-            let mut some_new_tele = None;
-            let _ = cb.peek(|buf, _half| {
-                let new_tele = tele.send(|b| fill_with_bytes(b, buf));
-                some_new_tele = Some(new_tele);
+            let mut msg = [0u8; 32];
+            let ret = cb.peek(|buf, _half| {
+                msg.copy_from_slice(buf);
             });
-            if let Some(new_tele) = some_new_tele {
-                *ctx.resources.TELE = Some(new_tele);
+            match ret {
+                Ok(()) => {
+                    let new_tele = tele.send(|b| fill_with_bytes(b, &msg));
+                    *ctx.resources.TELE = Some(new_tele);
+                },
+                Err(e) => {
+                    cortex_m_semihosting::hprintln!("e: {:?}", e).unwrap();
+                }
             }
         }
 
-        let _ = led.set_low();
     }
 };
