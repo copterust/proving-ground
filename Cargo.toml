@@ -243,3 +243,8 @@ required-features = [ "with_rtfm", "with_device", "ehal"]
 name = "echo_dma"
 path = "echo_dma/main.rs"
 required-features = [ "with_rtfm", "with_device", "with_hal", "with_heapless", "with_semihosting"]
+
+[[bin]]
+name = "cmd_dma"
+path = "cmd_dma/main.rs"
+required-features = [ "with_rtfm", "with_device", "with_hal", "with_heapless", "with_semihosting"]
