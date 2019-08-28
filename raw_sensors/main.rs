@@ -81,8 +81,8 @@ fn main() -> ! {
     syst.clear_current();
     syst.enable_interrupt();
     syst.enable_counter();
-    let mut nvic = core.NVIC;
-    nvic.enable(ser_int);
+    unsafe { cortex_m::peripheral::NVIC::unmask(ser_int) };
+
     let mut prev_t_ms = now_ms();
     write!(l,
            "All ok, now: {:?}; Press 'q' to toggle verbosity!\r\n",
