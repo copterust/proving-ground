@@ -14,17 +14,18 @@ use hal::delay;
 use hal::prelude::*;
 use hal::time::Bps;
 
+use libm::F32Ext;
 use mpu9250::Mpu9250;
 use nalgebra::Vector3;
-use libm::F32Ext;
 
 use logger::{Vs, Write};
 
 const G: f32 = 9.80665;
 
-fn accel_error<Dev, Imu>(mpu: &mut Mpu9250<Dev, Imu>, delay: &mut delay::Delay) -> Result<f32, Dev::Error>
-where
-    Dev: mpu9250::Device,
+fn accel_error<Dev, Imu>(mpu: &mut Mpu9250<Dev, Imu>,
+                         delay: &mut delay::Delay)
+                         -> Result<f32, Dev::Error>
+    where Dev: mpu9250::Device
 {
     let mut i = mpu.accel()?;
     let mut a = 0.0;
