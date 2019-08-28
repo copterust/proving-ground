@@ -57,12 +57,12 @@ fn main() -> ! {
         scl: gpiob.pb3,
         miso: gpiob.pb4,
         mosi: gpiob.pb5,
-        cs_mpu: gpiob.pb0,
+        cs_mpu: gpiob.pb9,
     };
 
     let usart_conf = conf! {
         dev: device.USART2,
-        tx: gpioa.pa2,
+        tx: gpioa.pa14,
         rx: gpioa.pa15,
         bps: 460800,
     };
