@@ -111,14 +111,62 @@ fn main() -> ! {
     let noise_level = accel_error(&mut mpu, &mut delay).unwrap();
     println!(" = {}", noise_level);
 
-    loop {
+    for pos in 0..6 {
+        println!("Put device in position {}", pos);
+        let mut mov = 0.0;
+
+        while mov < rest * 2.0 {
+            mov = lerp(0.05, mov, mpu.gyro().unwrap().norm());
+            delay.delay_ms(20u8);
+        }
+
+        println!("\r- found movement, waiting to settle");
+
+        loop {
+            let error = accel_error(&mut mpu, &mut delay).unwrap();
+            print!("\r{}", error);
+            if error < noise_level * 1.0001 {
+                break;
+            }
+        }
+
+        println!("\r- measuring, stay put");
+
+        let mut r = mpu.accel().unwrap();
+        for _ in 0..50 {
+            r += mpu.accel().unwrap();
+            delay.delay_ms(20u8);
+        }
+
+        r *= 0.02;
+
+        println!("\r- ok, readings: {} = {:8.3}", Vs(r), r.norm());
+
+        readings[pos] = [r[0], r[1], r[2]];
+    }
+
+    if let Some(adj) = estimate(&readings) {
+        println!("Calibration result: {:?}", adj);
         for pos in 0..6 {
-            println!("Put device in position {}", pos);
+            let r = Vector3::from(readings[pos]);
+            let a = Vector3::new(adj[0].estimate(r[0]),
+                                 adj[1].estimate(r[1]),
+                                 adj[2].estimate(r[2]));
+            let err = (G - a.norm()).abs();
+            println!(" - orig reading: {} = {}", Vs(r), r.norm());
+            println!("   adjusted:     {} = {}, error: {}",
+                     Vs(a),
+                     a.norm(),
+                     err);
+        }
+
+        loop {
+            println!("Put device in new position");
             let mut mov = 0.0;
 
             while mov < rest * 2.0 {
                 mov = lerp(0.05, mov, mpu.gyro().unwrap().norm());
-                print!("\r{:5.2}", mov);
+                // print!("\r{:5.2}", mov);
                 delay.delay_ms(20u8);
             }
 
@@ -142,28 +190,19 @@ fn main() -> ! {
 
             r *= 0.02;
 
-            println!("\r- ok, readings: {} = {:8.3}", Vs(r), r.norm());
-
-            readings[pos] = [r[0], r[1], r[2]];
+            let a = Vector3::new(adj[0].estimate(r[0]),
+                                 adj[1].estimate(r[1]),
+                                 adj[2].estimate(r[2]));
+            let err = (G - a.norm()).abs();
+            println!("\r- readings: {} = {:8.3}", Vs(r), r.norm());
+            println!("\r- adjusted: {} = {:8.3} err = {}",
+                     Vs(a),
+                     a.norm(),
+                     err);
         }
-
-        if let Some(adj) = estimate(&readings) {
-            println!("Calibration result: {:?}", adj);
-            for pos in 0..6 {
-                let r = Vector3::from(readings[pos]);
-                let a = Vector3::new(adj[0].estimate(r[0]),
-                                     adj[1].estimate(r[1]),
-                                     adj[2].estimate(r[2]));
-                let err = (G - a.norm()).abs();
-                println!(" - orig reading: {} = {}", Vs(r), r.norm());
-                println!("   adjusted:     {} = {}, error: {}",
-                         Vs(a),
-                         a.norm(),
-                         err);
-            }
-        } else {
-            println!("Calibration failed, try again.");
-        }
+    } else {
+        println!("Calibration failed, try again.");
+        loop {}
     }
 }
 
