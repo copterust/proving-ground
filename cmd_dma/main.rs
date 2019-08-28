@@ -12,6 +12,7 @@ use hal::gpio::{LowSpeed, Output, PullNone, PushPull};
 use hal::prelude::*;
 use hal::time::Bps;
 use heapless::consts::*;
+use heapless::spsc::{Consumer, Producer, Queue};
 use heapless::Vec;
 
 type USART = hal::pac::USART2;
@@ -21,7 +22,8 @@ type TxBuffer = Vec<u8, U256>;
 type TxReady = (&'static mut TxBuffer, TxCh, TxUsart);
 type TxBusy =
     hal::dma::Transfer<hal::dma::R, &'static mut TxBuffer, TxCh, TxUsart>;
-static mut BUFFER: TxBuffer = Vec::new();
+static mut BUFFER: TxBuffer = Vec(heapless::i::Vec::new());
+static mut QUEUE: Queue<u8, U16> = Queue(heapless::i::Queue::new());
 
 enum TransferState {
     Ready(TxReady),
@@ -121,6 +123,8 @@ const APP: () = {
     static mut TELE: Option<DmaTelemetry> = ();
     static mut RX: hal::serial::Rx<USART> = ();
     static mut CMD: Cmd = ();
+    static mut P: Producer<'static, u8, U16> = ();
+    static mut C: Consumer<'static, u8, U16> = ();
 
     #[init]
     fn init(ctx: init::Context) -> init::LateResources {
@@ -135,7 +139,7 @@ const APP: () = {
         let gpioa = device.GPIOA.split(&mut rcc.ahb);
         let mut serial =
             device.USART2
-            .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
+                  .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
         cortex_m_semihosting::hprintln!("serial").unwrap();
         serial.listen(hal::serial::Event::Rxne);
         cortex_m_semihosting::hprintln!("listen").unwrap();
@@ -148,42 +152,47 @@ const APP: () = {
         let mut led = gpioa.pa5.output().pull_type(PullNone);
         let _ = led.set_low();
         cortex_m_semihosting::hprintln!("init done").unwrap();
+
+        let (p, c) = unsafe { QUEUE.split() };
         init::LateResources { LED: led,
                               RX: rx,
                               CMD: Cmd::new(),
-                              TELE: Some(new_tele) }
+                              TELE: Some(new_tele),
+                              P: p,
+                              C: c }
     }
 
-    #[idle]
-    fn idle(_ctx: idle::Context) -> ! {
-        cortex_m_semihosting::hprintln!("idle").unwrap();
-
-        loop {}
-    }
-
-    #[interrupt(binds=USART2_EXTI26, resources = [LED, TELE, CMD, RX])]
-    fn handle_rx(ctx: handle_rx::Context) {
-        let led = ctx.resources.LED;
+    #[idle(resources=[C, CMD, TELE])]
+    fn idle(ctx: idle::Context) -> ! {
         let cmd = ctx.resources.CMD;
-        let rx = ctx.resources.RX;
-
-        let _ = led.toggle();
-        cortex_m_semihosting::hprintln!("rx").unwrap();
-        match rx.read() {
-            Ok(b) => {
-                cortex_m_semihosting::hprintln!("ok: {:?}", b).unwrap();
-                if let Some(word) = cmd.push(b) {
+        loop {
+            if let Some(byte) = ctx.resources.C.dequeue() {
+                if let Some(word) = cmd.push(byte) {
                     let maybe_tele = ctx.resources.TELE.take();
                     if let Some(tele) = maybe_tele {
                         let new_tele = tele.send(|b| fill_with_bytes(b, word));
                         *ctx.resources.TELE = Some(new_tele);
                     }
                 }
-            },
+            }
+        }
+    }
+
+    #[interrupt(binds=USART2_EXTI26, resources = [LED, RX, P])]
+    fn handle_rx(ctx: handle_rx::Context) {
+        let led = ctx.resources.LED;
+        let rx = ctx.resources.RX;
+
+        let _ = led.toggle();
+        match rx.read() {
+            Ok(b) => {
+                if let Err(e) = ctx.resources.P.enqueue(b) {
+                    cortex_m_semihosting::hprintln!("err: {:?}", e).unwrap();
+                }
+            }
             Err(e) => {
                 cortex_m_semihosting::hprintln!("err: {:?}", e).unwrap();
             }
         }
-        cortex_m_semihosting::hprintln!("done").unwrap();
     }
 };
