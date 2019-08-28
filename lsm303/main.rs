@@ -24,7 +24,6 @@ const TURN_QUIET: u8 = 'q' as u8;
 #[entry]
 fn main() -> ! {
     let device = hal::pac::Peripherals::take().unwrap();
-    let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
     let clocks = rcc.cfgr

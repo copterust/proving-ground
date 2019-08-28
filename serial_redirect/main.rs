@@ -23,7 +23,6 @@ static mut TX_GPS: Option<hal::serial::Tx<hal::pac::USART3>> = None;
 #[entry]
 fn main() -> ! {
     let device = hal::pac::Peripherals::take().unwrap();
-    let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
     let clocks = rcc.cfgr

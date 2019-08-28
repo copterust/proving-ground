@@ -93,8 +93,6 @@ const APP: () = {
                         .pclk1(32.mhz())
                         .freeze(&mut flash.acr);
         let gpioa = device.GPIOA.split(&mut rcc.ahb);
-        let gpioc = device.GPIOC.split(&mut rcc.ahb);
-        // USART1
         let serial =
             device.USART2
                   .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
