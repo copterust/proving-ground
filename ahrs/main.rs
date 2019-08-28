@@ -80,8 +80,7 @@ fn main() -> ! {
     let mut syst = delay.free();
     unsafe { cortex_m::interrupt::enable() };
     syt_tick_config(&mut syst, clocks.sysclk().0 / 1000);
-    let mut nvic = core.NVIC;
-    nvic.enable(ser_int);
+    unsafe { cortex_m::peripheral::NVIC::unmask(ser_int) };
 
     let mut prev_t_ms = now_ms();
     write!(l,

@@ -59,8 +59,8 @@ fn main() -> ! {
     let mut tof = vl53l0x::VL53L0x::new(i2c).expect("vl");
     write!(l, "vl53l0x ok\r\n").unwrap();
     unsafe { cortex_m::interrupt::enable() };
-    let mut nvic = core.NVIC;
-    nvic.enable(ser_int);
+    unsafe { cortex_m::peripheral::NVIC::unmask(ser_int) };
+
     write!(l, "ready to set meas budget \r\n").unwrap();
     tof.set_measurement_timing_budget(200000).expect("timbudg");
     write!(l, "meas budget set; start cont \r\n").unwrap();

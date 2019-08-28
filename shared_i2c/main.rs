@@ -69,8 +69,8 @@ fn main() -> ! {
     write!(l, "bmp ok\r\n").unwrap();
     // done
     unsafe { cortex_m::interrupt::enable() };
-    let mut nvic = core.NVIC;
-    nvic.enable(ser_int);
+    unsafe { cortex_m::peripheral::NVIC::unmask(ser_int) };
+
     write!(l, "All ok; Press 'q' to toggle verbosity!\r\n").unwrap();
     loop {
         match lsm303.all() {

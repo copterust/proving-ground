@@ -59,9 +59,8 @@ fn main() -> ! {
     write!(l, "logger ok...\r\n").unwrap();
     write!(l, "starting loop...\r\n").unwrap();
     unsafe { cortex_m::interrupt::enable() };
-    let mut nvic = core.NVIC;
-    nvic.enable(us2_int);
-    nvic.enable(us3_int);
+    unsafe { cortex_m::peripheral::NVIC::unmask(us2_int) };
+    unsafe { cortex_m::peripheral::NVIC::unmask(us3_int) };
 
     loop {
         cortex_m::asm::wfi();
