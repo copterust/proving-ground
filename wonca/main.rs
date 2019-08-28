@@ -38,6 +38,43 @@ fn accel_error<Dev, Imu>(mpu: &mut Mpu9250<Dev, Imu>,
     Ok(a * 0.02)
 }
 
+fn wait_for_measurement<Dev, Imu>(mpu: &mut Mpu9250<Dev, Imu>,
+                                  delay: &mut delay::Delay,
+                                  rest: f32,
+                                  noise_level: f32)
+                                  -> Result<Vector3<f32>, Dev::Error>
+    where Dev: mpu9250::Device
+{
+    let mut mov = 0.0;
+
+    while mov < rest * 2.0 {
+        mov = lerp(0.05, mov, mpu.gyro()?.norm());
+        delay.delay_ms(20u8);
+    }
+
+    println!("\r- found movement, waiting to settle");
+
+    loop {
+        let error = accel_error(mpu, delay)?;
+        print!("\r{}", error);
+        if error < noise_level * 1.0001 {
+            break;
+        }
+    }
+
+    println!("\r- measuring, stay put");
+
+    let mut r = mpu.accel()?;
+    for _ in 0..50 {
+        r += mpu.accel()?;
+        delay.delay_ms(20u8);
+    }
+
+    r *= 0.02;
+
+    Ok(r)
+}
+
 #[entry]
 fn main() -> ! {
     let device = hal::pac::Peripherals::take().unwrap();
@@ -114,32 +151,8 @@ fn main() -> ! {
 
     for pos in 0..6 {
         println!("Put device in position {}", pos);
-        let mut mov = 0.0;
 
-        while mov < rest * 2.0 {
-            mov = lerp(0.05, mov, mpu.gyro().unwrap().norm());
-            delay.delay_ms(20u8);
-        }
-
-        println!("\r- found movement, waiting to settle");
-
-        loop {
-            let error = accel_error(&mut mpu, &mut delay).unwrap();
-            print!("\r{}", error);
-            if error < noise_level * 1.0001 {
-                break;
-            }
-        }
-
-        println!("\r- measuring, stay put");
-
-        let mut r = mpu.accel().unwrap();
-        for _ in 0..50 {
-            r += mpu.accel().unwrap();
-            delay.delay_ms(20u8);
-        }
-
-        r *= 0.02;
+        let r = wait_for_measurement(&mut mpu, &mut delay, rest, noise_level).unwrap();
 
         println!("\r- ok, readings: {} = {:8.3}", Vs(r), r.norm());
 
@@ -163,34 +176,8 @@ fn main() -> ! {
 
         loop {
             println!("Put device in new position");
-            let mut mov = 0.0;
 
-            while mov < rest * 2.0 {
-                mov = lerp(0.05, mov, mpu.gyro().unwrap().norm());
-                // print!("\r{:5.2}", mov);
-                delay.delay_ms(20u8);
-            }
-
-            println!("\r- found movement, waiting to settle");
-
-            loop {
-                let error = accel_error(&mut mpu, &mut delay).unwrap();
-                print!("\r{}", error);
-                if error < noise_level * 1.0001 {
-                    break;
-                }
-            }
-
-            println!("\r- measuring, stay put");
-
-            let mut r = mpu.accel().unwrap();
-            for _ in 0..50 {
-                r += mpu.accel().unwrap();
-                delay.delay_ms(20u8);
-            }
-
-            r *= 0.02;
-
+            let r = wait_for_measurement(&mut mpu, &mut delay, rest, noise_level).unwrap();
             let a = Vector3::new(adj[0].estimate(r[0]),
                                  adj[1].estimate(r[1]),
                                  adj[2].estimate(r[2]));
