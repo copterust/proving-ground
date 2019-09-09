@@ -64,4 +64,16 @@ clean:
 goad: build
 	sh -c "openocd & arm-none-eabi-gdb -q $(BIN) & wait"
 
+# Problem: 
+#   openocd does not connect (init failed, unknown status code 0x09).
+#   Can be connected when holding down NRST pin (via button or with jumper wire).
+#   Can't flash while NRST is down (target not halted), but openocd connection breaks immediately as soon as jumper wire is removed.
+# The fix:
+#   'reset_config connect_assert_srst' forces reset state when openocd starts.
+#   'reset halt' issues halt cmd and (AIUI) deasserts SRST so cpu leaves reset state and halts.
+#   'stm32f3x.cpu curstate' to check that we actually halted.
+#   After this can follow any other command to fix whatever mess was there.
+fix-nucleo:
+	openocd -f openocd.cfg -c 'reset_config connect_assert_srst srst_only' -c init -c 'reset halt' -c 'stm32f3x.cpu curstate' -c 'stm32f1x mass_erase 0'
+
 .PHONY: build
