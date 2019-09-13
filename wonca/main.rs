@@ -52,20 +52,9 @@ fn main() -> ! {
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
 
-    let spi_conf = conf! {
-        dev: device.SPI1,
-        scl: gpiob.pb3,
-        miso: gpiob.pb4,
-        mosi: gpiob.pb5,
-        cs_mpu: gpiob.pb9,
-    };
-
-    let usart_conf = conf! {
-        dev: device.USART2,
-        tx: gpioa.pa14,
-        rx: gpioa.pa15,
-        bps: 460800,
-    };
+    
+    let spi_conf = include!(concat!("hw_layout/", env!("hw_layout"), "/spi.rs"));
+    let usart_conf = include!(concat!("hw_layout/", env!("hw_layout"), "/usart.rs"));
 
     let serial = usart_conf.dev.serial((usart_conf.tx, usart_conf.rx),
                                        Bps(usart_conf.bps),
