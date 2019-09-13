@@ -27,11 +27,11 @@ fn accel_error<Dev, Imu>(mpu: &mut Mpu9250<Dev, Imu>,
                          -> Result<f32, Dev::Error>
     where Dev: mpu9250::Device
 {
-    let mut i = mpu.accel()?;
+    let mut i: Vector3<_> = mpu.accel()?;
     let mut a = 0.0;
     for _ in 0..50 {
         delay.delay_ms(20u8);
-        let j = mpu.accel()?;
+        let j: Vector3<_> = mpu.accel()?;
         a += (j - i).norm();
         i = j;
     }
@@ -48,7 +48,8 @@ fn wait_for_measurement<Dev, Imu>(mpu: &mut Mpu9250<Dev, Imu>,
     let mut mov = 0.0;
 
     while mov < rest * 2.0 {
-        mov = lerp(0.05, mov, mpu.gyro()?.norm());
+        let gyro: Vector3<_> = mpu.gyro()?;
+        mov = lerp(0.05, mov, gyro.norm());
         delay.delay_ms(20u8);
     }
 
@@ -64,9 +65,10 @@ fn wait_for_measurement<Dev, Imu>(mpu: &mut Mpu9250<Dev, Imu>,
 
     println!("\r- measuring, stay put");
 
-    let mut r = mpu.accel()?;
+    let mut r = Vector3::zeros();
     for _ in 0..50 {
-        r += mpu.accel()?;
+        let accel: Vector3<_> = mpu.accel()?;
+        r += accel;
         delay.delay_ms(20u8);
     }
 
@@ -131,7 +133,8 @@ fn main() -> ! {
     let mut rest = 1.0;
     loop {
         let prev = rest;
-        rest = lerp(0.1, rest, mpu.gyro().unwrap().norm());
+        let gyro: Vector3<_> = mpu.gyro().unwrap();
+        rest = lerp(0.1, rest, gyro.norm());
         if (prev - rest).abs() < 0.0001 {
             break;
         }
