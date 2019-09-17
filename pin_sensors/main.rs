@@ -52,7 +52,7 @@ fn main() -> ! {
     let _ = pa1.set_low();
     loop {
         let _ = pa1.toggle();
-        match mpu.all() {
+        match mpu.all::<[f32; 3]>() {
             Ok(a) => {}
             Err(e) => {}
         }

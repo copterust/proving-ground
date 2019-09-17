@@ -56,10 +56,11 @@ fn main() -> ! {
     let mut mag_min_y: f32 = INFINITY;
     let mut mag_min_z: f32 = INFINITY;
 
-    let mag_sensitivity = mpu.mag_sensitivity_adjustments();
+    let [mag_sensitivity_x, mag_sensitivity_y, mag_sensitivity_z] =
+        mpu.mag_sensitivity_adjustments::<[f32; 3]>();
     write!(l,
-           "factory sensitivity adjustments: {:?}\r\n",
-           mag_sensitivity).unwrap();
+           "factory sensitivity adjustments: {:?}, {:?}, {:?}\r\n",
+           mag_sensitivity_x, mag_sensitivity_y, mag_sensitivity_z).unwrap();
 
     write!(
         l,
@@ -68,29 +69,29 @@ fn main() -> ! {
     delay.delay_ms(200u32);
 
     for _ in 0..sample_count {
-        match mpu.mag() {
-            Ok(m) => {
+        match mpu.mag::<[f32; 3]>() {
+            Ok([mx, my, mz]) => {
                 // x
-                if m.x > mag_max_x {
-                    mag_max_x = m.x;
+                if mx > mag_max_x {
+                    mag_max_x = mx;
                 }
-                if m.x < mag_min_x {
-                    mag_min_x = m.x;
+                if mx < mag_min_x {
+                    mag_min_x = mx;
                 }
                 // y
-                if m.y > mag_max_y {
-                    mag_max_y = m.y;
+                if my > mag_max_y {
+                    mag_max_y = my;
                 }
-                if m.y < mag_min_y {
-                    mag_min_y = m.y;
+                if my < mag_min_y {
+                    mag_min_y = my;
                 }
 
                 // z
-                if m.z > mag_max_z {
-                    mag_max_z = m.z;
+                if mz > mag_max_z {
+                    mag_max_z = mz;
                 }
-                if m.z < mag_min_z {
-                    mag_min_z = m.z;
+                if mz < mag_min_z {
+                    mag_min_z = mz;
                 }
             }
             Err(e) => {
@@ -108,9 +109,9 @@ fn main() -> ! {
     let mag_res = mpu.mag_resolution();
 
     // save mag biases in G for main program
-    let mag_bias_x = mag_avg_bias_x * mag_res * mag_sensitivity.x;
-    let mag_bias_y = mag_avg_bias_y * mag_res * mag_sensitivity.y;
-    let mag_bias_z = mag_avg_bias_z * mag_res * mag_sensitivity.z;
+    let mag_bias_x = mag_avg_bias_x * mag_res * mag_sensitivity_x;
+    let mag_bias_y = mag_avg_bias_y * mag_res * mag_sensitivity_y;
+    let mag_bias_z = mag_avg_bias_z * mag_res * mag_sensitivity_z;
 
     // Get soft iron correction estimate
     let mag_scale_x = ((mag_max_x - mag_min_x) as f32) / 2.; // get average x axis max chord length in counts

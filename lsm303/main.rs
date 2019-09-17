@@ -59,22 +59,24 @@ fn main() -> ! {
 
     write!(l, "All ok; Press 'q' to toggle verbosity!\r\n").unwrap();
     loop {
-        match lsm303.mag() {
+        match lsm303.mag::<[f32; 3]>() {
             Ok(meas) => {
                 if unsafe { !QUIET } {
-                    write!(l, "lsm: mag({},{},{})\r\n", meas.x, meas.y, meas.z,).unwrap();
+                    write!(l,
+                           "lsm: mag({},{},{})\r\n",
+                           meas[0], meas[1], meas[2]).unwrap();
                 }
             }
             Err(e) => {
                 write!(l, "Err meas: {:?}", e).unwrap();
             }
         };
-        match lsm303.unscaled_mag() {
+        match lsm303.unscaled_mag::<[i16; 3]>() {
             Ok(meas) => {
                 if unsafe { !QUIET } {
                     write!(l,
                            "lsm: unscmag({},{},{})\r\n",
-                           meas.x, meas.y, meas.z,).unwrap();
+                           meas[0], meas[1], meas[2],).unwrap();
                 }
             }
             Err(e) => {

@@ -71,28 +71,28 @@ fn main() -> ! {
     unsafe { cortex_m::peripheral::NVIC::unmask(ser_int) };
     write!(l, "All ok; Press 'q' to toggle verbosity!\r\n").unwrap();
     loop {
-        let mlsm_meas = lsm303.all();
-        let mmpu_meas = mpu.all();
+        let mlsm_meas = lsm303.all::<[f32; 3]>();
+        let mmpu_meas = mpu.all::<[f32; 3]>();
         match (mlsm_meas, mmpu_meas) {
             (Ok(lsm_meas), Ok(mpu_meas)) => {
                 if unsafe { !QUIET } {
                     write!(l,
                            "lsm: mag({},{},{}); a({},{},{}); t({});\r\n",
-                           lsm_meas.mag.x,
-                           lsm_meas.mag.y,
-                           lsm_meas.mag.z,
-                           lsm_meas.accel.x,
-                           lsm_meas.accel.y,
-                           lsm_meas.accel.z,
+                           lsm_meas.mag[0],
+                           lsm_meas.mag[1],
+                           lsm_meas.mag[2],
+                           lsm_meas.accel[0],
+                           lsm_meas.accel[1],
+                           lsm_meas.accel[2],
                            lsm_meas.temp).unwrap();
                     write!(l,
                            "mpu: mag({},{},{}); a({},{},{}); t({});\r\n",
-                           mpu_meas.mag.x,
-                           mpu_meas.mag.y,
-                           mpu_meas.mag.z,
-                           mpu_meas.accel.x,
-                           mpu_meas.accel.y,
-                           mpu_meas.accel.z,
+                           mpu_meas.mag[0],
+                           mpu_meas.mag[1],
+                           mpu_meas.mag[2],
+                           mpu_meas.accel[0],
+                           mpu_meas.accel[1],
+                           mpu_meas.accel[2],
                            mpu_meas.temp).unwrap();
                 }
             }

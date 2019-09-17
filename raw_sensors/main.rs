@@ -66,7 +66,7 @@ fn main() -> ! {
         }
     };
     writeln!(l, "mpu ok").unwrap();
-    let accel_biases = match mpu.calibrate_at_rest(&mut delay) {
+    let accel_biases: [f32; 3] = match mpu.calibrate_at_rest(&mut delay) {
         Ok(ab) => ab,
         Err(e) => {
             writeln!(l, "Mpu calib error: {:?}", e).unwrap();
@@ -91,17 +91,19 @@ fn main() -> ! {
         let t_ms = now_ms();
         let dt_ms = t_ms.wrapping_sub(prev_t_ms);
         prev_t_ms = t_ms;
-        match mpu.all() {
+        match mpu.all::<[f32; 3]>() {
             Ok(meas) => {
                 let gyro = meas.gyro;
-                let accel = meas.accel - accel_biases;
+                let accel = [meas.accel[0] - accel_biases[0],
+                             meas.accel[1] - accel_biases[1],
+                             meas.accel[2] - accel_biases[2]];
                 if unsafe { !QUIET } {
                     write!(
                         l,
                         "IMU: t:{}ms; dt:{}ms; g({};{};{}); a({};{};{})\r\n",
-                        t_ms, dt_ms, gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z
-                    )
-                    .unwrap();
+                        t_ms, dt_ms, gyro[0], gyro[1], gyro[2],
+                        accel[0], accel[1], accel[2]
+                    ).unwrap();
                 }
             }
             Err(e) => {

@@ -70,10 +70,10 @@ fn main() -> ! {
     )
     .expect("mpu error");
     write!(l, "mpu ok\r\n").unwrap();
-    let mut accel_biases =
+    let mut accel_biases: [f32; 3] =
         mpu.calibrate_at_rest(&mut delay).expect("calib error");
     // Correct axis for gravity;
-    accel_biases.z -= mpu9250::G;
+    accel_biases[2] -= mpu9250::G;
     write!(l, "calibration ok: {:?}\r\n", accel_biases).unwrap();
 
     let mut dcmimu = DCMIMU::new();
@@ -87,17 +87,20 @@ fn main() -> ! {
            "All ok, now: {:?}; Press 'q' to toggle logging!\r\n",
            prev_t_ms).unwrap();
     loop {
-        match mpu.all() {
+        match mpu.all::<[f32; 3]>() {
             Ok(meas) => {
                 let gyro = meas.gyro;
-                let accel = meas.accel - accel_biases;
+                let accel = [meas.accel[0] - accel_biases[0],
+                             meas.accel[1] - accel_biases[1],
+                             meas.accel[2] - accel_biases[2]];
                 let t_ms = now_ms();
                 let dt_ms = t_ms.wrapping_sub(prev_t_ms);
                 prev_t_ms = t_ms;
                 let dt_s = (dt_ms as f32) / 1000.;
-                let (dcm, _biased) = dcmimu.update((gyro.x, gyro.y, gyro.z),
-                                                   (accel.x, accel.y, accel.z),
-                                                   dt_s);
+                let (dcm, _biased) =
+                    dcmimu.update((gyro[0], gyro[1], gyro[2]),
+                                  (accel[0], accel[1], accel[2]),
+                                  dt_s);
                 if unsafe { !QUIET } {
                     write!(l,
                            "IMU: dt={}s; roll={}; yaw={}; pitch={}\r\n",
