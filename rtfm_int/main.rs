@@ -11,15 +11,15 @@ use ehal::blocking::delay::DelayMs;
 use rtfm::app;
 use stm32f3::stm32f303;
 
-#[app(device = stm32f3::stm32f303)]
+#[app(device = stm32f3::stm32f303, peripherals = true)]
 const APP: () = {
-    static mut DEVICE: stm32f303::Peripherals = ();
-    static mut DELAY: AsmDelay = ();
+    struct Resources {
+        device: stm32f303::Peripherals,
+        delay: AsmDelay
+    }
 
     #[init]
     fn init(ctx: init::Context) -> init::LateResources {
-        let mut _core: rtfm::Peripherals = ctx.core;
-
         let device: stm32f303::Peripherals = ctx.device;
         let delay = AsmDelay::new(32u32.mhz());
 
@@ -44,20 +44,19 @@ const APP: () = {
         device.EXTI.emr1.modify(|_, w| w.mr13().set_bit());
         device.EXTI.rtsr1.modify(|_, w| w.tr13().set_bit());
 
-        init::LateResources { DEVICE: device,
-                              DELAY: delay }
+        init::LateResources { device, delay }
     }
 
-    #[interrupt(binds=EXTI15_10, resources = [DEVICE, DELAY])]
+    #[task(binds=EXTI15_10, resources = [device, delay])]
     fn int(ctx: int::Context) {
         for _ in 1..3 {
-            ctx.resources.DEVICE.GPIOA.bsrr.write(|w| w.bs5().set_bit());
-            ctx.resources.DELAY.delay_ms(100u32);
-            ctx.resources.DEVICE.GPIOA.brr.write(|w| w.br5().set_bit());
-            ctx.resources.DELAY.delay_ms(100u32);
+            ctx.resources.device.GPIOA.bsrr.write(|w| w.bs5().set_bit());
+            ctx.resources.delay.delay_ms(100u32);
+            ctx.resources.device.GPIOA.brr.write(|w| w.br5().set_bit());
+            ctx.resources.delay.delay_ms(100u32);
         }
         ctx.resources
-           .DEVICE
+           .device
            .EXTI
            .pr1
            .modify(|_, w| w.pr13().set_bit());

@@ -77,15 +77,17 @@ fn fill_with_str(buffer: &mut TxBuffer, arg: &str) {
     buffer.extend_from_slice(arg.as_bytes()).unwrap();
 }
 
-#[app(device = hal::pac)]
+#[app(device = hal::pac, peripherals = true)]
 const APP: () = {
-    static mut LED: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>> = ();
-    static mut EXTIH: hal::exti::Exti<hal::exti::EXTI13> = ();
-    static mut TELE: Option<DmaTelemetry> = ();
+    struct Resources {
+        led: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>>,
+        extih: hal::exti::Exti<hal::exti::EXTI13>,
+        tele: Option<DmaTelemetry>
+    }
 
     #[init]
     fn init(ctx: init::Context) -> init::LateResources {
-        let device: hal::pac::Peripherals = ctx.device;
+        let device = ctx.device;
         let mut rcc = device.RCC.constrain();
         let mut flash = device.FLASH.constrain();
         let clocks = rcc.cfgr
@@ -114,20 +116,20 @@ const APP: () = {
         let mut led = gpioa.pa5.output().pull_type(PullNone);
         let _ = led.set_high();
 
-        init::LateResources { LED: led,
-                              EXTIH: exti.EXTI13,
-                              TELE: Some(new_tele) }
+        init::LateResources { led,
+                              extih: exti.EXTI13,
+                              tele: Some(new_tele) }
     }
 
-    #[interrupt(binds=EXTI0, resources = [LED, TELE, EXTIH])]
+    #[task(binds=EXTI0, resources = [led, tele, extih])]
     fn handle_mpu(ctx: handle_mpu::Context) {
-        let led = ctx.resources.LED;
+        let led = ctx.resources.led;
         let _ = led.set_low();
-        let maybe_tele = ctx.resources.TELE.take();
+        let maybe_tele = ctx.resources.tele.take();
         if let Some(tele) = maybe_tele {
             let new_tele = tele.send(|b| fill_with_str(b, "interrupt!\n"));
-            *ctx.resources.TELE = Some(new_tele);
+            *ctx.resources.tele = Some(new_tele);
         }
-        ctx.resources.EXTIH.unpend();
+        ctx.resources.extih.unpend();
     }
 };
