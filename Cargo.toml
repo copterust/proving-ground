@@ -233,6 +233,11 @@ path = "dma_int/main.rs"
 required-features = [ "with_rtfm", "with_hal", "with_heapless"]
 
 [[bin]]
+name = "calibrating_ahrs"
+path = "calibrating_ahrs/main.rs"
+required-features = [ "with_rtfm", "with_hal", "with_heapless"]
+
+[[bin]]
 name = "rtfm_int"
 path = "rtfm_int/main.rs"
 required-features = [ "with_rtfm", "with_device", "ehal"]
