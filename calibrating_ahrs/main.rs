@@ -13,6 +13,7 @@ use hal::prelude::*;
 use hal::time::Bps;
 use heapless::consts::*;
 use heapless::Vec;
+use rtfm::cyccnt::{Instant, U32Ext as _};
 
 type USART = hal::pac::USART2;
 type TxUsart = hal::serial::Tx<USART>;
@@ -22,6 +23,8 @@ type TxReady = (&'static mut TxBuffer, TxCh, TxUsart);
 type TxBusy =
     hal::dma::Transfer<hal::dma::R, &'static mut TxBuffer, TxCh, TxUsart>;
 static mut BUFFER: TxBuffer = Vec(heapless::i::Vec::new());
+
+const FAST: u32 = 8_000_000;
 
 enum TransferState {
     Ready(TxReady),
@@ -77,15 +80,16 @@ fn fill_with_str(buffer: &mut TxBuffer, arg: &str) {
     buffer.extend_from_slice(arg.as_bytes()).unwrap();
 }
 
-#[app(device = hal::pac, peripherals = true)]
+#[rtfm::app(device = hal::pac, peripherals = true, monotonic = rtfm::cyccnt::CYCCNT)]
 const APP: () = {
     struct Resources {
         led: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>>,
         extih: hal::exti::Exti<hal::exti::EXTI13>,
-        tele: Option<DmaTelemetry>
+        tele: Option<DmaTelemetry>,
+        fast_calibration: bool
     }
 
-    #[init]
+    #[init(schedule = [calibrate])]
     fn init(ctx: init::Context) -> init::LateResources {
         let device = ctx.device;
         let mut rcc = device.RCC.constrain();
@@ -115,10 +119,24 @@ const APP: () = {
         let new_tele = tele.send(|b| fill_with_str(b, "Dma ok!\r\n"));
         let mut led = gpioa.pa5.output().pull_type(PullNone);
         let _ = led.set_high();
+        // Start periodic calibration
+        ctx.schedule.calibrate(Instant::now() + FAST.cycles()).unwrap();
 
         init::LateResources { led,
                               extih: exti.EXTI13,
-                              tele: Some(new_tele) }
+                              tele: Some(new_tele),
+                              fast_calibration: true
+                            }
+    }
+
+    #[task(schedule = [calibrate])]
+    fn calibrate(ctx: calibrate::Context) {
+        let now = Instant::now();
+        ctx.schedule.calibrate(ctx.scheduled + FAST.cycles()).unwrap();
+    }
+
+    extern "C" {
+        fn UART4_EXTI34();
     }
 
     #[task(binds=EXTI0, resources = [led, tele, extih])]
