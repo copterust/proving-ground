@@ -1,3 +1,8 @@
+bin :=
+NAME := $(if $(bin),$(bin),dflt)
+ifndef NAME
+$(error Set bin to build, e.g. 'bin=mini')
+endif
 fea := $(shell grep "\[\[bin\]\]" -A3 Cargo.toml | grep $(NAME) -A2 | grep required | awk -F'[][]' '{print $$2}')
 FEATURES := $(if $(fea),"--features=$(fea)",)
 release :=
@@ -21,12 +26,6 @@ endif
 ifeq ($(UNAME), Darwin)
 TTY := /dev/tty.usbserial-1410
 endif
-
-nodevice: memory
-	cargo -v build --bins --features=no_device
-
-all: memory
-	cargo -v build --bins --features=all
 
 $(BIN): build
 
@@ -64,6 +63,12 @@ clean:
 goad: build
 	sh -c "openocd & arm-none-eabi-gdb -q $(BIN) & wait"
 
+nodevice: memory
+	cargo -v build --bins --features=no_device
+
+all: memory
+	cargo -v build --bins --features=all
+
 # Problem:
 #   openocd does not connect (init failed, unknown status code 0x09).
 #   Can be connected when holding down NRST pin (via button or with jumper wire).
@@ -76,4 +81,4 @@ goad: build
 fix-nucleo:
 	openocd -f openocd.cfg -c 'reset_config connect_assert_srst srst_only' -c init -c 'reset halt' -c 'stm32f3x.cpu curstate' -c 'stm32f1x mass_erase 0'
 
-.PHONY: nodevice
+.PHONY: build
