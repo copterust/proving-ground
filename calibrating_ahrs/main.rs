@@ -6,7 +6,6 @@
 use panic_abort;
 
 use core::fmt::Write;
-use rtfm::app;
 
 use hal::gpio::{LowSpeed, Output, PullNone, PullUp, PushPull};
 use hal::prelude::*;
@@ -86,7 +85,7 @@ const APP: () = {
         led: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>>,
         extih: hal::exti::Exti<hal::exti::EXTI13>,
         tele: Option<DmaTelemetry>,
-        fast_calibration: bool
+        fast_calibration: bool,
     }
 
     #[init(schedule = [calibrate])]
@@ -120,19 +119,21 @@ const APP: () = {
         let mut led = gpioa.pa5.output().pull_type(PullNone);
         let _ = led.set_high();
         // Start periodic calibration
-        ctx.schedule.calibrate(Instant::now() + FAST.cycles()).unwrap();
+        ctx.schedule
+           .calibrate(Instant::now() + FAST.cycles())
+           .unwrap();
 
         init::LateResources { led,
                               extih: exti.EXTI13,
                               tele: Some(new_tele),
-                              fast_calibration: true
-                            }
+                              fast_calibration: true }
     }
 
     #[task(schedule = [calibrate])]
     fn calibrate(ctx: calibrate::Context) {
-        let now = Instant::now();
-        ctx.schedule.calibrate(ctx.scheduled + FAST.cycles()).unwrap();
+        ctx.schedule
+           .calibrate(ctx.scheduled + FAST.cycles())
+           .unwrap();
     }
 
     extern "C" {
