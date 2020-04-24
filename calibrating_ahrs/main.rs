@@ -122,9 +122,7 @@ const APP: () = {
         //ctx.core.DCB.enable_trace();
         ctx.core.DWT.enable_cycle_counter();
         // Start periodic calibration
-        ctx.schedule
-           .calibrate(ctx.start + FAST.cycles())
-           .unwrap();
+        ctx.schedule.calibrate(ctx.start + FAST.cycles()).unwrap();
 
         init::LateResources { led,
                               extih: exti.EXTI13,
@@ -140,7 +138,9 @@ const APP: () = {
             let new_tele = tele.send(|b| fill_with_str(b, "timer!\r\n"));
             *ctx.resources.tele = Some(new_tele);
         }
-        ctx.schedule.calibrate(ctx.scheduled + FAST.cycles()).unwrap();
+        ctx.schedule
+           .calibrate(ctx.scheduled + FAST.cycles())
+           .unwrap();
     }
 
     extern "C" {
