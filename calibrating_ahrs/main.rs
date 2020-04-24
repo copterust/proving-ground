@@ -23,7 +23,7 @@ type TxBusy =
     hal::dma::Transfer<hal::dma::R, &'static mut TxBuffer, TxCh, TxUsart>;
 static mut BUFFER: TxBuffer = Vec(heapless::i::Vec::new());
 
-const FAST: u32 = 8_000;
+const FAST: u32 = 8_000_000;
 
 enum TransferState {
     Ready(TxReady),
@@ -119,11 +119,11 @@ const APP: () = {
         let mut led = gpioa.pa5.output().pull_type(PullNone);
         let _ = led.set_high();
         // Enable monotonic timer (CYCCNT)
-        ctx.core.DCB.enable_trace();
+        //ctx.core.DCB.enable_trace();
         ctx.core.DWT.enable_cycle_counter();
         // Start periodic calibration
         ctx.schedule
-           .calibrate(Instant::now() + FAST.cycles())
+           .calibrate(ctx.start + FAST.cycles())
            .unwrap();
 
         init::LateResources { led,
@@ -137,7 +137,7 @@ const APP: () = {
         let now = Instant::now();
         let maybe_tele = ctx.resources.tele.take();
         if let Some(tele) = maybe_tele {
-            let new_tele = tele.send(|b| fill_with_str(b, "timer!\n"));
+            let new_tele = tele.send(|b| fill_with_str(b, "timer!\r\n"));
             *ctx.resources.tele = Some(new_tele);
         }
         ctx.schedule.calibrate(ctx.scheduled + FAST.cycles()).unwrap();
@@ -153,7 +153,7 @@ const APP: () = {
         let _ = led.set_low();
         let maybe_tele = ctx.resources.tele.take();
         if let Some(tele) = maybe_tele {
-            let new_tele = tele.send(|b| fill_with_str(b, "interrupt!\n"));
+            let new_tele = tele.send(|b| fill_with_str(b, "interrupt!\r\n"));
             *ctx.resources.tele = Some(new_tele);
         }
         ctx.resources.extih.unpend();
