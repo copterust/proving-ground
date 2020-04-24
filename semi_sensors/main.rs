@@ -76,19 +76,19 @@ fn main() -> ! {
     pa1.set_low();
     for _ in 1..10 {
         pa1.toggle();
-        match mpu.all() {
+        match mpu.all::<[f32; 3]>() {
             Ok(a) => {
                 hprintln!(
                     "[a:({:?},{:?},{:?}),g:({:?},{:?},{:?}),m:({:?},{:?},{:?}),]",
-                    a.accel.x,
-                    a.accel.y,
-                    a.accel.z,
-                    a.gyro.x,
-                    a.gyro.y,
-                    a.gyro.z,
-                    a.mag.x,
-                    a.mag.y,
-                    a.mag.z,
+                    a.accel[0],
+                    a.accel[1],
+                    a.accel[2],
+                    a.gyro[0],
+                    a.gyro[1],
+                    a.gyro[2],
+                    a.mag[0],
+                    a.mag[1],
+                    a.mag[2],
                 )
                 .unwrap();
             }
@@ -99,24 +99,24 @@ fn main() -> ! {
     }
 
     hprintln!("running calibration...").unwrap();
-    let accel_biases = mpu.calibrate_at_rest(&mut delay).unwrap();
+    let accel_biases = mpu.calibrate_at_rest::<AsmDelay, [f32; 3]>(&mut delay).unwrap();
     hprintln!("calibration ok: {:?}", accel_biases).unwrap();
 
     loop {
         pa1.toggle();
-        match mpu.all() {
+        match mpu.all::<[f32; 3]>() {
             Ok(a) => {
                 hprintln!(
                     "[a:({:?},{:?},{:?}),g:({:?},{:?},{:?}),m:({:?},{:?},{:?}),]",
-                    a.accel.x,
-                    a.accel.y,
-                    a.accel.z,
-                    a.gyro.x,
-                    a.gyro.y,
-                    a.gyro.z,
-                    a.mag.x,
-                    a.mag.y,
-                    a.mag.z,
+                    a.accel[0],
+                    a.accel[1],
+                    a.accel[2],
+                    a.gyro[0],
+                    a.gyro[1],
+                    a.gyro[2],
+                    a.mag[0],
+                    a.mag[1],
+                    a.mag[2],
                 )
                 .unwrap();
             }
