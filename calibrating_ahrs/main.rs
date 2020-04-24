@@ -89,7 +89,7 @@ const APP: () = {
     }
 
     #[init(schedule = [calibrate])]
-    fn init(ctx: init::Context) -> init::LateResources {
+    fn init(mut ctx: init::Context) -> init::LateResources {
         let device = ctx.device;
         let mut rcc = device.RCC.constrain();
         let mut flash = device.FLASH.constrain();
@@ -118,6 +118,9 @@ const APP: () = {
         let new_tele = tele.send(|b| fill_with_str(b, "Dma ok!\r\n"));
         let mut led = gpioa.pa5.output().pull_type(PullNone);
         let _ = led.set_high();
+        // Enable monotonic timer (CYCCNT)
+        ctx.core.DCB.enable_trace();
+        ctx.core.DWT.enable_cycle_counter();
         // Start periodic calibration
         ctx.schedule
            .calibrate(Instant::now() + FAST.cycles())
