@@ -12,7 +12,7 @@ use hal::prelude::*;
 use hal::time::Bps;
 use heapless::consts::*;
 use heapless::Vec;
-use rtfm::cyccnt::{Instant, U32Ext as _};
+use rtfm::cyccnt::U32Ext as _;
 
 type USART = hal::pac::USART2;
 type TxUsart = hal::serial::Tx<USART>;
@@ -89,7 +89,7 @@ const APP: () = {
     }
 
     #[init(schedule = [calibrate])]
-    fn init(mut ctx: init::Context) -> init::LateResources {
+    fn init(ctx: init::Context) -> init::LateResources {
         let device = ctx.device;
         let mut rcc = device.RCC.constrain();
         let mut flash = device.FLASH.constrain();
@@ -118,10 +118,7 @@ const APP: () = {
         let new_tele = tele.send(|b| fill_with_str(b, "Dma ok!\r\n"));
         let mut led = gpioa.pa5.output().pull_type(PullNone);
         let _ = led.set_high();
-        // Enable monotonic timer (CYCCNT)
-        //ctx.core.DCB.enable_trace();
-        ctx.core.DWT.enable_cycle_counter();
-        // Start periodic calibration
+
         ctx.schedule.calibrate(ctx.start + FAST.cycles()).unwrap();
 
         init::LateResources { led,
@@ -132,7 +129,6 @@ const APP: () = {
 
     #[task(schedule = [calibrate], resources = [tele])]
     fn calibrate(ctx: calibrate::Context) {
-        let now = Instant::now();
         let maybe_tele = ctx.resources.tele.take();
         if let Some(tele) = maybe_tele {
             let new_tele = tele.send(|b| fill_with_str(b, "timer!\r\n"));
