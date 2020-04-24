@@ -235,7 +235,7 @@ required-features = [ "with_rtfm", "with_hal", "with_heapless"]
 [[bin]]
 name = "calibrating_ahrs"
 path = "calibrating_ahrs/main.rs"
-required-features = [ "with_rtfm", "with_hal", "with_heapless"]
+required-features = [ "with_rtfm", "with_hal", "with_heapless", "with_rt" ]
 
 [[bin]]
 name = "rtfm_int"

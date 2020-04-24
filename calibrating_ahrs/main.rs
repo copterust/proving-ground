@@ -23,7 +23,7 @@ type TxBusy =
     hal::dma::Transfer<hal::dma::R, &'static mut TxBuffer, TxCh, TxUsart>;
 static mut BUFFER: TxBuffer = Vec(heapless::i::Vec::new());
 
-const FAST: u32 = 8_000_000;
+const FAST: u32 = 8_000;
 
 enum TransferState {
     Ready(TxReady),
@@ -129,11 +129,15 @@ const APP: () = {
                               fast_calibration: true }
     }
 
-    #[task(schedule = [calibrate])]
+    #[task(schedule = [calibrate], resources = [tele])]
     fn calibrate(ctx: calibrate::Context) {
-        ctx.schedule
-           .calibrate(ctx.scheduled + FAST.cycles())
-           .unwrap();
+        let now = Instant::now();
+        let maybe_tele = ctx.resources.tele.take();
+        if let Some(tele) = maybe_tele {
+            let new_tele = tele.send(|b| fill_with_str(b, "timer!\n"));
+            *ctx.resources.tele = Some(new_tele);
+        }
+        ctx.schedule.calibrate(ctx.scheduled + FAST.cycles()).unwrap();
     }
 
     extern "C" {
