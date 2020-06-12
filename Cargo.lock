@@ -191,7 +191,7 @@ dependencies = [
 
 [[package]]
 name = "dcmimu"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libm 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -418,7 +418,7 @@ dependencies = [
  "cortex-m-rt 0.6.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "cortex-m-rtic 0.5.3 (git+https://github.com/rtic-rs/cortex-m-rtic?rev=cfd5f4785e9c2ae88e666d1fb94a3488904a87f5)",
  "cortex-m-semihosting 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "dcmimu 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dcmimu 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "embedded-hal 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "heapless 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "libm 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -754,7 +754,7 @@ dependencies = [
 "checksum cortex-m-rtic 0.5.3 (git+https://github.com/rtic-rs/cortex-m-rtic?rev=cfd5f4785e9c2ae88e666d1fb94a3488904a87f5)" = "<none>"
 "checksum cortex-m-rtic-macros 0.5.0 (git+https://github.com/rtic-rs/cortex-m-rtic?rev=cfd5f4785e9c2ae88e666d1fb94a3488904a87f5)" = "<none>"
 "checksum cortex-m-semihosting 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)" = "113ef0ecffee2b62b58f9380f4469099b30e9f9cbee2804771b4203ba1762cfa"
-"checksum dcmimu 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "49385aec83acb40cd670b5e8203e2d2e020be2c29cd7c2f7195540540532b6f2"
+"checksum dcmimu 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "692b1c8923315ac22103c1890512597baf543b95f2eebd66f572ffb1ff8f0170"
 "checksum embedded-hal 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ee4908a155094da7723c2d60d617b820061e3b4efcc3d9e293d206a5a76c170b"
 "checksum generic-array 0.12.3 (registry+https://github.com/rust-lang/crates.io-index)" = "c68f0274ae0e023facc3c97b2e00f076be70e254bc851d972503b328db79b2ec"
 "checksum generic-array 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)" = "0ed1e761351b56f54eb9dcd0cfaca9fd0daecf93918e1cfc01c8a3d26ee7adcd"
