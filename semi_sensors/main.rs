@@ -79,7 +79,7 @@ fn main() -> ! {
         match mpu.all::<[f32; 3]>() {
             Ok(a) => {
                 hprintln!(
-                    "[a:({:?},{:?},{:?}),g:({:?},{:?},{:?}),m:({:?},{:?},{:?}),t:{}]",
+                    "[a:({:?},{:?},{:?}),g:({:?},{:?},{:?}),m:({:?},{:?},{:?}),]",
                     a.accel[0],
                     a.accel[1],
                     a.accel[2],
@@ -100,7 +100,7 @@ fn main() -> ! {
     }
 
     hprintln!("running calibration...").unwrap();
-    let accel_biases = mpu.calibrate_at_rest::<AsmDelay, [f32; 3]>(&mut delay).unwrap();
+    let accel_biases: [f32; 3] = mpu.calibrate_at_rest(&mut delay).unwrap();
     hprintln!("calibration ok: {:?}", accel_biases).unwrap();
 
     loop {

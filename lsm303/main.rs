@@ -165,5 +165,5 @@ fn panic(panic_info: &PanicInfo) -> ! {
         }
         None => {}
     }
-    unsafe { intrinsics::abort() }
+    intrinsics::abort()
 }

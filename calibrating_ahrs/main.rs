@@ -12,7 +12,7 @@ use hal::prelude::*;
 use hal::time::Bps;
 use heapless::consts::*;
 use heapless::Vec;
-use rtfm::cyccnt::U32Ext as _;
+use rtic::cyccnt::U32Ext as _;
 
 type USART = hal::pac::USART2;
 type TxUsart = hal::serial::Tx<USART>;
@@ -79,7 +79,7 @@ fn fill_with_str(buffer: &mut TxBuffer, arg: &str) {
     buffer.extend_from_slice(arg.as_bytes()).unwrap();
 }
 
-#[rtfm::app(device = hal::pac, peripherals = true, monotonic = rtfm::cyccnt::CYCCNT)]
+#[rtic::app(device = hal::pac, peripherals = true, monotonic = rtic::cyccnt::CYCCNT)]
 const APP: () = {
     struct Resources {
         led: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>>,

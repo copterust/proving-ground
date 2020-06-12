@@ -8,14 +8,14 @@ use panic_abort;
 use asm_delay::bitrate::*;
 use asm_delay::AsmDelay;
 use ehal::blocking::delay::DelayMs;
-use rtfm::app;
+use rtic::app;
 use stm32f3::stm32f303;
 
 #[app(device = stm32f3::stm32f303, peripherals = true)]
 const APP: () = {
     struct Resources {
         device: stm32f303::Peripherals,
-        delay: AsmDelay
+        delay: AsmDelay,
     }
 
     #[init]

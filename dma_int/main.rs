@@ -6,7 +6,7 @@
 use panic_abort;
 
 use core::fmt::Write;
-use rtfm::app;
+use rtic::app;
 
 use hal::gpio::{LowSpeed, Output, PullNone, PullUp, PushPull};
 use hal::prelude::*;
@@ -82,7 +82,7 @@ const APP: () = {
     struct Resources {
         led: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>>,
         extih: hal::exti::Exti<hal::exti::EXTI13>,
-        tele: Option<DmaTelemetry>
+        tele: Option<DmaTelemetry>,
     }
 
     #[init]

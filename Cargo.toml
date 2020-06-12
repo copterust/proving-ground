@@ -24,12 +24,12 @@ incremental = false
 [dependencies]
 panic-abort = {version = "0.3.1", optional=true}
 asm-delay = {version = "0.7"}
-cortex-m = {version = ">=0.5.8,<0.7", optional=true, features = ["inline-asm", "const-fn"]}
+cortex-m = {version = ">=0.6.2,<0.7", optional=true, features = ["inline-asm"]}
 cortex-m-rt = {version = "0.6.7", optional = true}
 nb = {version = "0.1.1", optional = true}
 stm32f3 = {version = "0.7.0", optional = true}
-mpu9250 = {version = "0.20", optional = true}
-# mpu9250 = {path = "../mpu9250", optional = true}
+# mpu9250 = {version = "0.20", optional = true}
+mpu9250 = {path = "../mpu9250", optional = true}
 dcmimu = {version = "0.2.1", optional = true}
 ryu = {version = "0.2", optional = true}
 lsm303c = {version = "0.2.0", optional = true}
@@ -44,8 +44,11 @@ rand = {version = "0.5.5", optional = true, default-features = false}
 cortex-m-semihosting = {version = "0.3.2", optional = true}
 heapless = {version = "0.5.0", optional = true}
 
-[dependencies.cortex-m-rtfm]
-version = "0.5.0"
+
+[dependencies.cortex-m-rtic]
+version = "0.5.3"
+git = "https://github.com/rtic-rs/cortex-m-rtic"
+rev = "cfd5f4785e9c2ae88e666d1fb94a3488904a87f5"
 optional = true
 
 [dependencies.panic-semihosting]
@@ -74,6 +77,9 @@ rev = "bab7ae635ad3b27c8abded674cc9061f9171d196"
 default-features = false
 optional = true
 
+[patch.crates-io]
+cortex-m = { git = "https://github.com/rust-embedded/cortex-m" }
+
 [features]
 no_device = ["panic-abort", "cortex-m-rt", "cortex-m"]
 with_rt = ["panic-abort", "cortex-m-rt", "cortex-m", ]
@@ -90,7 +96,7 @@ with_semihosting = ["cortex-m-semihosting", "panic-semihosting"]
 with_won2010 = ["won2010"]
 with_heapless = ["heapless"]
 with_ryu = ["ryu"]
-with_rtfm = ["cortex-m-rtfm"]
+with_rtfm = ["cortex-m-rtic"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
 all = ["with_dcmimu", "with_lsm", "with_heapless", "with_rtfm"]

@@ -7,7 +7,7 @@ In order to obtain good orientation estimate the following steps are needed [1]:
 * Filtering: eliminate outliners in data;
 * Estimation: use cleaned up readings for pose estimation.
 
-For filtering we are going to remove the points that has vecotr length more that
+For filtering we are going to remove the points that has vector length more that
 two standard deviations away from mean of the bucket.
 
 ## Program outline

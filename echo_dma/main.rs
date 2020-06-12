@@ -5,7 +5,7 @@
 #[allow(unused)]
 use panic_abort;
 
-use rtfm::app;
+use rtic::app;
 
 use hal::gpio::{LowSpeed, Output, PullNone, PushPull};
 use hal::prelude::*;
@@ -82,7 +82,6 @@ fn fill_with_str(buffer: &mut TxBuffer, arg: &str) {
     buffer.extend_from_slice(arg.as_bytes()).unwrap();
 }
 
-
 #[app(device = hal::pac)]
 const APP: () = {
     static mut LED: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>> = ();
@@ -101,7 +100,7 @@ const APP: () = {
         let gpioa = device.GPIOA.split(&mut rcc.ahb);
         let serial =
             device.USART2
-            .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
+                  .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
         let (tx, rx) = serial.split();
         let dma_channels = device.DMA1.split(&mut rcc.ahb);
         let tele = DmaTelemetry::create(dma_channels.7, tx);
@@ -128,18 +127,17 @@ const APP: () = {
         if let Some(tele) = maybe_tele {
             let mut msg = [0u8; 32];
             let ret = cb.peek(|buf, _half| {
-                msg.copy_from_slice(buf);
-            });
+                            msg.copy_from_slice(buf);
+                        });
             match ret {
                 Ok(()) => {
                     let new_tele = tele.send(|b| fill_with_bytes(b, &msg));
                     *ctx.resources.TELE = Some(new_tele);
-                },
+                }
                 Err(e) => {
                     cortex_m_semihosting::hprintln!("e: {:?}", e).unwrap();
                 }
             }
         }
-
     }
 };

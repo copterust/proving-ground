@@ -6,7 +6,7 @@
 use panic_abort;
 
 use core::fmt::Write;
-use rtfm::app;
+use rtic::app;
 
 use hal::gpio::{LowSpeed, Output, PullNone, PushPull};
 use hal::prelude::*;
