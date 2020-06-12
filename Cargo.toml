@@ -28,7 +28,7 @@ cortex-m = {version = ">=0.6.2,<0.7", optional=true, features = ["inline-asm"]}
 cortex-m-rt = {version = "0.6.7", optional = true}
 nb = {version = "0.1.1", optional = true}
 stm32f3 = {version = "0.7.0", optional = true}
-mpu9250 = {version = "0.20", optional = true}
+mpu9250 = {version = "0.22", optional = true}
 # mpu9250 = {path = "../mpu9250", optional = true}
 dcmimu = {version = "0.2.1", optional = true}
 ryu = {version = "0.2", optional = true}
