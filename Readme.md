@@ -22,4 +22,4 @@ but error message will contain name of the feature you need to enable: `cargo -v
 * Use `thumbv7em-none-eabi` for ARM Cortex-M4 and Cortex-M7 (*no* FPU support)
 * Use `thumbv7em-none-eabihf` for ARM Cortex-M4**F** and Cortex-M7**F** (*with* FPU support)
 
-You will have to change default target in `.cargo/config`.
+You will have to change default target in `.cargo/config`...
