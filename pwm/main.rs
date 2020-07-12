@@ -39,7 +39,7 @@ fn main() -> ! {
         // Enable output for channel 1
         prphs.TIM4.ccer.write(|w| w.cc3e().bit(true));
         // Set channel 1 as PWM1
-        prphs.TIM4.ccmr2_output.write(|w| w.oc3m().bits(0b0110));
+        prphs.TIM4.ccmr2_output().write(|w| w.oc3m().bits(0b0110));
         // Enable timer
         prphs.TIM4.cr1.write(|w| w.cen().bit(true));
     }

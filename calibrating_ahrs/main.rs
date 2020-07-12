@@ -7,7 +7,7 @@ use panic_abort;
 
 use core::fmt::Write;
 
-use hal::gpio::{LowSpeed, Output, PullNone, PullUp, PushPull};
+use hal::gpio::{Input, LowSpeed, Output, PullNone, PullUp, PushPull};
 use hal::prelude::*;
 use hal::time::Bps;
 use heapless::consts::*;
@@ -83,7 +83,8 @@ fn fill_with_str(buffer: &mut TxBuffer, arg: &str) {
 const APP: () = {
     struct Resources {
         led: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>>,
-        extih: hal::exti::Exti<hal::exti::EXTI13>,
+        extih: hal::exti::BoundInterrupt<hal::gpio::PA0<PullUp, Input>,
+                                         hal::exti::EXTI1>,
         tele: Option<DmaTelemetry>,
         fast_calibration: bool,
     }
@@ -105,11 +106,11 @@ const APP: () = {
         write!(tx, "init...\r\n").unwrap();
         let mut syscfg = device.SYSCFG.constrain(&mut rcc.apb2);
         write!(tx, "syscfg...\r\n").unwrap();
-        let mut exti = device.EXTI.constrain();
+        let exti = device.EXTI.constrain();
         write!(tx, "exti...\r\n").unwrap();
         let interrupt_pin = gpioa.pa0.pull_type(PullUp).input();
 
-        exti.EXTI1.bind(interrupt_pin, &mut syscfg);
+        let handle = exti.EXTI1.bind(interrupt_pin, &mut syscfg);
         write!(tx, "bound...\r\n").unwrap();
 
         let dma_channels = device.DMA1.split(&mut rcc.ahb);
@@ -122,7 +123,7 @@ const APP: () = {
         ctx.schedule.calibrate(ctx.start + FAST.cycles()).unwrap();
 
         init::LateResources { led,
-                              extih: exti.EXTI13,
+                              extih: handle,
                               tele: Some(new_tele),
                               fast_calibration: true }
     }
