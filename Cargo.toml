@@ -238,6 +238,11 @@ path = "calibrating_ahrs/main.rs"
 required-features = [ "with_rtfm", "with_hal", "with_heapless", "with_rt", "with_mpu" ]
 
 [[bin]]
+name = "mpu_int"
+path = "mpu_int/main.rs"
+required-features = [ "with_rtfm", "with_semihosting", "with_mpu" ]
+
+[[bin]]
 name = "rtfm_int"
 path = "rtfm_int/main.rs"
 required-features = [ "with_rtfm", "with_device", "ehal"]
