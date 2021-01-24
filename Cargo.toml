@@ -24,29 +24,30 @@ incremental = false
 [dependencies]
 panic-abort = {version = "0.3.1", optional=true}
 asm-delay = {version = "0.9"}
-cortex-m = {version = ">=0.6.3,<0.7", optional=true, features = ["inline-asm"]}
+cortex-m = {version = ">=0.7", optional=true, features = ["inline-asm"]}
 cortex-m-rt = {version = "0.6.12", optional = true}
 nb = {version = "0.1.1", optional = true}
-stm32f3 = {version = "0.11.0", optional = true}
-mpu9250 = {version = "0.22", optional = true}
+mpu9250 = {version = "0.24", optional = true}
 # mpu9250 = {path = "../mpu9250", optional = true}
 dcmimu = {version = "0.2.1", optional = true}
 ryu = {version = "0.2", optional = true}
 lsm303c = {version = "0.2.0", optional = true}
 # lsm303c = {path = "../lsm303c", optional = true}
 bmp280 = {version = "0.0.1", optional = true, package="bmp280-ehal"}
-shared-bus = {version = "0.1.2", optional = true, features = ["cortexm"]}
+shared-bus = {version = "0.2", optional = true}
 vl53l0x = {version = "0.2.0", optional = true}
 # vl53l0x = {path = "../vl53l0x", optional = true}
 nalgebra = {version = "0.18", optional = true, default-features = false}
 libm = {version = "0.1.2", optional = true}
 rand = {version = "0.5.5", optional = true, default-features = false}
-cortex-m-semihosting = {version = "0.3.2", optional = true}
+cortex-m-semihosting = {version = "0.3.6", optional = true}
 heapless = {version = "0.5.0", optional = true}
 
 
 [dependencies.cortex-m-rtic]
-version = "0.5.3"
+# version = "0.5.5"
+git = "https://github.com/rtic-rs/cortex-m-rtic"
+rev = "6cbf98ff70823b152eb54ce846f73eddbd8bf82c"
 optional = true
 
 [dependencies.panic-semihosting]
@@ -56,12 +57,17 @@ optional = true
 
 [dependencies.ehal]
 features = ["unproven"]
-version = "0.2.3"
+version = "0.2.4"
 package = "embedded-hal"
 optional = true
 
+[dependencies.stm32f3]
+version = "0.12"
+package = "stm32f3-copterust"
+optional = true
+
 [dependencies.hal]
-version = "0.24"
+version = "0.40"
 # path = "../alt-stm32f30x-hal"
 # git = "https://github.com/copterust/alt-stm32f30x-hal"
 # rev = "08fe718af0cf652bc689b1e8d5bfa822785f3c92"

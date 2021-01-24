@@ -46,7 +46,8 @@ impl DmaTelemetry {
     }
 
     fn send<F>(self, mut buffer_filler: F) -> Self
-        where F: for<'a> FnMut<(&'a mut TxBuffer,), Output = ()>
+    where
+        F: for<'a> FnMut<(&'a mut TxBuffer,), Output = ()>,
     {
         let ns = match self.state {
             TransferState::Ready((mut buffer, ch, tx)) => {
@@ -78,11 +79,16 @@ fn fill_with_str(buffer: &mut TxBuffer, arg: &str) {
 }
 
 #[app(device = hal::pac, peripherals = true)]
-const APP: () = {
+mod app {
+    use super::*;
+
+    #[resources]
     struct Resources {
         led: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>>,
-        extih: hal::exti::BoundInterrupt<hal::gpio::PA0<PullUp, Input>,
-                                         hal::exti::EXTI1>,
+        extih: hal::exti::BoundInterrupt<
+            hal::gpio::PA0<PullUp, Input>,
+            hal::exti::EXTI1,
+        >,
         tele: Option<DmaTelemetry>,
     }
 
@@ -91,14 +97,16 @@ const APP: () = {
         let device = ctx.device;
         let mut rcc = device.RCC.constrain();
         let mut flash = device.FLASH.constrain();
-        let clocks = rcc.cfgr
-                        .sysclk(64.mhz())
-                        .pclk1(32.mhz())
-                        .freeze(&mut flash.acr);
+        let clocks = rcc
+            .cfgr
+            .sysclk(64.mhz())
+            .pclk1(32.mhz())
+            .freeze(&mut flash.acr);
         let gpioa = device.GPIOA.split(&mut rcc.ahb);
         let serial =
-            device.USART2
-                  .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
+            device
+                .USART2
+                .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
         let (mut tx, _) = serial.split();
         write!(tx, "init...\r\n").unwrap();
         let mut syscfg = device.SYSCFG.constrain(&mut rcc.apb2);
@@ -117,20 +125,24 @@ const APP: () = {
         let mut led = gpioa.pa5.output().pull_type(PullNone);
         let _ = led.set_high();
 
-        init::LateResources { led,
-                              extih: handle,
-                              tele: Some(new_tele) }
+        init::LateResources {
+            led,
+            extih: handle,
+            tele: Some(new_tele),
+        }
     }
 
     #[task(binds=EXTI0, resources = [led, tele, extih])]
-    fn handle_mpu(ctx: handle_mpu::Context) {
-        let led = ctx.resources.led;
-        let _ = led.set_low();
-        let maybe_tele = ctx.resources.tele.take();
-        if let Some(tele) = maybe_tele {
-            let new_tele = tele.send(|b| fill_with_str(b, "interrupt!\n"));
-            *ctx.resources.tele = Some(new_tele);
-        }
-        ctx.resources.extih.unpend();
+    fn handle_mpu(mut ctx: handle_mpu::Context) {
+        ctx.resources.led.lock(|led| {
+            let _ = led.set_low();
+        });
+        ctx.resources.tele.lock(|maybe_tele| {
+            if let Some(tele) = maybe_tele.take() {
+                let new_tele = tele.send(|b| fill_with_str(b, "interrupt!\n"));
+                *maybe_tele = Some(new_tele);
+            }
+        });
+        ctx.resources.extih.lock(|extih| extih.unpend());
     }
-};
+}

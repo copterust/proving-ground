@@ -1,4 +1,4 @@
-indent_style = "Visual"
+indent_style = "Block"
 binop_separator = "Front"
 wrap_comments = true
 comment_width = 80

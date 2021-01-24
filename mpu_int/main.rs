@@ -3,33 +3,34 @@
 #![feature(unboxed_closures)]
 
 #[allow(unused)]
-use panic_abort;
+use panic_abort as _;
 
-use asm_delay::AsmDelay;
-use cortex_m_semihosting::hprintln;
-use hal::gpio::{
-    self, AltFn, HighSpeed, Input, Output, PullNone, PullUp, PushPull, AF5,
-};
-use hal::prelude::*;
-use hal::spi::Spi;
+#[rtic::app(device = hal::pac, peripherals = true)]
+mod app {
+    use asm_delay::AsmDelay;
+    use cortex_m_semihosting::hprintln;
+    use hal::gpio::{
+        self, AltFn, HighSpeed, Input, Output, PullNone, PullUp, PushPull, AF5,
+    };
+    use hal::prelude::*;
+    use hal::spi::Spi;
 
-use mpu9250::{Mpu9250, MpuConfig};
+    use mpu9250::{Mpu9250, MpuConfig};
 
-type SpiT = hal::pac::SPI1;
-type SCLPin<B> = gpio::PB3<PullNone, B>;
-type MISOPin<B> = gpio::PB4<PullNone, B>;
-type MOSIPin<B> = gpio::PB5<PullNone, B>;
-type SpiPins = (SCLPin<AltFn<AF5, PushPull, HighSpeed>>,
-                MISOPin<AltFn<AF5, PushPull, HighSpeed>>,
-                MOSIPin<AltFn<AF5, PushPull, HighSpeed>>);
-type SPI = Spi<SpiT, SpiPins>;
-type NcsPinDef<B> = gpio::PB0<PullNone, B>;
-type NcsPinT = NcsPinDef<Output<PushPull, HighSpeed>>;
-type Dev = mpu9250::SpiDevice<SPI, NcsPinT>;
-type MPU9250 = mpu9250::Mpu9250<Dev, mpu9250::Imu>;
+    type SpiT = hal::pac::SPI1;
+    type SCLPin<B> = gpio::PB3<PullNone, B>;
+    type MISOPin<B> = gpio::PB4<PullNone, B>;
+    type MOSIPin<B> = gpio::PB5<PullNone, B>;
+    type SpiPins = (SCLPin<AltFn<AF5, PushPull, HighSpeed>>,
+                    MISOPin<AltFn<AF5, PushPull, HighSpeed>>,
+                    MOSIPin<AltFn<AF5, PushPull, HighSpeed>>);
+    type SPI = Spi<SpiT, SpiPins>;
+    type NcsPinDef<B> = gpio::PB0<PullNone, B>;
+    type NcsPinT = NcsPinDef<Output<PushPull, HighSpeed>>;
+    type Dev = mpu9250::SpiDevice<SPI, NcsPinT>;
+    type MPU9250 = mpu9250::Mpu9250<Dev, mpu9250::Imu>;
 
-#[rtic::app(device = hal::pac, peripherals = true, monotonic = rtic::cyccnt::CYCCNT)]
-const APP: () = {
+    #[resources]
     struct Resources {
         extih: hal::exti::BoundInterrupt<hal::gpio::PA0<PullUp, Input>,
                                          hal::exti::EXTI1>,
@@ -100,23 +101,25 @@ const APP: () = {
     }
 
     #[task(binds=EXTI0, resources = [mpu, extih])]
-    fn handle_mpu(ctx: handle_mpu::Context) {
-        let mpu = ctx.resources.mpu;
-        match mpu.all::<[f32; 3]>() {
-            Ok(a) => {
-                hprintln!("[a:({:?},{:?},{:?}),g:({:?},{:?},{:?}),t:{:?}]",
-                          a.accel[0],
-                          a.accel[1],
-                          a.accel[2],
-                          a.gyro[0],
-                          a.gyro[1],
-                          a.gyro[2],
-                          a.temp,).unwrap();
+    fn handle_mpu(mut ctx: handle_mpu::Context) {
+        ctx.resources.mpu.lock(|mpu| {
+            match mpu.all::<[f32; 3]>() {
+                Ok(a) => {
+                    hprintln!("[a:({:?},{:?},{:?}),g:({:?},{:?},{:?}),t:{:?}]",
+                              a.accel[0],
+                              a.accel[1],
+                              a.accel[2],
+                              a.gyro[0],
+                              a.gyro[1],
+                              a.gyro[2],
+                              a.temp,).unwrap();
+                }
+                Err(e) => {
+                    hprintln!("e: {:?}", e).unwrap();
+                }
             }
-            Err(e) => {
-                hprintln!("e: {:?}", e).unwrap();
-            }
-        }
-        ctx.resources.extih.unpend();
+        });
+
+        ctx.resources.extih.lock(|extih| extih.unpend());
     }
-};
+}
