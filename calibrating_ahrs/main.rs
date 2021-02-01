@@ -98,8 +98,8 @@ mod app {
         fast_calibration: bool,
     }
 
-    #[init]
-    fn init(ctx: init::Context) -> init::LateResources {
+    #[init()]
+    fn init(mut ctx: init::Context) -> init::LateResources {
         let device = ctx.device;
         let mut rcc = device.RCC.constrain();
         let mut flash = device.FLASH.constrain();
@@ -130,6 +130,8 @@ mod app {
         let new_tele = tele.send(|b| fill_with_str(b, "Dma ok!\r\n"));
         let mut led = gpioa.pa5.output().pull_type(PullNone);
         let _ = led.set_high();
+
+        ctx.core.DWT.enable_cycle_counter();
 
         calibrate::schedule(ctx.start + FAST.cycles()).unwrap();
 
