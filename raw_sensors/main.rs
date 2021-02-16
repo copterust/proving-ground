@@ -1,11 +1,11 @@
 #![deny(warnings)]
 #![no_std]
 #![no_main]
-
-#[allow(unused)]
-use panic_abort;
+#![feature(core_intrinsics)]
 
 use core::fmt::Write;
+use core::intrinsics;
+use core::panic::PanicInfo;
 
 use asm_delay::AsmDelay;
 use cortex_m_rt::{entry, exception, ExceptionFrame};
@@ -28,16 +28,18 @@ fn main() -> ! {
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc.cfgr
-                    .sysclk(64.mhz())
-                    .pclk1(32.mhz())
-                    .pclk2(32.mhz())
-                    .freeze(&mut flash.acr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .pclk2(32.mhz())
+        .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     let mut serial =
-        device.USART2
-              .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
+        device
+            .USART2
+            .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
     let ser_int = serial.get_interrupt();
     serial.listen(serial::Event::Rxne);
     let (mut tx, rx) = serial.split();
@@ -50,11 +52,13 @@ fn main() -> ! {
     writeln!(l, "logger ok").unwrap();
     // SPI1
     let ncs = gpiob.pb0.output().push_pull();
-    let spi = device.SPI1.spi(// scl_sck, ad0_sd0_miso, sda_sdi_mosi,
-                              (gpiob.pb3, gpiob.pb4, gpiob.pb5),
-                              mpu9250::MODE,
-                              1.mhz(),
-                              clocks);
+    let spi = device.SPI1.spi(
+        // scl_sck, ad0_sd0_miso, sda_sdi_mosi,
+        (gpiob.pb3, gpiob.pb4, gpiob.pb5),
+        mpu9250::MODE,
+        1.mhz(),
+        clocks,
+    );
     writeln!(l, "spi ok").unwrap();
     let mut delay = AsmDelay::new(clocks.sysclk());
     writeln!(l, "delay ok").unwrap();
@@ -84,26 +88,42 @@ fn main() -> ! {
     unsafe { cortex_m::peripheral::NVIC::unmask(ser_int) };
 
     let mut prev_t_ms = now_ms();
-    write!(l,
-           "All ok, now: {:?}; Press 'q' to toggle verbosity!\r\n",
-           prev_t_ms).unwrap();
+    let mut prev_s = prev_t_ms / 1000;
+    write!(
+        l,
+        "All ok, now: {:?}; Press 'q' to toggle verbosity!\r\n",
+        prev_t_ms
+    )
+    .unwrap();
     loop {
         let t_ms = now_ms();
+        let t_s = t_ms / 1000;
+        let passed = t_s != prev_s;
+        prev_s = t_s;
         let dt_ms = t_ms.wrapping_sub(prev_t_ms);
         prev_t_ms = t_ms;
         match mpu.all::<[f32; 3]>() {
             Ok(meas) => {
                 let gyro = meas.gyro;
-                let accel = [meas.accel[0] - accel_biases[0],
-                             meas.accel[1] - accel_biases[1],
-                             meas.accel[2] - accel_biases[2]];
-                if unsafe { !QUIET } {
+                let accel = [
+                    meas.accel[0] - accel_biases[0],
+                    meas.accel[1] - accel_biases[1],
+                    meas.accel[2] - accel_biases[2],
+                ];
+                if unsafe { !QUIET } || passed {
                     write!(
                         l,
                         "IMU: t:{}ms; dt:{}ms; g({};{};{}); a({};{};{})\r\n",
-                        t_ms, dt_ms, gyro[0], gyro[1], gyro[2],
-                        accel[0], accel[1], accel[2]
-                    ).unwrap();
+                        t_ms,
+                        dt_ms,
+                        gyro[0],
+                        gyro[1],
+                        gyro[2],
+                        accel[0],
+                        accel[1],
+                        accel[2]
+                    )
+                    .unwrap();
                 }
             }
             Err(e) => {
@@ -121,7 +141,7 @@ unsafe fn extract<T>(opt: &'static mut Option<T>) -> &'static mut T {
 }
 
 #[interrupt]
-fn USART1_EXTI25() {
+fn USART2_EXTI26() {
     let rx = unsafe { extract(&mut RX) };
     let l = unsafe { extract(&mut L) };
     match rx.read() {
@@ -173,5 +193,42 @@ unsafe fn HardFault(ef: &ExceptionFrame) -> ! {
 unsafe fn DefaultHandler(irqn: i16) {
     let l = extract(&mut L);
     write!(l, "Interrupt: {}", irqn).unwrap();
-    panic!("Unhandled exception (IRQn = {})", irqn);
+}
+
+#[panic_handler]
+fn panic(panic_info: &PanicInfo) -> ! {
+    match unsafe { &mut L } {
+        Some(ref mut l) => {
+            let payload = panic_info.payload().downcast_ref::<&str>();
+            match (panic_info.location(), payload) {
+                (Some(location), Some(msg)) => {
+                    write!(
+                        l,
+                        "\r\npanic in file '{}' at line {}: {:?}\r\n",
+                        location.file(),
+                        location.line(),
+                        msg
+                    )
+                    .unwrap();
+                }
+                (Some(location), None) => {
+                    write!(
+                        l,
+                        "panic in file '{}' at line {}",
+                        location.file(),
+                        location.line()
+                    )
+                    .unwrap();
+                }
+                (None, Some(msg)) => {
+                    write!(l, "panic: {:?}", msg).unwrap();
+                }
+                (None, None) => {
+                    write!(l, "panic occured, no info available").unwrap();
+                }
+            }
+        }
+        None => {}
+    }
+    intrinsics::abort()
 }
