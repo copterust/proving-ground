@@ -24,45 +24,47 @@ fn main() -> ! {
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc.cfgr
-                    .sysclk(72.mhz())
-                    .pclk1(32.mhz())
-                    .pclk2(32.mhz())
-                    .freeze(&mut flash.acr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .pclk2(32.mhz())
+        .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
-    let mut pa1 = gpioa.pa1
-                       .output()
-                       .output_speed(hal::gpio::HighSpeed)
-                       .pull_type(hal::gpio::PullDown);
-
+    let mut pa1 = gpioa
+        .pa1
+        .output()
+        .output_speed(hal::gpio::HighSpeed)
+        .pull_type(hal::gpio::PullDown);
+    hprintln!("start").unwrap();
     // SPI1
     let ncs = gpiob.pb0.output().push_pull();
     let scl_sck = gpiob.pb3;
     let sda_sdi_mosi = gpiob.pb5;
     let ad0_sdo_miso = gpiob.pb4;
-    let spi = device.SPI1.spi((scl_sck, ad0_sdo_miso, sda_sdi_mosi),
-                              mpu9250::MODE,
-                              1.mhz(),
-                              clocks);
+    let spi = device.SPI1.spi(
+        (scl_sck, ad0_sdo_miso, sda_sdi_mosi),
+        mpu9250::MODE,
+        1.mhz(),
+        clocks,
+    );
     hprintln!("spi ok").unwrap();
     let mut delay = AsmDelay::new(clocks.sysclk());
     hprintln!("delay ok").unwrap();
     // MPU
-    let mmpu = Mpu9250::marg_with_reinit(spi,
-                                         ncs,
-                                         &mut delay,
-                                         &mut MpuConfig::marg(),
-                                         |spi, ncs| {
-                                             let (dev_spi, (scl, miso, mosi)) =
-                                                 spi.free();
-                                             let new_spi =
-                                                 dev_spi.spi((scl, miso, mosi),
-                                                             mpu9250::MODE,
-                                                             20.mhz(),
-                                                             clocks);
-                                             Some((new_spi, ncs))
-                                         });
+    let mmpu = Mpu9250::marg_with_reinit(
+        spi,
+        ncs,
+        &mut delay,
+        &mut MpuConfig::marg(),
+        |spi, ncs| {
+            let (dev_spi, (scl, miso, mosi)) = spi.free();
+            let new_spi =
+                dev_spi.spi((scl, miso, mosi), mpu9250::MODE, 20.mhz(), clocks);
+            Some((new_spi, ncs))
+        },
+    );
     // .unwrap();
     let mut mpu = match mmpu {
         Ok(m) => m,
@@ -79,7 +81,7 @@ fn main() -> ! {
         match mpu.all::<[f32; 3]>() {
             Ok(a) => {
                 hprintln!(
-                    "[a:({:?},{:?},{:?}),g:({:?},{:?},{:?}),m:({:?},{:?},{:?}),]",
+                    "[a:({:?},{:?},{:?}),g:({:?},{:?},{:?}),m:({:?},{:?},{:?}),t:{:?}]",
                     a.accel[0],
                     a.accel[1],
                     a.accel[2],
