@@ -63,6 +63,9 @@ clean:
 goad: build
 	sh -c "openocd & arm-none-eabi-gdb -q $(BIN) & wait"
 
+doad: build
+	arm-none-eabi-gdb $(BIN)
+
 nodevice: memory
 	cargo -v build --bins --features=no_device
 
