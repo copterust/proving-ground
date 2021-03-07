@@ -22,7 +22,7 @@ mod app {
     }
 
     #[init]
-    fn init(ctx: init::Context) -> init::LateResources {
+    fn init(ctx: init::Context) -> (init::LateResources, init::Monotonics) {
         let device: stm32f303::Peripherals = ctx.device;
         let delay = AsmDelay::new(32u32.mhz());
 
@@ -49,7 +49,7 @@ mod app {
         device.EXTI.emr1.modify(|_, w| w.mr13().set_bit());
         device.EXTI.rtsr1.modify(|_, w| w.tr13().set_bit());
 
-        init::LateResources { device, delay }
+        (init::LateResources { device, delay }, init::Monotonics())
     }
 
     #[task(binds=EXTI15_10, resources = [device, delay])]

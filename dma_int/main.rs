@@ -93,7 +93,7 @@ mod app {
     }
 
     #[init]
-    fn init(ctx: init::Context) -> init::LateResources {
+    fn init(ctx: init::Context) -> (init::LateResources, init::Monotonics) {
         let device = ctx.device;
         let mut rcc = device.RCC.constrain();
         let mut flash = device.FLASH.constrain();
@@ -125,11 +125,14 @@ mod app {
         let mut led = gpioa.pa5.output().pull_type(PullNone);
         let _ = led.set_high();
 
-        init::LateResources {
-            led,
-            extih: handle,
-            tele: Some(new_tele),
-        }
+        (
+            init::LateResources {
+                led,
+                extih: handle,
+                tele: Some(new_tele),
+            },
+            init::Monotonics(),
+        )
     }
 
     #[task(binds=EXTI0, resources = [led, tele, extih])]
