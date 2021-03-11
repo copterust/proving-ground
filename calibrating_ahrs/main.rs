@@ -46,7 +46,7 @@ type TxBusy =
     hal::dma::Transfer<hal::dma::R, &'static mut TxBuffer, TxCh, TxUsart>;
 static mut BUFFER: TxBuffer = Vec(heapless::i::Vec::new());
 
-const FAST: u32 = 8_000_000;
+const FAST: u32 = 1_280_000;
 
 pub trait Chrono: Sized {
     type Time;
