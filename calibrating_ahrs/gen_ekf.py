@@ -1,9 +1,5 @@
 from sympy import *
 
-def reduce(exp):
-    '''Reduce number of operations in exp.'''
-    return simplify(collect(collect(exp, [q0, q1, q2, q3]), dt))
-
 def q2m(q):
     '''Turn quaternion q into matrix to multiply with 3-vectors (q0 set to 0)'''
     return Matrix([
@@ -14,6 +10,10 @@ def q2m(q):
 
 def predict():
     '''Generate equations for the predict step for Kalman filter'''
+    def reduce(exp):
+        '''Reduce number of operations in exp.'''
+        return simplify(collect(collect(exp, [q0, q1, q2, q3]), dt))
+
     # Without an input our state changed only by biases
     # So we repeat our quat
     I4 = Identity(4)
@@ -41,13 +41,14 @@ def predict():
     # So our control
     B = BlockMatrix([[q2m(q)], [Z3x3]])
     # Next state
-    return Matrix(A) * x + (dt / 2.0) * Matrix(B) * w
-
-def print_state_transition(exp):
-    '''Output rust code for state transition'''
+    nx = Matrix(A) * x + (dt / 2.0) * Matrix(B) * w
+    # Output rust code for state transition
     assigns = ["q0n", "q1n", "q2n", "q3n", "bxn", "byn", "bzn"]
-    for i, r in enumerate(exp):
-        print(rust_code(r, assign_to=assigns[i]))
+    for i, r in enumerate(nx):
+        print(rust_code(reduce(r), assign_to=assigns[i]))
+    # Estimate error
+    P = MatrixSymbol('P', 7, 7)
+    Q = MatrixSymbol('Q', 7, 7)
+    np = A * P * A.transpose() + Q
 
-print_state_transition(predict())
-
+predict()
