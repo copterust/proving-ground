@@ -16,20 +16,24 @@ def q2m(q):
         [ q.d,  q.a, -q.b],
         [-q.c,  q.b,  q.a]])
 
+# Convert indexed base to list
+def i2v(i, start, stop):
+    return [x[i] for i in range(start, stop)]
+
 # no interaction between q and b
 Z3x4 = zeros(3, 4)
 # we assume constant angular speed between measurements
 dt = symbols("dT")
 # Estimated quaternion
-q = Quaternion(x[0], x[1], x[2], x[3])
+q = Quaternion(*i2v(x, 0, 4))
 # Estimated bias
-b = Matrix([x[4], x[5], x[6]])
+b = Matrix([*i2v(x, 4, 6)])
 # State transition matrix
 A = BlockMatrix([[I4, (-dt / 2.0) * q2m(q)], [Z3x4, I3]])
 # Measured angular velocity control our attitude
 w = IndexedBase('w', shape=(3,))
 j = Idx('j', 3)
-w_m = Matrix([w[0], w[1], w[2]])
+w_m = Matrix([*i2v(w, 0, 3)])
 # But doesn't influence the bias
 Z3x3 = zeros(3, 3)
 # So our control
