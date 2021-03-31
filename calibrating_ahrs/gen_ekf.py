@@ -49,7 +49,7 @@ Z3x3 = zeros(3, 3)
 # So our control
 B = BlockMatrix([[q2m(q)], [Z3x3]])
 # State in matrix form
-x_m = Matrix([x[i] for i in range(state_len)])
+x_m = Matrix([*i2l(x, 0, state_len)])
 # Next state
 nx = A * x_m + (dt / 2.0) * Matrix(B) * w_m
 
@@ -59,16 +59,22 @@ def reduce(exp):
 
 # Output our state transition equation
 output = MatrixSymbol('nx', state_len, 1)
+# Normalize quaternion to account for the limited precision
+def norm_q(q):
+    mag = (q[0]**2 + q[1]**2 + q[2]**2 + q[3]**2)**0.5
+    return [q[i] / mag for i in range(4)]
+
+nx[0:4, :] = norm_q(nx[0:4])
 print("// State transition")
 print(ccode(nx, assign_to=output, contract=False))
 
-# We keep it symbolical for code generation
+# We keep it symbolical for code generation, initialize to I7
 P = IndexedBase('P', shape=(state_len, state_len))
 P_m = i2m(P)
 Q = IndexedBase('Q', shape=(state_len, state_len))
 Q_m = i2m(Q)
 
-Px = A * P * A.transpose() + Q
-output = MatrixSymbol('Px', state_len, state_len)
+nP = A * P * A.transpose() + Q
+output = MatrixSymbol('nP', state_len, state_len)
 print("// Error transition")
-print(ccode(Px, assign_to=output, contract=False))
+print(ccode(nP, assign_to=output, contract=False))
