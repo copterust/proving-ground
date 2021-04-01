@@ -85,8 +85,11 @@ def q2hrm(q):
     m00 = s * (q.a**2 + q.b**2 - q.c**2 - q.d**2)
     m11 = s * (q.a**2 - q.b**2 + q.c**2 - q.d**2)
     m22 = s * (q.a**2 - q.b**2 - q.c**2 + q.d**2)
-    m = q.to_rotation_matrix()
+    m = q.to_rotation_matrix().transpose()
     m[0, 0] = m00
     m[1, 1] = m11
     m[2, 2] = m22
     return m / s
+
+r = IndexedBase('r', shape=(3,))
+print((q2hrm(q) * Matrix([*i2l(r, 0, 3)])).jacobian(Matrix([q.a, q.b, q.c, q.d])))
