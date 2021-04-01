@@ -34,7 +34,7 @@ def i2m(i):
 # no interaction between q and b
 Z3x4 = zeros(3, 4)
 # we assume constant angular speed between measurements
-dt = symbols("dT")
+dt = symbols("d_t")
 # Estimated quaternion
 q = Quaternion(*i2l(x, 0, 4))
 # Estimated bias
@@ -65,8 +65,8 @@ def norm_q(q):
     return [q[i] / mag for i in range(4)]
 
 nx[0:4, :] = norm_q(nx[0:4])
-print("// State transition")
-print(ccode(nx, assign_to=output, contract=False))
+# print("// State transition")
+# print(rust_code(nx, assign_to=output, contract=False))
 
 # We keep it symbolical for code generation, initialize to I7
 P = IndexedBase('P', shape=(state_len, state_len))
@@ -75,6 +75,18 @@ Q = IndexedBase('Q', shape=(state_len, state_len))
 Q_m = i2m(Q)
 
 nP = A * P * A.transpose() + Q
-output = MatrixSymbol('nP', state_len, state_len)
-print("// Error transition")
-print(ccode(nP, assign_to=output, contract=False))
+output = MatrixSymbol('np', state_len, state_len)
+# print("// Error transition")
+# print(ccode(nP, assign_to=output, contract=False))
+
+# Get homogeneous rotation matrix
+def q2hrm(q):
+    s = q.norm()**-2
+    m00 = s * (q.a**2 + q.b**2 - q.c**2 - q.d**2)
+    m11 = s * (q.a**2 - q.b**2 + q.c**2 - q.d**2)
+    m22 = s * (q.a**2 - q.b**2 - q.c**2 + q.d**2)
+    m = q.to_rotation_matrix()
+    m[0, 0] = m00
+    m[1, 1] = m11
+    m[2, 2] = m22
+    return m / s
