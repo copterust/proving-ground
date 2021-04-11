@@ -38,24 +38,20 @@ dt = symbols("d_t")
 # Estimated quaternion
 q = Quaternion(*i2l(x, 0, 4))
 # Estimated bias
-b = Matrix([*i2l(x, 4, 6)])
+b = Matrix(i2l(x, 4, 6))
 # State transition matrix
 A = Matrix(BlockMatrix([[I4, (-dt / 2.0) * q2m(q)], [Z3x4, I3]]))
 # Measured angular velocity control our attitude
 w = IndexedBase('w', shape=(3,))
-w_m = Matrix([*i2l(w, 0, 3)])
+w_m = Matrix(i2l(w, 0, 3))
 # But doesn't influence the bias
 Z3x3 = zeros(3, 3)
 # So our control
 B = BlockMatrix([[q2m(q)], [Z3x3]])
 # State in matrix form
-x_m = Matrix([*i2l(x, 0, state_len)])
+x_m = Matrix(i2l(x, 0, state_len))
 # Next state
 nx = A * x_m + (dt / 2.0) * Matrix(B) * w_m
-
-def reduce(exp):
-    # TODO: why so complicated?
-    return simplify(collect(collect(exp, [q0, q1, q2, q3]), dt))
 
 # Output our state transition equation
 output = MatrixSymbol('nx', state_len, 1)
@@ -91,5 +87,24 @@ def q2hrm(q):
     m[2, 2] = m22
     return m / s
 
-r = IndexedBase('r', shape=(3,))
-print((q2hrm(q) * Matrix([*i2l(r, 0, 3)])).jacobian(Matrix([q.a, q.b, q.c, q.d])))
+# Generate Jacobian equations
+def gen_jac(q, r):
+    return (q2hrm(q) * Matrix(i2l(r, 0, 3))).jacobian(Matrix([q.a, q.b, q.c, q.d]))
+
+# r = IndexedBase('r', shape=(3,))
+# output = MatrixSymbol('j', 3, 4)
+# print(ccode(gen_jac(q, r), assign_to=output, contract=False))
+
+# Now we have everything to predict accelerometer and magnetometer values
+ar = Matrix(i2l(IndexedBase('a_r', shape=(3,)), 0, 3))
+mr = Matrix(i2l(IndexedBase('m_r', shape=(3,)), 0, 3))
+C_a = gen_jac(q, ar)
+C_m = gen_jac(q, mr)
+C = BlockMatrix([[C_a, Z3x3], [C_m, Z3x3]])
+output = MatrixSymbol('C', 6, 7)
+# Convertion matrix
+print(ccode(C, assign_to=output, contract=False))
+
+y = BlockMatrix([[q2hrm(q) * ar], [q2hrm(q) * mr]])
+output = MatrixSymbol('y', 6, 1)
+print(rust_code(y, assign_to=output, contract=False))
