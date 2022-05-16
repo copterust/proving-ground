@@ -11,17 +11,16 @@ use rtic::app;
 use hal::gpio::{Input, LowSpeed, Output, PullNone, PullUp, PushPull};
 use hal::prelude::*;
 use hal::time::Bps;
-use heapless::consts::*;
 use heapless::Vec;
 
 type USART = hal::pac::USART2;
 type TxUsart = hal::serial::Tx<USART>;
 type TxCh = hal::dma::dma1::C7;
-type TxBuffer = Vec<u8, U256>;
+type TxBuffer = Vec<u8, 256>;
 type TxReady = (&'static mut TxBuffer, TxCh, TxUsart);
 type TxBusy =
     hal::dma::Transfer<hal::dma::R, &'static mut TxBuffer, TxCh, TxUsart>;
-static mut BUFFER: TxBuffer = Vec(heapless::i::Vec::new());
+static mut BUFFER: TxBuffer = Vec::new();
 
 enum TransferState {
     Ready(TxReady),
@@ -82,8 +81,8 @@ fn fill_with_str(buffer: &mut TxBuffer, arg: &str) {
 mod app {
     use super::*;
 
-    #[resources]
-    struct Resources {
+    #[local]
+    struct Local {
         led: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>>,
         extih: hal::exti::BoundInterrupt<
             hal::gpio::PA0<PullUp, Input>,
@@ -92,8 +91,11 @@ mod app {
         tele: Option<DmaTelemetry>,
     }
 
+    #[shared]
+    struct Shared {}
+
     #[init]
-    fn init(ctx: init::Context) -> (init::LateResources, init::Monotonics) {
+    fn init(ctx: init::Context) -> (Shared, Local, init::Monotonics) {
         let device = ctx.device;
         let mut rcc = device.RCC.constrain();
         let mut flash = device.FLASH.constrain();
@@ -126,7 +128,8 @@ mod app {
         let _ = led.set_high();
 
         (
-            init::LateResources {
+            Shared {},
+            Local {
                 led,
                 extih: handle,
                 tele: Some(new_tele),
@@ -135,17 +138,13 @@ mod app {
         )
     }
 
-    #[task(binds=EXTI0, resources = [led, tele, extih])]
-    fn handle_mpu(mut ctx: handle_mpu::Context) {
-        ctx.resources.led.lock(|led| {
-            let _ = led.set_low();
-        });
-        ctx.resources.tele.lock(|maybe_tele| {
-            if let Some(tele) = maybe_tele.take() {
-                let new_tele = tele.send(|b| fill_with_str(b, "interrupt!\n"));
-                *maybe_tele = Some(new_tele);
-            }
-        });
-        ctx.resources.extih.lock(|extih| extih.unpend());
+    #[task(binds=EXTI0, local = [led, tele, extih])]
+    fn handle_mpu(ctx: handle_mpu::Context) {
+        let _ = ctx.local.led.set_low();
+        if let Some(tele) = ctx.local.tele.take() {
+            let new_tele = tele.send(|b| fill_with_str(b, "interrupt!\n"));
+            *ctx.local.tele = Some(new_tele);
+        }
+        ctx.local.extih.unpend();
     }
 }

@@ -22,55 +22,49 @@ lto = true
 incremental = false
 
 [dependencies]
-panic-abort = {version = "0.3.1", optional=true}
-asm-delay = {version = "0.9"}
-cortex-m = {version = ">=0.7", optional=true, features = ["inline-asm"]}
-cortex-m-rt = {version = "0.6.13", optional = true}
-nb = {version = "1.0.0", optional = true}
-mpu9250 = {version = "0.24", optional = true}
+panic-abort = { version = "0.3.2", optional = true }
+asm-delay = "0.9.0"
+cortex-m = { version = "0.7.4", optional = true }
+cortex-m-rt = { version = "0.7.1", optional = true }
+nb = { version = "1.0.0", optional = true }
+mpu9250 = { version = "0.24.0", optional = true }
 # mpu9250 = {path = "../mpu9250", optional = true}
-dcmimu = {version = "0.2.1", optional = true}
-ryu = {version = "0.2", optional = true}
-lsm303c = {version = "0.2.0", optional = true}
+dcmimu = { version = "0.2.2", optional = true }
+ryu = { version = "1.0.10", optional = true }
+lsm303c = { version = "0.2.0", optional = true }
 # lsm303c = {path = "../lsm303c", optional = true}
-bmp280 = {version = "0.0.1", optional = true, package="bmp280-ehal"}
-shared-bus = {version = "0.2", optional = true}
-vl53l0x = {version = "0.2.0", optional = true}
+bmp280 = { version = "0.0.5", optional = true, package = "bmp280-ehal" }
+shared-bus = { version = "0.2.3", optional = true }
+vl53l0x = { version = "0.3.1", optional = true }
 # vl53l0x = {path = "../vl53l0x", optional = true}
-nalgebra = {version = "0.18", optional = true, default-features = false}
-libm = {version = "0.1.2", optional = true}
-rand = {version = "0.5.5", optional = true, default-features = false}
-cortex-m-semihosting = {version = "0.3.7", optional = true}
-heapless = {version = "0.5.0", optional = true}
+nalgebra = { version = "0.31.0", optional = true, default-features = false }
+libm = { version = "0.2.2", optional = true }
+rand = { version = "0.8.5", optional = true, default-features = false }
+cortex-m-semihosting = { version = "0.5.0", optional = true }
+heapless = { version = "0.7.13", optional = true }
 
 [dependencies.cortex-m-rtic]
-# version = "0.5.5"
-git = "https://github.com/copterust/cortex-m-rtic"
-branch = "feature-configurable-binds"
-# path = "../japaric/cortex-m-rtfm"
+version = "1.1.2"
 optional = true
 
 [dependencies.panic-semihosting]
 features = ["exit"]
-version = "0.5.1"
+version = "0.6.0"
 optional = true
 
 [dependencies.ehal]
 features = ["unproven"]
-version = "0.2.5"
+version = "0.2.7"
 package = "embedded-hal"
 optional = true
 
 [dependencies.stm32f3]
-version = "0.13"
+version = "0.14.0"
 package = "stm32f3"
 optional = true
 
 [dependencies.hal]
-version = "0.41"
-# path = "../alt-stm32f30x-hal"
-# git = "https://github.com/copterust/alt-stm32f30x-hal"
-# rev = "08fe718af0cf652bc689b1e8d5bfa822785f3c92"
+version = "0.42.0"
 package = "alt-stm32f30x-hal"
 optional = true
 features = ["rt", "stm32f303"]

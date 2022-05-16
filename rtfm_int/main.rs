@@ -15,14 +15,17 @@ use stm32f3::stm32f303;
 mod app {
     use super::*;
 
-    #[resources]
-    struct Resources {
+    #[local]
+    struct Local {
         device: stm32f303::Peripherals,
         delay: AsmDelay,
     }
 
+    #[shared]
+    struct Shared {}
+
     #[init]
-    fn init(ctx: init::Context) -> (init::LateResources, init::Monotonics) {
+    fn init(ctx: init::Context) -> (Shared, Local, init::Monotonics) {
         let device: stm32f303::Peripherals = ctx.device;
         let delay = AsmDelay::new(32u32.mhz());
 
@@ -49,23 +52,22 @@ mod app {
         device.EXTI.emr1.modify(|_, w| w.mr13().set_bit());
         device.EXTI.rtsr1.modify(|_, w| w.tr13().set_bit());
 
-        (init::LateResources { device, delay }, init::Monotonics())
+        (Shared {}, Local { device, delay }, init::Monotonics())
     }
 
-    #[task(binds=EXTI15_10, resources = [device, delay])]
-    fn int(mut ctx: int::Context) {
+    #[task(binds=EXTI15_10, local = [device, delay])]
+    fn int(ctx: int::Context) {
         for _ in 1..3 {
-            ctx.resources
+            ctx.local
+                .device.GPIOA.bsrr.write(|w| w.bs5().set_bit());
+            ctx.local.delay.delay_ms(100u32);
+            ctx.local
                 .device
-                .lock(|device| device.GPIOA.bsrr.write(|w| w.bs5().set_bit()));
-            ctx.resources.delay.lock(|delay| delay.delay_ms(100u32));
-            ctx.resources
-                .device
-                .lock(|device| device.GPIOA.brr.write(|w| w.br5().set_bit()));
-            ctx.resources.delay.lock(|delay| delay.delay_ms(100u32));
+                .GPIOA.brr.write(|w| w.br5().set_bit());
+            ctx.local.delay.delay_ms(100u32);
         }
-        ctx.resources
+        ctx.local
             .device
-            .lock(|device| device.EXTI.pr1.modify(|_, w| w.pr13().set_bit()));
+            .EXTI.pr1.modify(|_, w| w.pr13().set_bit());
     }
 }

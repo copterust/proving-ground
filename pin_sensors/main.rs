@@ -14,7 +14,6 @@ use hal::{delay, serial};
 use mpu9250::{Mpu9250, MpuConfig};
 
 #[entry]
-#[inline(never)]
 fn main() -> ! {
     let freq = 72.mhz();
     let device = hal::pac::Peripherals::take().unwrap();

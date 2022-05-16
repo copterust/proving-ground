@@ -59,12 +59,12 @@ fn main() -> ! {
 }
 
 #[exception]
-fn HardFault(ef: &ExceptionFrame) -> ! {
+unsafe fn HardFault(ef: &ExceptionFrame) -> ! {
     panic!("HardFault at {:#?}", ef);
 }
 
 #[exception]
-fn DefaultHandler(irqn: i16) {
+unsafe fn DefaultHandler(irqn: i16) {
     panic!("Unhandled exception (IRQn = {})", irqn);
 }
 
