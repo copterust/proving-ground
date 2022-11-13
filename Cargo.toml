@@ -42,6 +42,7 @@ libm = { version = "0.2.2", optional = true }
 rand = { version = "0.8.5", optional = true, default-features = false }
 cortex-m-semihosting = { version = "0.5.0", optional = true }
 heapless = { version = "0.7.13", optional = true }
+ahrs = { git = "https://github.com/vickenty/ahrs", optional=true }
 
 [dependencies.cortex-m-rtic]
 version = "1.1.2"
@@ -175,6 +176,11 @@ required-features = ["with_bmp"]
 name = "ahrs"
 path = "ahrs/main.rs"
 required-features = ["with_dcmimu"]
+
+[[bin]]
+name = "ahrs-ekf"
+path = "ahrs-ekf/main.rs"
+required-features = [ "ahrs", "with_mpu" ]
 
 [[bin]]
 name = "lsm303"

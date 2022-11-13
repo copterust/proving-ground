@@ -12,6 +12,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ahrs"
+version = "0.2.0"
+source = "git+https://github.com/vickenty/ahrs#c58e94a51e6aa5a4fb758803e593b0ad53fb5b90"
+dependencies = [
+ "libm 0.2.6",
+]
+
+[[package]]
 name = "alt-stm32f30x-hal"
 version = "0.42.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -295,9 +303,9 @@ checksum = "7fc7aa29613bd6a620df431842069224d8bc9011086b1db4c0e0cd47fa03ec9a"
 
 [[package]]
 name = "libm"
-version = "0.2.2"
+version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33a33a362ce288760ec6a508b94caaec573ae7d3bbbd91b87aa0bad4456839db"
+checksum = "348108ab3fba42ec82ff6e9564fc4ca0247bdccdc68dd8af9764bbc79c3c8ffb"
 
 [[package]]
 name = "lock_api"
@@ -463,6 +471,7 @@ dependencies = [
 name = "proving_ground"
 version = "0.1.0"
 dependencies = [
+ "ahrs",
  "alt-stm32f30x-hal",
  "asm-delay",
  "bmp280-ehal",
@@ -473,7 +482,7 @@ dependencies = [
  "dcmimu",
  "embedded-hal",
  "heapless",
- "libm 0.2.2",
+ "libm 0.2.6",
  "lsm303c",
  "mpu9250",
  "nalgebra",
@@ -741,6 +750,6 @@ name = "won2010"
 version = "0.1.0"
 source = "git+https://github.com/copterust/won2010?rev=bab7ae635ad3b27c8abded674cc9061f9171d196#bab7ae635ad3b27c8abded674cc9061f9171d196"
 dependencies = [
- "libm 0.2.2",
+ "libm 0.1.4",
  "nalgebra",
 ]
