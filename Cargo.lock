@@ -335,9 +335,7 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
 name = "mpu9250"
-version = "0.24.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75638d99c5a3f1109ff1022c77c1f8cd4e095f8b2ab3aa8a62f61e49084a022d"
+version = "0.24.1"
 dependencies = [
  "bitflags",
  "cast 0.2.7",

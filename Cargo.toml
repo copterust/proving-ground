@@ -27,8 +27,8 @@ asm-delay = "0.9.0"
 cortex-m = { version = "0.7.4", optional = true }
 cortex-m-rt = { version = "0.7.1", optional = true }
 nb = { version = "1.0.0", optional = true }
-mpu9250 = { version = "0.24.0", optional = true }
-# mpu9250 = {path = "../mpu9250", optional = true}
+# mpu9250 = { version = "0.24.0", optional = true }
+mpu9250 = {path = "../mpu9250", optional = true}
 dcmimu = { version = "0.2.2", optional = true }
 ryu = { version = "1.0.10", optional = true }
 lsm303c = { version = "0.2.0", optional = true }
@@ -181,6 +181,11 @@ required-features = ["with_dcmimu"]
 name = "ahrs-ekf"
 path = "ahrs-ekf/main.rs"
 required-features = [ "ahrs", "with_mpu" ]
+
+[[bin]]
+name = "calibration"
+path = "calibration/main.rs"
+required-features = [ "with_mpu" ]
 
 [[bin]]
 name = "lsm303"
