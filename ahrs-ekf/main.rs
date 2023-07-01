@@ -90,21 +90,30 @@ fn main() -> ! {
 
     write!(l, "{} {}\r\n", clocks.sysclk().0, reload).unwrap();
 
-    // EEPROM this
-    let mag_offs = [
-        0., 0., 0.,
-        // Dev1
-        // 400.149575,
-        // -75.52005,
-        // -145.13623,
+    // // EEPROM this
+    // let mag_offs = [
+    //     0., 0., 0.,
+    //     // Dev1
+    //     // 400.149575,
+    //     // -75.52005,
+    //     // -145.13623,
 
-        // // Dev2
-        // 505.4114185,
-        // 503.12718,
-        // 291.256415,
-    ];
+    //     // // Dev2
+    //     // 505.4114185,
+    //     // 503.12718,
+    //     // 291.256415,
+    // ];
 
     let mut marg = ahrs::MargEkf::new();
+
+    // magic
+    let a_1 = [0.8584555038527345, 0.10586940235249466, -0.03836484610343783,
+               0.10586940235249466, 0.9443944364324307, 0.026852422933079816,
+               -0.03836484610343783, 0.026852422933079816, 0.9564666809032134];
+    let b = [-171.46636520969122,
+              440.13276013298366,
+             -197.88863777137766];
+    // end of magic
 
     loop {
         let t_ms = now_ms();
@@ -113,21 +122,17 @@ fn main() -> ! {
         match mpu.all::<[f32; 3]>() {
             Ok(meas) => {
                 let gyro = meas.gyro;
-                // let accel = [
-                //     meas.accel[0] - accel_biases[0],
-                //     meas.accel[1] - accel_biases[1],
-                //     meas.accel[2] - accel_biases[2],
-                // ];
 
                 let accel = meas.accel;
                 let mag = [
-                    (meas.mag[0] - mag_offs[0]),
-                    (meas.mag[1] - mag_offs[1]),
-                    (meas.mag[2] - mag_offs[2]),
+                    meas.mag[0],
+                    meas.mag[1],
+                    meas.mag[2]
                 ];
+                let cal = calibrated_sample(&mag, &a_1, &b);
 
                 marg.predict(gyro[0], gyro[1], gyro[2], (dt_ms as f32) / 1000.0);
-                marg.update(accel, mag);
+                marg.update(accel, cal);
 
                 write!(l, "[{}, {:?}, {:?}, {:?}, {:?}]\r\n", dt_ms, accel, gyro, meas.mag, marg.state).unwrap();
 
@@ -238,4 +243,21 @@ fn panic(panic_info: &PanicInfo) -> ! {
         None => {}
     }
     intrinsics::abort()
+}
+
+
+pub fn calibrated_sample(
+    sample: &[f32; 3],
+    a_1: &[f32; 9],
+    b: &[f32; 3],
+) -> [f32; 3] {
+    let s = *sample;
+
+    let transformed_s = [
+        a_1[0] * (s[0] - b[0]) + a_1[1] * (s[1] - b[1]) + a_1[2] * (s[2] - b[2]),
+        a_1[3] * (s[0] - b[0]) + a_1[4] * (s[1] - b[1]) + a_1[5] * (s[2] - b[2]),
+        a_1[6] * (s[0] - b[0]) + a_1[7] * (s[1] - b[1]) + a_1[8] * (s[2] - b[2]),
+    ];
+
+    transformed_s
 }
