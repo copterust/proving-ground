@@ -134,7 +134,7 @@ fn main() -> ! {
                 marg.predict(gyro[0], gyro[1], gyro[2], (dt_ms as f32) / 1000.0);
                 marg.update(accel, cal);
 
-                write!(l, "[{}, {:?}, {:?}, {:?}, {:?}]\r\n", dt_ms, accel, gyro, meas.mag, marg.state).unwrap();
+                write!(l, "[{}, {:?}, {:?}, {:?}, {:?}]\r\n", dt_ms, accel, gyro, cal, marg.state).unwrap();
 
                 while now_ms() < t_ms + 100 {}
             }
