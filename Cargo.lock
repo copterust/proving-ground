@@ -335,7 +335,9 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
 name = "mpu9250"
-version = "0.24.1"
+version = "0.24.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "756d7b4223ebe98a99dc2fd11a740357e4a921a278b2f9332644666b3761bec1"
 dependencies = [
  "bitflags",
  "cast 0.2.7",
@@ -748,6 +750,6 @@ name = "won2010"
 version = "0.1.0"
 source = "git+https://github.com/copterust/won2010?rev=bab7ae635ad3b27c8abded674cc9061f9171d196#bab7ae635ad3b27c8abded674cc9061f9171d196"
 dependencies = [
- "libm 0.1.4",
+ "libm 0.2.6",
  "nalgebra",
 ]
