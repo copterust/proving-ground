@@ -69,14 +69,14 @@ fn main() -> ! {
         }
     };
     writeln!(l, "mpu ok").unwrap();
-    // let accel_biases: [f32; 3] = match mpu.calibrate_at_rest(&mut delay) {
-    //     Ok(ab) => ab,
-    //     Err(e) => {
-    //         writeln!(l, "Mpu calib error: {:?}", e).unwrap();
-    //         panic!("mpu err");
-    //     }
-    // };
-    // writeln!(l, "calibration ok: {:?}", accel_biases).unwrap();
+    let accel_biases: [f32; 3] = match mpu.calibrate_at_rest(&mut delay) {
+        Ok(ab) => ab,
+        Err(e) => {
+            writeln!(l, "Mpu calib error: {:?}", e).unwrap();
+            panic!("mpu err");
+        }
+    };
+    writeln!(l, "calibration ok: {:?}", accel_biases).unwrap();
     let mut syst = core.SYST;
     unsafe { cortex_m::interrupt::enable() };
     let reload = clocks.sysclk().0 / 8000 - 1;
@@ -107,12 +107,18 @@ fn main() -> ! {
     let mut marg = ahrs::MargEkf::new();
 
     // magic
-    let a_1 = [0.8584555038527345, 0.10586940235249466, -0.03836484610343783,
-               0.10586940235249466, 0.9443944364324307, 0.026852422933079816,
-               -0.03836484610343783, 0.026852422933079816, 0.9564666809032134];
-    let b = [-171.46636520969122,
-              440.13276013298366,
-             -197.88863777137766];
+    let a_1 = [
+        0.8584555038527345,
+        0.10586940235249466,
+        -0.03836484610343783,
+        0.10586940235249466,
+        0.9443944364324307,
+        0.026852422933079816,
+        -0.03836484610343783,
+        0.026852422933079816,
+        0.9564666809032134,
+    ];
+    let b = [-171.46636520969122, 440.13276013298366, -197.88863777137766];
     // end of magic
 
     loop {
@@ -124,19 +130,25 @@ fn main() -> ! {
                 let gyro = meas.gyro;
 
                 let accel = meas.accel;
-                let mag = [
-                    meas.mag[0],
-                    meas.mag[1],
-                    meas.mag[2]
-                ];
+                let mag = [meas.mag[0], meas.mag[1], meas.mag[2]];
                 let cal = calibrated_sample(&mag, &a_1, &b);
 
-                marg.predict(gyro[0], gyro[1], gyro[2], (dt_ms as f32) / 1000.0);
+                marg.predict(
+                    gyro[0],
+                    gyro[1],
+                    gyro[2],
+                    (dt_ms as f32) / 1000.0,
+                );
                 marg.update(accel, cal);
 
-                write!(l, "[{}, {:?}, {:?}, {:?}, {:?}, {:?}]\r\n", dt_ms, accel, gyro, cal, marg.state, meas.mag).unwrap();
+                write!(
+                    l,
+                    "[{}, {:?}, {:?}, {:?}, {:?}, {:?}]\r\n",
+                    dt_ms, accel, gyro, cal, marg.state, meas.mag
+                )
+                .unwrap();
 
-                while now_ms() < t_ms + 100 {}
+                while now_ms() < t_ms + 20 {}
             }
             Err(e) => {
                 write!(l, "Err: {:?}; {:?}", t_ms, e).unwrap();
@@ -245,7 +257,6 @@ fn panic(panic_info: &PanicInfo) -> ! {
     intrinsics::abort()
 }
 
-
 pub fn calibrated_sample(
     sample: &[f32; 3],
     a_1: &[f32; 9],
@@ -253,11 +264,7 @@ pub fn calibrated_sample(
 ) -> [f32; 3] {
     let s = *sample;
 
-    let sb = [
-        s[0] - b[0],
-        s[1] - b[1],
-        s[2] - b[2]
-    ];
+    let sb = [s[0] - b[0], s[1] - b[1], s[2] - b[2]];
 
     let transformed_s = [
         a_1[0] * sb[0] + a_1[1] * sb[1] + a_1[2] * sb[2],
