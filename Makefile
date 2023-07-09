@@ -14,6 +14,8 @@ TARGET_PATH := ./target/$(TARGET)/$(MODE)
 BIN := $(TARGET_PATH)/$(NAME)
 mem :=
 MEM := $(if $(mem),$(mem),128k)
+chip :=
+CHIP := $(if $(chip),$(chip),stm32f303k8tx)
 
 ifeq (,$(wildcard memory.$(MEM)))
 $(error File memory.$(MEM) do not exist, create if you want to use different memory settings)
@@ -24,7 +26,8 @@ ifeq ($(UNAME), Linux)
 TTY := /dev/ttyUSB0
 endif
 ifeq ($(UNAME), Darwin)
-TTY := /dev/tty.usbserial-1410
+# TTY := /dev/tty.usbserial-1410
+TTY := /dev/tty.usbmodem1103
 endif
 
 $(BIN): build
@@ -43,6 +46,9 @@ flash: $(BIN).bin
 	python2 ./loader/stm32loader.py -p $(TTY) -f F3 -e -w $(BIN).bin
 
 load: flash
+
+foad: memory
+	cargo flash --chip $(CHIP) --target $(TARGET) --bin $(NAME) $(FEATURES)
 
 boad: build
 	bobbin -v load $(RELEASE_FLAG) --target $(TARGET) --bin $(NAME) $(FEATURES)

@@ -3,7 +3,7 @@ name = "proving_ground"
 description = "Examples of tiny programs for stm32f30x MCUs"
 version = "0.1.0"
 authors = ["Roma Sokolov", "Alexander Zhuravlev"]
-edition = '2018'
+edition = '2021'
 
 [profile.dev]
 panic = "abort"
@@ -24,8 +24,8 @@ incremental = false
 [dependencies]
 panic-abort = { version = "0.3.2", optional = true }
 asm-delay = "0.9.0"
-cortex-m = { version = "0.7.4", optional = true }
-cortex-m-rt = { version = "0.7.1", optional = true }
+cortex-m = { version = "0.7.6", features = ["inline-asm", "critical-section-single-core"], optional = true}
+cortex-m-rt = { version = "0.7.0" , optional = true}
 nb = { version = "1.0.0", optional = true }
 mpu9250 = { version = "0.24.2", optional = true }
 # mpu9250 = {path = "../mpu9250", optional = true}
@@ -45,7 +45,7 @@ heapless = { version = "0.7.13", optional = true }
 ahrs = { git = "https://github.com/vickenty/ahrs", optional=true }
 
 [dependencies.cortex-m-rtic]
-version = "1.1.2"
+version = "1.1.3"
 optional = true
 
 [dependencies.panic-semihosting]
@@ -60,7 +60,7 @@ package = "embedded-hal"
 optional = true
 
 [dependencies.stm32f3]
-version = "0.14.0"
+version = "0.15.1"
 package = "stm32f3"
 optional = true
 
@@ -76,11 +76,53 @@ rev = "bab7ae635ad3b27c8abded674cc9061f9171d196"
 default-features = false
 optional = true
 
+[dependencies.embedded-hal-async]
+version = "=0.2.0-alpha.2"
+optional = true
+[dependencies.embassy-sync]
+version = "0.2.0"
+features = ["defmt"]
+git = "https://github.com/embassy-rs/embassy"
+optional = true
+[dependencies.embassy-executor]
+version = "0.2.0"
+features = ["nightly", "arch-cortex-m", "executor-thread", "defmt", "integrated-timers"]
+git = "https://github.com/embassy-rs/embassy"
+optional = true
+[dependencies.embassy-time]
+version = "0.1.2"
+features = ["defmt", "defmt-timestamp-uptime", "unstable-traits", "tick-hz-32_768"]
+git = "https://github.com/embassy-rs/embassy"
+optional = true
+[dependencies.embassy-stm32]
+version = "0.1.0"
+git = "https://github.com/embassy-rs/embassy"
+features = ["nightly", "defmt", "stm32f303ze", "unstable-pac", "memory-x", "time-driver-any", "exti"]
+optional = true
+[dependencies.embedded-io]
+version = "0.4.0"
+features = ["async"]
+optional = true
+[dependencies.defmt]
+version = "0.3"
+optional = true
+[dependencies.defmt-rtt]
+version = "0.4"
+optional = true
+[dependencies.static_cell]
+version = "1.1"
+features = ["nightly"]
+optional = true
+[dependencies.panic-probe]
+version = "0.3"
+features = ["print-defmt"]
+optional = true
+
 [features]
 no_device = ["panic-abort", "cortex-m-rt", "cortex-m"]
 with_rt = ["panic-abort", "cortex-m-rt", "cortex-m", ]
 with_device = ["with_rt", "stm32f3/rt", "stm32f3/stm32f303"]
-with_hal = ["with_device", "nb", "ehal", "hal"]
+with_hal = ["with_device", "nb", "hal", "ehal"]
 with_mpu = ["with_hal", "mpu9250"]
 with_dcmimu = ["with_mpu", "dcmimu"]
 with_lsm = ["with_hal", "lsm303c"]
@@ -93,6 +135,7 @@ with_won2010 = ["won2010"]
 with_heapless = ["heapless"]
 with_ryu = ["ryu"]
 with_rtfm = ["cortex-m-rtic"]
+with_embassy = ["with_rt", "embassy-sync", "embassy-executor", "embassy-time", "embassy-stm32", "embedded-io", "embedded-hal-async", "defmt", "defmt-rtt", "static_cell", "panic-probe"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
 all = ["with_dcmimu", "with_lsm", "with_heapless", "with_rtfm"]
@@ -267,3 +310,8 @@ required-features = [ "with_rtfm", "with_device", "with_hal", "with_heapless", "
 name = "cmd_dma"
 path = "cmd_dma/main.rs"
 required-features = [ "with_rtfm", "with_device", "with_hal", "with_heapless", "with_semihosting"]
+
+[[bin]]
+name = "embassy_raw_sensors"
+path = "embassy_raw_sensors/main.rs"
+required-features = [ "with_embassy" ]
