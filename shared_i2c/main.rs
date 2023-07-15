@@ -28,16 +28,18 @@ fn main() -> ! {
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc.cfgr
-                    .sysclk(64.mhz())
-                    .pclk1(32.mhz())
-                    .pclk2(32.mhz())
-                    .freeze(&mut flash.acr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .pclk2(32.mhz())
+        .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     let mut serial =
-        device.USART1
-              .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
+        device
+            .USART1
+            .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
     let ser_int = serial.get_interrupt();
     serial.listen(serial::Event::Rxne);
     let (mut tx, rx) = serial.split();
@@ -61,11 +63,15 @@ fn main() -> ! {
     let mut bmp = BMP280::new(bus.acquire()).expect("bmp error");
     write!(l, "bmp created\r\n").unwrap();
     bmp.reset();
-    bmp.set_config(bmp280::Config { t_sb: bmp280::Standby::ms250,
-                                    filter: bmp280::Filter::c8 });
-    bmp.set_control(bmp280::Control { osrs_t: bmp280::Oversampling::x1,
-                                      osrs_p: bmp280::Oversampling::x1,
-                                      mode: bmp280::PowerMode::Forced });
+    bmp.set_config(bmp280::Config {
+        t_sb: bmp280::Standby::ms250,
+        filter: bmp280::Filter::c8,
+    });
+    bmp.set_control(bmp280::Control {
+        osrs_t: bmp280::Oversampling::x1,
+        osrs_p: bmp280::Oversampling::x1,
+        mode: bmp280::PowerMode::Forced,
+    });
     write!(l, "bmp ok\r\n").unwrap();
     // done
     unsafe { cortex_m::interrupt::enable() };
@@ -163,17 +169,23 @@ fn panic(panic_info: &PanicInfo) -> ! {
             let payload = panic_info.payload().downcast_ref::<&str>();
             match (panic_info.location(), payload) {
                 (Some(location), Some(msg)) => {
-                    write!(l,
-                           "\r\npanic in file '{}' at line {}: {:?}\r\n",
-                           location.file(),
-                           location.line(),
-                           msg).unwrap();
+                    write!(
+                        l,
+                        "\r\npanic in file '{}' at line {}: {:?}\r\n",
+                        location.file(),
+                        location.line(),
+                        msg
+                    )
+                    .unwrap();
                 }
                 (Some(location), None) => {
-                    write!(l,
-                           "panic in file '{}' at line {}",
-                           location.file(),
-                           location.line()).unwrap();
+                    write!(
+                        l,
+                        "panic in file '{}' at line {}",
+                        location.file(),
+                        location.line()
+                    )
+                    .unwrap();
                 }
                 (None, Some(msg)) => {
                     write!(l, "panic: {:?}", msg).unwrap();

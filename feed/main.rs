@@ -28,8 +28,10 @@ pub struct Cmd {
 impl Cmd {
     #[inline]
     const fn new() -> Cmd {
-        Cmd { buffer: [0; BUFFER_SIZE],
-              pos: 0 }
+        Cmd {
+            buffer: [0; BUFFER_SIZE],
+            pos: 0,
+        }
     }
 
     #[inline]
@@ -82,7 +84,8 @@ impl DmaTelemetry {
     }
 
     fn send<F>(self, mut buffer_filler: F) -> Self
-        where F: for<'a> FnMut<(&'a mut TxBuffer,), Output = ()>
+    where
+        F: for<'a> FnMut<(&'a mut TxBuffer,), Output = ()>,
     {
         let ns = match self.state {
             TransferState::Ready((mut buffer, ch, tx)) => {
@@ -128,16 +131,18 @@ fn main() -> ! {
     let device = hal::pac::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc.cfgr
-                    .sysclk(64.mhz())
-                    .pclk1(32.mhz())
-                    .pclk2(36.mhz())
-                    .freeze(&mut flash.acr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .pclk2(36.mhz())
+        .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     // USART1
     let mut serial =
-        device.USART2
-              .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
+        device
+            .USART2
+            .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
     serial.listen(serial::Event::Rxne);
     let (tx, mut rx) = serial.split();
     let dma_channels = device.DMA1.split(&mut rcc.ahb);
@@ -184,8 +189,9 @@ macro_rules! parse_assign {
     }};
 }
 
-fn parse(inp: &str)
-         -> ((f32, f32, f32), (f32, f32, f32), f32, (f32, f32, f32)) {
+fn parse(
+    inp: &str,
+) -> ((f32, f32, f32), (f32, f32, f32), f32, (f32, f32, f32)) {
     let mut ax = 0.;
     let mut ay = 0.;
     let mut az = 0.;

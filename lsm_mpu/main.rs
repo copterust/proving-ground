@@ -28,16 +28,18 @@ fn main() -> ! {
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc.cfgr
-                    .sysclk(64.mhz())
-                    .pclk1(32.mhz())
-                    .pclk2(32.mhz())
-                    .freeze(&mut flash.acr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .pclk2(32.mhz())
+        .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     let mut serial =
-        device.USART1
-              .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
+        device
+            .USART1
+            .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
     let ser_int = serial.get_interrupt();
     serial.listen(serial::Event::Rxne);
     let (mut tx, rx) = serial.split();
@@ -58,11 +60,13 @@ fn main() -> ! {
     write!(l, "lsm ok\r\n").unwrap();
     // SPI1
     let ncs = gpiob.pb9.output().push_pull();
-    let spi = device.SPI1.spi(// scl_sck, ad0_sd0_miso, sda_sdi_mosi,
-                              (gpiob.pb3, gpiob.pb4, gpiob.pb5),
-                              mpu9250::MODE,
-                              1.mhz(),
-                              clocks);
+    let spi = device.SPI1.spi(
+        // scl_sck, ad0_sd0_miso, sda_sdi_mosi,
+        (gpiob.pb3, gpiob.pb4, gpiob.pb5),
+        mpu9250::MODE,
+        1.mhz(),
+        clocks,
+    );
     write!(l, "spi ok\r\n").unwrap();
     let mut mpu =
         Mpu9250::marg_default(spi, ncs, &mut delay).expect("mpu error");
@@ -76,24 +80,30 @@ fn main() -> ! {
         match (mlsm_meas, mmpu_meas) {
             (Ok(lsm_meas), Ok(mpu_meas)) => {
                 if unsafe { !QUIET } {
-                    write!(l,
-                           "lsm: mag({},{},{}); a({},{},{}); t({});\r\n",
-                           lsm_meas.mag[0],
-                           lsm_meas.mag[1],
-                           lsm_meas.mag[2],
-                           lsm_meas.accel[0],
-                           lsm_meas.accel[1],
-                           lsm_meas.accel[2],
-                           lsm_meas.temp).unwrap();
-                    write!(l,
-                           "mpu: mag({},{},{}); a({},{},{}); t({});\r\n",
-                           mpu_meas.mag[0],
-                           mpu_meas.mag[1],
-                           mpu_meas.mag[2],
-                           mpu_meas.accel[0],
-                           mpu_meas.accel[1],
-                           mpu_meas.accel[2],
-                           mpu_meas.temp).unwrap();
+                    write!(
+                        l,
+                        "lsm: mag({},{},{}); a({},{},{}); t({});\r\n",
+                        lsm_meas.mag[0],
+                        lsm_meas.mag[1],
+                        lsm_meas.mag[2],
+                        lsm_meas.accel[0],
+                        lsm_meas.accel[1],
+                        lsm_meas.accel[2],
+                        lsm_meas.temp
+                    )
+                    .unwrap();
+                    write!(
+                        l,
+                        "mpu: mag({},{},{}); a({},{},{}); t({});\r\n",
+                        mpu_meas.mag[0],
+                        mpu_meas.mag[1],
+                        mpu_meas.mag[2],
+                        mpu_meas.accel[0],
+                        mpu_meas.accel[1],
+                        mpu_meas.accel[2],
+                        mpu_meas.temp
+                    )
+                    .unwrap();
                 }
             }
             (Err(e), _) => {
@@ -163,17 +173,23 @@ fn panic(panic_info: &PanicInfo) -> ! {
             let payload = panic_info.payload().downcast_ref::<&str>();
             match (panic_info.location(), payload) {
                 (Some(location), Some(msg)) => {
-                    write!(l,
-                           "\r\npanic in file '{}' at line {}: {:?}\r\n",
-                           location.file(),
-                           location.line(),
-                           msg).unwrap();
+                    write!(
+                        l,
+                        "\r\npanic in file '{}' at line {}: {:?}\r\n",
+                        location.file(),
+                        location.line(),
+                        msg
+                    )
+                    .unwrap();
                 }
                 (Some(location), None) => {
-                    write!(l,
-                           "panic in file '{}' at line {}",
-                           location.file(),
-                           location.line()).unwrap();
+                    write!(
+                        l,
+                        "panic in file '{}' at line {}",
+                        location.file(),
+                        location.line()
+                    )
+                    .unwrap();
                 }
                 (None, Some(msg)) => {
                     write!(l, "panic: {:?}", msg).unwrap();

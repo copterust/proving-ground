@@ -33,15 +33,17 @@ fn main() -> ! {
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
 
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc.cfgr
-                    .sysclk(64.mhz())
-                    .pclk1(32.mhz())
-                    .pclk2(32.mhz())
-                    .freeze(&mut flash.acr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .pclk2(32.mhz())
+        .freeze(&mut flash.acr);
 
     let mut serial =
-        device.USART1
-              .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
+        device
+            .USART1
+            .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
     let ser_int = serial.get_interrupt();
     serial.listen(serial::Event::Rxne);
     let (mut tx, rx) = serial.split();
@@ -56,11 +58,13 @@ fn main() -> ! {
     let mut delay = delay::Delay::new(core.SYST, clocks);
     // SPI1
     let ncs = gpiob.pb9.output().push_pull();
-    let spi = device.SPI1.spi(// scl_sck, ad0_sd0_miso, sda_sdi_mosi,
-                              (gpiob.pb3, gpiob.pb4, gpiob.pb5),
-                              mpu9250::MODE,
-                              1.mhz(),
-                              clocks);
+    let spi = device.SPI1.spi(
+        // scl_sck, ad0_sd0_miso, sda_sdi_mosi,
+        (gpiob.pb3, gpiob.pb4, gpiob.pb5),
+        mpu9250::MODE,
+        1.mhz(),
+        clocks,
+    );
     write!(l, "spi ok\r\n").unwrap();
     let mut mpu = Mpu9250::imu(
         spi,
@@ -83,31 +87,40 @@ fn main() -> ! {
     unsafe { cortex_m::peripheral::NVIC::unmask(ser_int) };
 
     let mut prev_t_ms = now_ms();
-    write!(l,
-           "All ok, now: {:?}; Press 'q' to toggle logging!\r\n",
-           prev_t_ms).unwrap();
+    write!(
+        l,
+        "All ok, now: {:?}; Press 'q' to toggle logging!\r\n",
+        prev_t_ms
+    )
+    .unwrap();
     loop {
         match mpu.all::<[f32; 3]>() {
             Ok(meas) => {
                 let gyro = meas.gyro;
-                let accel = [meas.accel[0] - accel_biases[0],
-                             meas.accel[1] - accel_biases[1],
-                             meas.accel[2] - accel_biases[2]];
+                let accel = [
+                    meas.accel[0] - accel_biases[0],
+                    meas.accel[1] - accel_biases[1],
+                    meas.accel[2] - accel_biases[2],
+                ];
                 let t_ms = now_ms();
                 let dt_ms = t_ms.wrapping_sub(prev_t_ms);
                 prev_t_ms = t_ms;
                 let dt_s = (dt_ms as f32) / 1000.;
-                let (dcm, _biased) =
-                    dcmimu.update((gyro[0], gyro[1], gyro[2]),
-                                  (accel[0], accel[1], accel[2]),
-                                  dt_s);
+                let (dcm, _biased) = dcmimu.update(
+                    (gyro[0], gyro[1], gyro[2]),
+                    (accel[0], accel[1], accel[2]),
+                    dt_s,
+                );
                 if unsafe { !QUIET } {
-                    write!(l,
-                           "IMU: dt={}s; roll={}; yaw={}; pitch={}\r\n",
-                           dt_s,
-                           rad_to_degrees(dcm.roll),
-                           rad_to_degrees(dcm.yaw),
-                           rad_to_degrees(dcm.pitch)).unwrap();
+                    write!(
+                        l,
+                        "IMU: dt={}s; roll={}; yaw={}; pitch={}\r\n",
+                        dt_s,
+                        rad_to_degrees(dcm.roll),
+                        rad_to_degrees(dcm.yaw),
+                        rad_to_degrees(dcm.pitch)
+                    )
+                    .unwrap();
                 }
             }
             Err(e) => {
@@ -195,17 +208,23 @@ fn panic(panic_info: &PanicInfo) -> ! {
             let payload = panic_info.payload().downcast_ref::<&str>();
             match (panic_info.location(), payload) {
                 (Some(location), Some(msg)) => {
-                    write!(l,
-                           "\r\npanic in file '{}' at line {}: {:?}\r\n",
-                           location.file(),
-                           location.line(),
-                           msg).unwrap();
+                    write!(
+                        l,
+                        "\r\npanic in file '{}' at line {}: {:?}\r\n",
+                        location.file(),
+                        location.line(),
+                        msg
+                    )
+                    .unwrap();
                 }
                 (Some(location), None) => {
-                    write!(l,
-                           "panic in file '{}' at line {}",
-                           location.file(),
-                           location.line()).unwrap();
+                    write!(
+                        l,
+                        "panic in file '{}' at line {}",
+                        location.file(),
+                        location.line()
+                    )
+                    .unwrap();
                 }
                 (None, Some(msg)) => {
                     write!(l, "panic: {:?}", msg).unwrap();

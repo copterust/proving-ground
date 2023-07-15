@@ -15,14 +15,18 @@ fn main() -> ! {
     let device = hal::pac::Peripherals::take().unwrap();
     let rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc.cfgr
-                    .sysclk(72.mhz())
-                    .pclk1(32.mhz())
-                    .pclk2(32.mhz())
-                    .freeze(&mut flash.acr);
-    hprintln!("main: sysclk: {:?}; hclck: {:?}",
-              clocks.sysclk(),
-              clocks.hclk()).unwrap();
+    let clocks = rcc
+        .cfgr
+        .sysclk(72.mhz())
+        .pclk1(32.mhz())
+        .pclk2(32.mhz())
+        .freeze(&mut flash.acr);
+    hprintln!(
+        "main: sysclk: {:?}; hclck: {:?}",
+        clocks.sysclk(),
+        clocks.hclk()
+    )
+    .unwrap();
     loop {}
 }
 

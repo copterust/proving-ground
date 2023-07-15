@@ -28,10 +28,11 @@ fn main() -> ! {
     // let mut delay = delay::Delay::new(core.SYST, clocks);
 
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
-    let mut beeper = gpiob.pb3
-                          .pull_type(gpio::PullNone)
-                          .output()
-                          .output_type(gpio::PushPull);
+    let mut beeper = gpiob
+        .pb3
+        .pull_type(gpio::PullNone)
+        .output()
+        .output_type(gpio::PushPull);
     // let mut b = true;
     let _ = beeper.set_high();
     loop {

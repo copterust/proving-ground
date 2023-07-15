@@ -18,17 +18,19 @@ fn main() -> ! {
     let device = hal::pac::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc.cfgr
-                    .sysclk(64.mhz())
-                    .pclk1(32.mhz())
-                    .pclk2(32.mhz())
-                    .freeze(&mut flash.acr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .pclk2(32.mhz())
+        .freeze(&mut flash.acr);
 
     // serial
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let mut serial =
-        device.USART1
-              .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
+        device
+            .USART1
+            .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
     serial.listen(serial::Event::Rxne);
     let (mut tx, mut rx) = serial.split();
     // COBS frame
@@ -49,31 +51,36 @@ fn main() -> ! {
     write!(l, "ID after reset: {}\r\n", ps.id()).unwrap();
     write!(l, "Status: {}\r\n", ps.status()).unwrap();
     write!(l, "{:?}\r\n", ps.control()).unwrap();
-    ps.set_control(bmp280::Control { osrs_t: bmp280::Oversampling::x1,
-                                     osrs_p: bmp280::Oversampling::x4,
-                                     mode: bmp280::PowerMode::Normal });
+    ps.set_control(bmp280::Control {
+        osrs_t: bmp280::Oversampling::x1,
+        osrs_p: bmp280::Oversampling::x4,
+        mode: bmp280::PowerMode::Normal,
+    });
     write!(l, "After write {:?}\r\n", ps.control()).unwrap();
     ps.reset();
     write!(l, "After reset {:?}\r\n", ps.control()).unwrap();
     write!(l, "{:?}\r\n", ps.config()).unwrap();
-    ps.set_config(bmp280::Config { t_sb: bmp280::Standby::ms250,
-                                   filter: bmp280::Filter::c8 });
+    ps.set_config(bmp280::Config {
+        t_sb: bmp280::Standby::ms250,
+        filter: bmp280::Filter::c8,
+    });
     write!(l, "After write {:?}\r\n", ps.config()).unwrap();
-    ps.set_control(bmp280::Control { osrs_t: bmp280::Oversampling::x1,
-                                     osrs_p: bmp280::Oversampling::x1,
-                                     mode: bmp280::PowerMode::Forced });
+    ps.set_control(bmp280::Control {
+        osrs_t: bmp280::Oversampling::x1,
+        osrs_p: bmp280::Oversampling::x1,
+        mode: bmp280::PowerMode::Forced,
+    });
     write!(l, "Press any key to meausure\r\n").unwrap();
     loop {
         match rx.read() {
             Ok(_b) => {
                 write!(l, "Temperature: {}\r\n", ps.temp()).unwrap();
                 write!(l, "Pressure: {}\r\n", ps.pressure()).unwrap();
-                ps.set_control(bmp280::Control { osrs_t:
-                                                   bmp280::Oversampling::x1,
-                                               osrs_p:
-                                                   bmp280::Oversampling::x1,
-                                               mode:
-                                                   bmp280::PowerMode::Forced });
+                ps.set_control(bmp280::Control {
+                    osrs_t: bmp280::Oversampling::x1,
+                    osrs_p: bmp280::Oversampling::x1,
+                    mode: bmp280::PowerMode::Forced,
+                });
             }
             Err(nb::Error::Other(e)) => match e {
                 serial::Error::Overrun => {

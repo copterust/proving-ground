@@ -22,10 +22,12 @@ use logger::{Vs, Write};
 
 const G: f32 = 9.80665;
 
-fn accel_error<Dev, Imu>(mpu: &mut Mpu9250<Dev, Imu>,
-                         delay: &mut delay::Delay)
-                         -> Result<f32, Dev::Error>
-    where Dev: mpu9250::Device
+fn accel_error<Dev, Imu>(
+    mpu: &mut Mpu9250<Dev, Imu>,
+    delay: &mut delay::Delay,
+) -> Result<f32, Dev::Error>
+where
+    Dev: mpu9250::Device,
 {
     let mut i: Vector3<_> = mpu.accel()?;
     let mut a = 0.0;
@@ -38,12 +40,14 @@ fn accel_error<Dev, Imu>(mpu: &mut Mpu9250<Dev, Imu>,
     Ok(a * 0.02)
 }
 
-fn wait_for_measurement<Dev, Imu>(mpu: &mut Mpu9250<Dev, Imu>,
-                                  delay: &mut delay::Delay,
-                                  rest: f32,
-                                  noise_level: f32)
-                                  -> Result<Vector3<f32>, Dev::Error>
-    where Dev: mpu9250::Device
+fn wait_for_measurement<Dev, Imu>(
+    mpu: &mut Mpu9250<Dev, Imu>,
+    delay: &mut delay::Delay,
+    rest: f32,
+    noise_level: f32,
+) -> Result<Vector3<f32>, Dev::Error>
+where
+    Dev: mpu9250::Device,
 {
     let mut mov = 0.0;
 
@@ -83,22 +87,26 @@ fn main() -> ! {
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc.cfgr
-                    .sysclk(64.mhz())
-                    .pclk1(32.mhz())
-                    .pclk2(32.mhz())
-                    .freeze(&mut flash.acr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .pclk2(32.mhz())
+        .freeze(&mut flash.acr);
 
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
 
-    
-    let spi_conf = include!(concat!("hw_layout/", env!("hw_layout"), "/spi.rs"));
-    let usart_conf = include!(concat!("hw_layout/", env!("hw_layout"), "/usart.rs"));
+    let spi_conf =
+        include!(concat!("hw_layout/", env!("hw_layout"), "/spi.rs"));
+    let usart_conf =
+        include!(concat!("hw_layout/", env!("hw_layout"), "/usart.rs"));
 
-    let serial = usart_conf.dev.serial((usart_conf.tx, usart_conf.rx),
-                                       Bps(usart_conf.bps),
-                                       clocks);
+    let serial = usart_conf.dev.serial(
+        (usart_conf.tx, usart_conf.rx),
+        Bps(usart_conf.bps),
+        clocks,
+    );
     let (tx, _) = serial.split();
 
     logger::set_stdout(tx);
@@ -110,11 +118,12 @@ fn main() -> ! {
 
     // SPI1
     let cs_mpu = spi_conf.cs_mpu.output().push_pull();
-    let spi = spi_conf.dev
-                      .spi((spi_conf.scl, spi_conf.miso, spi_conf.mosi),
-                           mpu9250::MODE,
-                           1.mhz(),
-                           clocks);
+    let spi = spi_conf.dev.spi(
+        (spi_conf.scl, spi_conf.miso, spi_conf.mosi),
+        mpu9250::MODE,
+        1.mhz(),
+        clocks,
+    );
 
     println!("- spi");
 
@@ -155,7 +164,8 @@ fn main() -> ! {
     for pos in 0..6 {
         println!("Put device in position {}", pos);
 
-        let r = wait_for_measurement(&mut mpu, &mut delay, rest, noise_level).unwrap();
+        let r = wait_for_measurement(&mut mpu, &mut delay, rest, noise_level)
+            .unwrap();
 
         println!("\r- ok, readings: {} = {:8.3}", Vs(r), r.norm());
 
@@ -166,30 +176,40 @@ fn main() -> ! {
         println!("Calibration result: {:?}", adj);
         for pos in 0..6 {
             let r = Vector3::from(readings[pos]);
-            let a = Vector3::new(adj[0].estimate(r[0]),
-                                 adj[1].estimate(r[1]),
-                                 adj[2].estimate(r[2]));
+            let a = Vector3::new(
+                adj[0].estimate(r[0]),
+                adj[1].estimate(r[1]),
+                adj[2].estimate(r[2]),
+            );
             let err = (G - a.norm()).abs();
             println!(" - orig reading: {} = {}", Vs(r), r.norm());
-            println!("   adjusted:     {} = {}, error: {}",
-                     Vs(a),
-                     a.norm(),
-                     err);
+            println!(
+                "   adjusted:     {} = {}, error: {}",
+                Vs(a),
+                a.norm(),
+                err
+            );
         }
 
         loop {
             println!("Put device in new position");
 
-            let r = wait_for_measurement(&mut mpu, &mut delay, rest, noise_level).unwrap();
-            let a = Vector3::new(adj[0].estimate(r[0]),
-                                 adj[1].estimate(r[1]),
-                                 adj[2].estimate(r[2]));
+            let r =
+                wait_for_measurement(&mut mpu, &mut delay, rest, noise_level)
+                    .unwrap();
+            let a = Vector3::new(
+                adj[0].estimate(r[0]),
+                adj[1].estimate(r[1]),
+                adj[2].estimate(r[2]),
+            );
             let err = (G - a.norm()).abs();
             println!("\r- readings: {} = {:8.3}", Vs(r), r.norm());
-            println!("\r- adjusted: {} = {:8.3} err = {}",
-                     Vs(a),
-                     a.norm(),
-                     err);
+            println!(
+                "\r- adjusted: {} = {:8.3} err = {}",
+                Vs(a),
+                a.norm(),
+                err
+            );
         }
     } else {
         println!("Calibration failed, try again.");
@@ -198,7 +218,8 @@ fn main() -> ! {
 }
 
 fn lerp<A>(a: f32, x: A, y: A) -> A
-    where A: core::ops::Mul<f32, Output = A> + core::ops::Add<A, Output = A>
+where
+    A: core::ops::Mul<f32, Output = A> + core::ops::Add<A, Output = A>,
 {
     x * (1.0 - a) + y * a
 }

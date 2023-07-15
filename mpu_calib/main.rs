@@ -21,16 +21,19 @@ fn main() -> ! {
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc.cfgr
-                    .sysclk(64.mhz())
-                    .pclk1(32.mhz())
-                    .pclk2(36.mhz())
-                    .freeze(&mut flash.acr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .pclk2(36.mhz())
+        .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
 
-    let serial = device.USART1
-                       .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
+    let serial =
+        device
+            .USART1
+            .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
     let (mut tx, _rx) = serial.split();
     // COBS frame
     tx.write(0x00).unwrap();
@@ -42,10 +45,12 @@ fn main() -> ! {
     let scl_sck = gpiob.pb3;
     let sda_sdi_mosi = gpiob.pb5;
     let ad0_sdo_miso = gpiob.pb4;
-    let spi = device.SPI1.spi((scl_sck, ad0_sdo_miso, sda_sdi_mosi),
-                              mpu9250::MODE,
-                              1.mhz(),
-                              clocks);
+    let spi = device.SPI1.spi(
+        (scl_sck, ad0_sdo_miso, sda_sdi_mosi),
+        mpu9250::MODE,
+        1.mhz(),
+        clocks,
+    );
     let mut mpu = Mpu9250::marg_default(spi, ncs, &mut delay).unwrap();
 
     let sample_count = 500;
@@ -58,14 +63,18 @@ fn main() -> ! {
 
     let [mag_sensitivity_x, mag_sensitivity_y, mag_sensitivity_z] =
         mpu.mag_sensitivity_adjustments::<[f32; 3]>();
-    write!(l,
-           "factory sensitivity adjustments: {:?}, {:?}, {:?}\r\n",
-           mag_sensitivity_x, mag_sensitivity_y, mag_sensitivity_z).unwrap();
+    write!(
+        l,
+        "factory sensitivity adjustments: {:?}, {:?}, {:?}\r\n",
+        mag_sensitivity_x, mag_sensitivity_y, mag_sensitivity_z
+    )
+    .unwrap();
 
     write!(
         l,
         "Mag Calibration: Wave device in a figure eight until done!\r\n"
-    ).unwrap();
+    )
+    .unwrap();
     delay.delay_ms(200u32);
 
     for _ in 0..sample_count {
@@ -125,14 +134,17 @@ fn main() -> ! {
     let final_mag_scale_y = avg_rad / (mag_scale_y);
     let final_mag_scale_z = avg_rad / (mag_scale_z);
 
-    write!(l,
-           "loop done; bias: ({}, {}, {}); scale: ({}, {}, {})\r\n",
-           mag_bias_x,
-           mag_bias_y,
-           mag_bias_z,
-           final_mag_scale_x,
-           final_mag_scale_y,
-           final_mag_scale_z).unwrap();
+    write!(
+        l,
+        "loop done; bias: ({}, {}, {}); scale: ({}, {}, {})\r\n",
+        mag_bias_x,
+        mag_bias_y,
+        mag_bias_z,
+        final_mag_scale_x,
+        final_mag_scale_y,
+        final_mag_scale_z
+    )
+    .unwrap();
     loop {}
 }
 

@@ -20,16 +20,18 @@ fn main() -> ! {
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc.cfgr
-                    .sysclk(64.mhz())
-                    .pclk1(32.mhz())
-                    .pclk2(36.mhz())
-                    .freeze(&mut flash.acr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .pclk2(36.mhz())
+        .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     let mut serial =
-        device.USART1
-              .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
+        device
+            .USART1
+            .serial((gpioa.pa9, gpioa.pa10), Bps(115200), clocks);
     serial.listen(serial::Event::Rxne);
     let (mut tx, _rx) = serial.split();
     // COBS frame
@@ -42,10 +44,12 @@ fn main() -> ! {
     let scl_sck = gpiob.pb3;
     let sda_sdi_mosi = gpiob.pb5;
     let ad0_sdo_miso = gpiob.pb4;
-    let spi = device.SPI1.spi((scl_sck, ad0_sdo_miso, sda_sdi_mosi),
-                              mpu9250::MODE,
-                              1.mhz(),
-                              clocks);
+    let spi = device.SPI1.spi(
+        (scl_sck, ad0_sdo_miso, sda_sdi_mosi),
+        mpu9250::MODE,
+        1.mhz(),
+        clocks,
+    );
     let mut mpu = Mpu9250::imu_default(spi, ncs, &mut delay).unwrap();
 
     write!(l, "starting loop...\r\n").unwrap();

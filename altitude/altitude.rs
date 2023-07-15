@@ -42,12 +42,12 @@ fn agl_to_range(agl: f32) -> f32 {
 /// Class for fusing range and barometric sensors
 pub struct ASL_EKF {
     baseline_pressure: f32,
-    p_pre: na::Matrix1<f32>,  // Previous prediction noise covariance
-    x: na::Matrix1<f32>,      // Matrix of n states, where n = 1
+    p_pre: na::Matrix1<f32>, // Previous prediction noise covariance
+    x: na::Matrix1<f32>,     // Matrix of n states, where n = 1
     p_post: na::Matrix1<f32>, // Matrix of n multiplied by pval
-    q: na::Matrix1<f32>,      // Matrix of size n
-    r: na::Matrix2<f32>,      // Two observations
-    i: na::Matrix1<f32>,      // of size n
+    q: na::Matrix1<f32>,     // Matrix of size n
+    r: na::Matrix2<f32>,     // Two observations
+    i: na::Matrix1<f32>,     // of size n
 }
 
 impl ASL_EKF {
@@ -84,11 +84,17 @@ impl ASL_EKF {
     }
 
     /// State transition function
-    pub fn f(&self, x: na::Matrix1<f32>) -> (na::Matrix1<f32>, na::Matrix1<f32>) {
+    pub fn f(
+        &self,
+        x: na::Matrix1<f32>,
+    ) -> (na::Matrix1<f32>, na::Matrix1<f32>) {
         (x, na::Matrix1::identity())
     }
 
-    pub fn h(&self, x: na::Matrix1<f32>) -> (na::Matrix2x1<f32>, na::Vector2<f32>) {
+    pub fn h(
+        &self,
+        x: na::Matrix1<f32>,
+    ) -> (na::Matrix2x1<f32>, na::Vector2<f32>) {
         let asl = x[0];
         let s = agl_to_range(asl - baro_to_asl(self.baseline_pressure));
         let b = asl_to_baro(asl);

@@ -22,8 +22,8 @@ fn main() {
         let baro = baro_base + sine * 20.;
 
         // Add noise to simulated sonar at random intervals
-        let sonar: f32 =
-            sonarfun(50. * (1. - sine)) + if rand::random::<f32>() > 0.9 { 50. } else { 0. };
+        let sonar: f32 = sonarfun(50. * (1. - sine))
+            + if rand::random::<f32>() > 0.9 { 50. } else { 0. };
         let fused = ekf.step(na::Vector2::new(baro, sonar));
         println!("Pressure: {}, height: {}, fused: {}", baro, sonar, fused[0]);
     }

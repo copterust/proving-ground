@@ -47,7 +47,8 @@ impl DmaTelemetry {
     }
 
     fn send<F>(self, mut buffer_filler: F) -> Self
-        where F: for<'a> FnMut<(&'a mut TxBuffer,), Output = ()>
+    where
+        F: for<'a> FnMut<(&'a mut TxBuffer,), Output = ()>,
     {
         let ns = match self.state {
             TransferState::Ready((mut buffer, ch, tx)) => {
@@ -93,14 +94,16 @@ const APP: () = {
         let device: hal::pac::Peripherals = ctx.device;
         let mut rcc = device.RCC.constrain();
         let mut flash = device.FLASH.constrain();
-        let clocks = rcc.cfgr
-                        .sysclk(64.mhz())
-                        .pclk1(32.mhz())
-                        .freeze(&mut flash.acr);
+        let clocks = rcc
+            .cfgr
+            .sysclk(64.mhz())
+            .pclk1(32.mhz())
+            .freeze(&mut flash.acr);
         let gpioa = device.GPIOA.split(&mut rcc.ahb);
         let serial =
-            device.USART2
-                  .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
+            device
+                .USART2
+                .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
         let (tx, rx) = serial.split();
         let dma_channels = device.DMA1.split(&mut rcc.ahb);
         let tele = DmaTelemetry::create(dma_channels.7, tx);
@@ -112,9 +115,11 @@ const APP: () = {
         rx_chan.listen(hal::dma::Event::TransferComplete);
         let ib = unsafe { &mut IN_BUFFER };
         let cb = rx.circ_read(rx_chan, ib);
-        init::LateResources { LED: led,
-                              CB: cb,
-                              TELE: Some(new_tele) }
+        init::LateResources {
+            LED: led,
+            CB: cb,
+            TELE: Some(new_tele),
+        }
     }
 
     #[interrupt(binds = DMA1_CH6, resources = [LED, CB, TELE])]
@@ -127,8 +132,8 @@ const APP: () = {
         if let Some(tele) = maybe_tele {
             let mut msg = [0u8; 32];
             let ret = cb.peek(|buf, _half| {
-                            msg.copy_from_slice(buf);
-                        });
+                msg.copy_from_slice(buf);
+            });
             match ret {
                 Ok(()) => {
                     let new_tele = tele.send(|b| fill_with_bytes(b, &msg));

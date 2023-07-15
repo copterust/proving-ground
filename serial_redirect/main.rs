@@ -25,19 +25,23 @@ fn main() -> ! {
     let device = hal::pac::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc.cfgr
-                    .sysclk(64.mhz())
-                    .pclk1(32.mhz())
-                    .pclk2(36.mhz())
-                    .freeze(&mut flash.acr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .pclk2(36.mhz())
+        .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
     let mut usart2 =
-        device.USART2
-              .serial((gpioa.pa14, gpioa.pa15), Bps(115200), clocks);
+        device
+            .USART2
+            .serial((gpioa.pa14, gpioa.pa15), Bps(115200), clocks);
 
-    let mut usart3 = device.USART3
-                           .serial((gpiob.pb10, gpiob.pb11), Bps(9600), clocks);
+    let mut usart3 =
+        device
+            .USART3
+            .serial((gpiob.pb10, gpiob.pb11), Bps(9600), clocks);
 
     usart3.listen(serial::Event::Rxne);
     usart2.listen(serial::Event::Rxne);
@@ -144,17 +148,23 @@ fn panic(panic_info: &PanicInfo) -> ! {
             let payload = panic_info.payload().downcast_ref::<&str>();
             match (panic_info.location(), payload) {
                 (Some(location), Some(msg)) => {
-                    write!(l,
-                           "\r\npanic in file '{}' at line {}: {:?}\r\n",
-                           location.file(),
-                           location.line(),
-                           msg).unwrap();
+                    write!(
+                        l,
+                        "\r\npanic in file '{}' at line {}: {:?}\r\n",
+                        location.file(),
+                        location.line(),
+                        msg
+                    )
+                    .unwrap();
                 }
                 (Some(location), None) => {
-                    write!(l,
-                           "panic in file '{}' at line {}",
-                           location.file(),
-                           location.line()).unwrap();
+                    write!(
+                        l,
+                        "panic in file '{}' at line {}",
+                        location.file(),
+                        location.line()
+                    )
+                    .unwrap();
                 }
                 (None, Some(msg)) => {
                     write!(l, "panic: {:?}", msg).unwrap();

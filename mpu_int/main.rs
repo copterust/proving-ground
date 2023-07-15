@@ -21,9 +21,11 @@ mod app {
     type SCLPin<B> = gpio::PB3<PullNone, B>;
     type MISOPin<B> = gpio::PB4<PullNone, B>;
     type MOSIPin<B> = gpio::PB5<PullNone, B>;
-    type SpiPins = (SCLPin<AltFn<AF5, PushPull, HighSpeed>>,
-                    MISOPin<AltFn<AF5, PushPull, HighSpeed>>,
-                    MOSIPin<AltFn<AF5, PushPull, HighSpeed>>);
+    type SpiPins = (
+        SCLPin<AltFn<AF5, PushPull, HighSpeed>>,
+        MISOPin<AltFn<AF5, PushPull, HighSpeed>>,
+        MOSIPin<AltFn<AF5, PushPull, HighSpeed>>,
+    );
     type SPI = Spi<SpiT, SpiPins>;
     type NcsPinDef<B> = gpio::PB0<PullNone, B>;
     type NcsPinT = NcsPinDef<Output<PushPull, HighSpeed>>;
@@ -32,8 +34,10 @@ mod app {
 
     #[resources]
     struct Resources {
-        extih: hal::exti::BoundInterrupt<hal::gpio::PA0<PullUp, Input>,
-                                         hal::exti::EXTI1>,
+        extih: hal::exti::BoundInterrupt<
+            hal::gpio::PA0<PullUp, Input>,
+            hal::exti::EXTI1,
+        >,
         mpu: MPU9250,
     }
 
@@ -42,10 +46,11 @@ mod app {
         let device = ctx.device;
         let mut rcc = device.RCC.constrain();
         let mut flash = device.FLASH.constrain();
-        let clocks = rcc.cfgr
-                        .sysclk(64.mhz())
-                        .pclk1(32.mhz())
-                        .freeze(&mut flash.acr);
+        let clocks = rcc
+            .cfgr
+            .sysclk(64.mhz())
+            .pclk1(32.mhz())
+            .freeze(&mut flash.acr);
         let gpioa = device.GPIOA.split(&mut rcc.ahb);
         let gpiob = device.GPIOB.split(&mut rcc.ahb);
 
@@ -59,10 +64,12 @@ mod app {
         let scl_sck = gpiob.pb3;
         let sda_sdi_mosi = gpiob.pb5;
         let ad0_sdo_miso = gpiob.pb4;
-        let spi = device.SPI1.spi((scl_sck, ad0_sdo_miso, sda_sdi_mosi),
-                                  mpu9250::MODE,
-                                  1.mhz(),
-                                  clocks);
+        let spi = device.SPI1.spi(
+            (scl_sck, ad0_sdo_miso, sda_sdi_mosi),
+            mpu9250::MODE,
+            1.mhz(),
+            clocks,
+        );
         hprintln!("spi ok").unwrap();
         // MPU
         // 8Hz
@@ -86,37 +93,42 @@ mod app {
                 );
                 Some((new_spi, ncs))
             },
-        ).unwrap();
+        )
+        .unwrap();
         hprintln!("mpu ok").unwrap();
 
-        mpu9250.enable_interrupts(mpu9250::InterruptEnable::RAW_RDY_EN)
-               .unwrap();
+        mpu9250
+            .enable_interrupts(mpu9250::InterruptEnable::RAW_RDY_EN)
+            .unwrap();
         hprintln!("int enabled").unwrap();
 
         let extih = exti.EXTI1.bind(interrupt_pin, &mut syscfg);
         hprintln!("int bound").unwrap();
 
-        init::LateResources { extih,
-                              mpu: mpu9250 }
+        init::LateResources {
+            extih,
+            mpu: mpu9250,
+        }
     }
 
     #[task(binds=EXTI0, resources = [mpu, extih])]
     fn handle_mpu(mut ctx: handle_mpu::Context) {
-        ctx.resources.mpu.lock(|mpu| {
-            match mpu.all::<[f32; 3]>() {
-                Ok(a) => {
-                    hprintln!("[a:({:?},{:?},{:?}),g:({:?},{:?},{:?}),t:{:?}]",
-                              a.accel[0],
-                              a.accel[1],
-                              a.accel[2],
-                              a.gyro[0],
-                              a.gyro[1],
-                              a.gyro[2],
-                              a.temp,).unwrap();
-                }
-                Err(e) => {
-                    hprintln!("e: {:?}", e).unwrap();
-                }
+        ctx.resources.mpu.lock(|mpu| match mpu.all::<[f32; 3]>() {
+            Ok(a) => {
+                hprintln!(
+                    "[a:({:?},{:?},{:?}),g:({:?},{:?},{:?}),t:{:?}]",
+                    a.accel[0],
+                    a.accel[1],
+                    a.accel[2],
+                    a.gyro[0],
+                    a.gyro[1],
+                    a.gyro[2],
+                    a.temp,
+                )
+                .unwrap();
+            }
+            Err(e) => {
+                hprintln!("e: {:?}", e).unwrap();
             }
         });
 

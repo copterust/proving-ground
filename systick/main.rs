@@ -22,14 +22,17 @@ fn main() -> ! {
     let core = cortex_m::Peripherals::take().unwrap();
     let mut rcc = device.RCC.constrain();
     let mut flash = device.FLASH.constrain();
-    let clocks = rcc.cfgr
-                    .sysclk(64.mhz())
-                    .pclk1(32.mhz())
-                    .pclk2(32.mhz())
-                    .freeze(&mut flash.acr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .pclk2(32.mhz())
+        .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
-    let serial = device.USART2
-                       .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
+    let serial =
+        device
+            .USART2
+            .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
     let (mut tx, _rx) = serial.split();
     // COBS frame
     tx.write(0x00).unwrap();
@@ -69,9 +72,12 @@ unsafe fn SysTick() {
     if (NOW_MS.wrapping_sub(LAST_SNAPSHOT_MS)) > 2000 {
         LAST_SNAPSHOT_MS = NOW_MS;
         let l = extract(&mut L);
-        write!(l,
-               "Tick: {:?}ms; last: {:?}ms\r\n",
-               NOW_MS, LAST_SNAPSHOT_MS).unwrap();
+        write!(
+            l,
+            "Tick: {:?}ms; last: {:?}ms\r\n",
+            NOW_MS, LAST_SNAPSHOT_MS
+        )
+        .unwrap();
     }
 }
 

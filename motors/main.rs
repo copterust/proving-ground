@@ -20,10 +20,11 @@ fn main() -> ! {
     let mut rcc = device.RCC.constrain();
 
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
-    let clocks = rcc.cfgr
-                    .sysclk(64.mhz())
-                    .pclk1(32.mhz())
-                    .freeze(&mut flash.acr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(64.mhz())
+        .pclk1(32.mhz())
+        .freeze(&mut flash.acr);
     let ((ch1, ch2, ch3, ch4), mut tim1) =
         timer::tim2::Timer::new(device.TIM2, 1.mhz(), clocks).use_pwm();
     let ((ch5, ch6, _, _), mut tim2) =

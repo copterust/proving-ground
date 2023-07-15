@@ -58,16 +58,11 @@ mod app {
     #[task(binds=EXTI15_10, local = [device, delay])]
     fn int(ctx: int::Context) {
         for _ in 1..3 {
-            ctx.local
-                .device.GPIOA.bsrr.write(|w| w.bs5().set_bit());
+            ctx.local.device.GPIOA.bsrr.write(|w| w.bs5().set_bit());
             ctx.local.delay.delay_ms(100u32);
-            ctx.local
-                .device
-                .GPIOA.brr.write(|w| w.br5().set_bit());
+            ctx.local.device.GPIOA.brr.write(|w| w.br5().set_bit());
             ctx.local.delay.delay_ms(100u32);
         }
-        ctx.local
-            .device
-            .EXTI.pr1.modify(|_, w| w.pr13().set_bit());
+        ctx.local.device.EXTI.pr1.modify(|_, w| w.pr13().set_bit());
     }
 }

@@ -48,7 +48,8 @@ impl DmaTelemetry {
     }
 
     fn send<F>(self, mut buffer_filler: F) -> Self
-        where F: for<'a> FnMut<(&'a mut TxBuffer,), Output = ()>
+    where
+        F: for<'a> FnMut<(&'a mut TxBuffer,), Output = ()>,
     {
         let ns = match self.state {
             TransferState::Ready((mut buffer, ch, tx)) => {
@@ -87,8 +88,10 @@ pub struct Cmd {
 impl Cmd {
     #[inline]
     const fn new() -> Cmd {
-        Cmd { buffer: [0; BUFFER_SIZE],
-              pos: 0 }
+        Cmd {
+            buffer: [0; BUFFER_SIZE],
+            pos: 0,
+        }
     }
 
     #[inline]
@@ -132,14 +135,16 @@ const APP: () = {
         let device: hal::pac::Peripherals = ctx.device;
         let mut rcc = device.RCC.constrain();
         let mut flash = device.FLASH.constrain();
-        let clocks = rcc.cfgr
-                        .sysclk(64.mhz())
-                        .pclk1(32.mhz())
-                        .freeze(&mut flash.acr);
+        let clocks = rcc
+            .cfgr
+            .sysclk(64.mhz())
+            .pclk1(32.mhz())
+            .freeze(&mut flash.acr);
         let gpioa = device.GPIOA.split(&mut rcc.ahb);
         let mut serial =
-            device.USART2
-                  .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
+            device
+                .USART2
+                .serial((gpioa.pa2, gpioa.pa15), Bps(460800), clocks);
         cortex_m_semihosting::hprintln!("serial").unwrap();
         serial.listen(hal::serial::Event::Rxne);
         cortex_m_semihosting::hprintln!("listen").unwrap();
@@ -154,12 +159,14 @@ const APP: () = {
         cortex_m_semihosting::hprintln!("init done").unwrap();
 
         let (p, c) = unsafe { QUEUE.split() };
-        init::LateResources { LED: led,
-                              RX: rx,
-                              CMD: Cmd::new(),
-                              TELE: Some(new_tele),
-                              P: p,
-                              C: c }
+        init::LateResources {
+            LED: led,
+            RX: rx,
+            CMD: Cmd::new(),
+            TELE: Some(new_tele),
+            P: p,
+            C: c,
+        }
     }
 
     #[idle(resources=[C, CMD, TELE])]
