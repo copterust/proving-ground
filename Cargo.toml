@@ -124,6 +124,7 @@ with_rt = ["panic-abort", "cortex-m-rt", "cortex-m", ]
 with_device = ["with_rt", "stm32f3/rt", "stm32f3/stm32f303"]
 with_hal = ["with_device", "nb", "hal", "ehal"]
 with_mpu = ["with_hal", "mpu9250"]
+with_only_mpu = ["mpu9250"]
 with_dcmimu = ["with_mpu", "dcmimu"]
 with_lsm = ["with_hal", "lsm303c"]
 with_bmp = ["with_hal", "bmp280"]
@@ -135,7 +136,7 @@ with_won2010 = ["won2010"]
 with_heapless = ["heapless"]
 with_ryu = ["ryu"]
 with_rtfm = ["cortex-m-rtic"]
-with_embassy = ["with_rt", "embassy-sync", "embassy-executor", "embassy-time", "embassy-stm32", "embedded-io", "embedded-hal-async", "defmt", "defmt-rtt", "static_cell", "panic-probe"]
+with_embassy = ["with_rt", "embassy-sync", "embassy-executor", "embassy-time", "embassy-stm32", "embedded-io", "embedded-hal-async", "defmt", "defmt-rtt", "static_cell", "panic-probe", "nb"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
 all = ["with_dcmimu", "with_lsm", "with_heapless", "with_rtfm"]
@@ -314,4 +315,4 @@ required-features = [ "with_rtfm", "with_device", "with_hal", "with_heapless", "
 [[bin]]
 name = "embassy_raw_sensors"
 path = "embassy_raw_sensors/main.rs"
-required-features = [ "with_embassy" ]
+required-features = [ "with_embassy", "with_only_mpu", "with_heapless" ]
