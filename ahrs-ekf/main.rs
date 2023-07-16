@@ -9,6 +9,7 @@ use core::panic::PanicInfo;
 use asm_delay::AsmDelay;
 use cortex_m_rt::{entry, exception, ExceptionFrame};
 use hal::pac::interrupt;
+use hal::gpio;
 use hal::prelude::*;
 use hal::serial;
 use hal::time::Bps;
@@ -35,6 +36,15 @@ fn main() -> ! {
         .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     let gpiob = device.GPIOB.split(&mut rcc.ahb);
+
+    let mut beeper = gpiob
+        .pb3
+        .pull_type(gpio::PullNone)
+        .output()
+        .output_type(gpio::PushPull);
+    let _ = beeper.set_high();
+    let mut is_high = true;
+
     let mut serial =
         device
             .USART2
@@ -121,6 +131,7 @@ fn main() -> ! {
     let b = [-171.46636520969122, 440.13276013298366, -197.88863777137766];
     // end of magic
 
+    let mut reads = 0;
     loop {
         let t_ms = now_ms();
         let dt_ms = t_ms.wrapping_sub(prev_t_ms);
@@ -149,6 +160,17 @@ fn main() -> ! {
                 .unwrap();
 
                 while now_ms() < t_ms + 20 {}
+                reads += 1;
+                if reads >= 100 {
+                    reads = 0;
+                    if is_high {
+                        let _ = beeper.set_low();
+                        is_high = false;
+                    } else {
+                        let _ = beeper.set_high();
+                        is_high = true;
+                    }
+                }
             }
             Err(e) => {
                 write!(l, "Err: {:?}; {:?}", t_ms, e).unwrap();
