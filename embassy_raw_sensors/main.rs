@@ -5,21 +5,20 @@
 #![feature(type_alias_impl_trait)]
 
 use asm_delay::AsmDelay;
-use defmt;
 use core::fmt::Write;
+use defmt;
 use {defmt_rtt as _, panic_probe as _};
 
 use embassy_executor::Spawner;
-use heapless::String;
 use embassy_stm32::dma::NoDma;
-use embassy_time::Instant;
 use embassy_stm32::gpio::{Level, Output, Speed};
 use embassy_stm32::time::{mhz, Hertz};
 use embassy_stm32::{bind_interrupts, peripherals, spi, usart};
-use mpu9250::Mpu9250;
-use embassy_sync::signal::Signal;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
-
+use embassy_sync::signal::Signal;
+use embassy_time::Instant;
+use heapless::String;
+use mpu9250::Mpu9250;
 
 struct ToggleQuiet;
 static QUIET: Signal<CriticalSectionRawMutex, ToggleQuiet> = Signal::new();
@@ -29,7 +28,6 @@ bind_interrupts!(struct Irqs {
     USART2 => usart::InterruptHandler<peripherals::USART2>;
 });
 
-
 macro_rules! log_to_usart {
     ($sink: ident, $buf: ident, $($args:tt)+) => ({
         core::write!(&mut $buf, $($args)+).unwrap();
@@ -38,7 +36,6 @@ macro_rules! log_to_usart {
         $buf.clear();
     });
 }
-
 
 #[embassy_executor::task]
 async fn reader(mut rx: usart::UartRx<'static, peripherals::USART2, NoDma>) {
@@ -54,12 +51,9 @@ async fn reader(mut rx: usart::UartRx<'static, peripherals::USART2, NoDma>) {
             Err(nb::Error::WouldBlock) => {}
             Err(nb::Error::Other(e)) => match e {
                 // seems embassy clears errors automatically
-                usart::Error::Overrun => {
-                }
-                usart::Error::Framing => {
-                }
-                usart::Error::Noise => {
-                }
+                usart::Error::Overrun => {}
+                usart::Error::Framing => {}
+                usart::Error::Noise => {}
                 _ => {
                     defmt::error!("read error: {:?}", defmt::Debug2Format(&e));
                     // TODO: log to usart too
@@ -69,10 +63,9 @@ async fn reader(mut rx: usart::UartRx<'static, peripherals::USART2, NoDma>) {
     }
 }
 
-
 #[embassy_executor::main]
 async fn main(spawner: Spawner) -> ! {
-    defmt::info!("Starting MPU Embassy demo!");
+    // defmt::info!("Starting MPU Embassy demo!");
 
     let mut config = embassy_stm32::Config::default();
     let sysclk = 64_000_000;
@@ -104,7 +97,7 @@ async fn main(spawner: Spawner) -> ! {
 
     let spi = spi::Spi::new(
         device.SPI1,
-        device.PB3, // scl_sck
+        device.PA5, // scl_sck
         device.PB5, // mosi
         device.PB4, // miso
         NoDma,
@@ -139,8 +132,12 @@ async fn main(spawner: Spawner) -> ! {
 
     let mut prev_t_ms = Instant::now().as_millis();
 
-    log_to_usart!(tx, log_buf, "All ok, now: {:?}; Press 'q' to toggle verbosity!\r\n",
-                  prev_t_ms);
+    log_to_usart!(
+        tx,
+        log_buf,
+        "All ok, now: {:?}; Press 'q' to toggle verbosity!\r\n",
+        prev_t_ms
+    );
 
     // TODO: read mpu on interrupt; await signals here
     let mut quiet = false;
@@ -157,8 +154,9 @@ async fn main(spawner: Spawner) -> ! {
                     meas.accel[2] - accel_biases[2],
                 ];
                 if !quiet {
-                    log_to_usart!(tx,
-                                  log_buf,
+                    log_to_usart!(
+                        tx,
+                        log_buf,
                         "IMU: t:{}ms; dt:{}ms; g({};{};{}); a({};{};{})\r\n",
                         t_ms,
                         dt_ms,

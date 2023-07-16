@@ -10,13 +10,12 @@ use rtic::app;
 use hal::gpio::{LowSpeed, Output, PullNone, PushPull};
 use hal::prelude::*;
 use hal::time::Bps;
-use heapless::consts::*;
 use heapless::Vec;
 
 type USART = hal::pac::USART2;
 type TxUsart = hal::serial::Tx<USART>;
 type TxCh = hal::dma::dma1::C7;
-type TxBuffer = Vec<u8, U256>;
+type TxBuffer = Vec<u8, 256>;
 type TxReady = (&'static mut TxBuffer, TxCh, TxUsart);
 type TxBusy =
     hal::dma::Transfer<hal::dma::R, &'static mut TxBuffer, TxCh, TxUsart>;
@@ -83,14 +82,22 @@ fn fill_with_str(buffer: &mut TxBuffer, arg: &str) {
     buffer.extend_from_slice(arg.as_bytes()).unwrap();
 }
 
-#[app(device = hal::pac)]
-const APP: () = {
-    static mut LED: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>> = ();
-    static mut TELE: Option<DmaTelemetry> = ();
-    static mut CB: hal::dma::CircBuffer<[u8; HALF], hal::dma::dma1::C6> = ();
+#[app(device = hal::pac, peripherals = true)]
+mod app {
+    use super::*;
 
-    #[init]
-    fn init(ctx: init::Context) -> init::LateResources {
+    #[local]
+    struct Local {
+        led: hal::gpio::PA5<PullNone, Output<PushPull, LowSpeed>>,
+        tele: Option<DmaTelemetry>,
+        cb: hal::dma::CircBuffer<[u8; HALF], hal::dma::dma1::C6>,
+    }
+
+    #[shared]
+    struct Shared {}
+
+    #[init()]
+    fn init(ctx: init::Context) -> (Shared, Local, init::Monotonics) {
         let device: hal::pac::Peripherals = ctx.device;
         let mut rcc = device.RCC.constrain();
         let mut flash = device.FLASH.constrain();
@@ -115,19 +122,23 @@ const APP: () = {
         rx_chan.listen(hal::dma::Event::TransferComplete);
         let ib = unsafe { &mut IN_BUFFER };
         let cb = rx.circ_read(rx_chan, ib);
-        init::LateResources {
-            LED: led,
-            CB: cb,
-            TELE: Some(new_tele),
-        }
+        (
+            Shared {},
+            Local {
+                led,
+                cb,
+                tele: Some(new_tele),
+            },
+            init::Monotonics(),
+        )
     }
 
-    #[interrupt(binds = DMA1_CH6, resources = [LED, CB, TELE])]
+    #[task(binds = DMA1_CH6, local = [led, cb, tele], shared = [])]
     fn handle_read(ctx: handle_read::Context) {
-        let led = ctx.resources.LED;
+        let led = ctx.local.led;
         let _ = led.toggle();
-        let maybe_tele = ctx.resources.TELE.take();
-        let cb = ctx.resources.CB;
+        let maybe_tele = ctx.local.tele.take();
+        let cb = ctx.local.cb;
 
         if let Some(tele) = maybe_tele {
             let mut msg = [0u8; 32];
@@ -137,12 +148,12 @@ const APP: () = {
             match ret {
                 Ok(()) => {
                     let new_tele = tele.send(|b| fill_with_bytes(b, &msg));
-                    *ctx.resources.TELE = Some(new_tele);
+                    *ctx.local.tele = Some(new_tele);
                 }
-                Err(e) => {
-                    cortex_m_semihosting::hprintln!("e: {:?}", e).unwrap();
+                Err(_e) => {
+                    // err
                 }
             }
         }
     }
-};
+}

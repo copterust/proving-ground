@@ -48,7 +48,7 @@ flash: $(BIN).bin
 load: flash
 
 foad: memory
-	cargo flash --chip $(CHIP) --target $(TARGET) --bin $(NAME) $(FEATURES)
+	cargo flash $(RELEASE_FLAG) --chip $(CHIP) --target $(TARGET) --bin $(NAME) $(FEATURES)
 
 boad: build
 	bobbin -v load $(RELEASE_FLAG) --target $(TARGET) --bin $(NAME) $(FEATURES)

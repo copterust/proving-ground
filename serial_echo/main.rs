@@ -22,7 +22,7 @@ fn main() -> ! {
         .cfgr
         .sysclk(64.mhz())
         .pclk1(32.mhz())
-        .pclk2(36.mhz())
+        .pclk2(32.mhz())
         .freeze(&mut flash.acr);
     let gpioa = device.GPIOA.split(&mut rcc.ahb);
     // USART2

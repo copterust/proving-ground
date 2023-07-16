@@ -109,10 +109,6 @@ optional = true
 [dependencies.defmt-rtt]
 version = "0.4"
 optional = true
-[dependencies.static_cell]
-version = "1.1"
-features = ["nightly"]
-optional = true
 [dependencies.panic-probe]
 version = "0.3"
 features = ["print-defmt"]
@@ -136,7 +132,8 @@ with_won2010 = ["won2010"]
 with_heapless = ["heapless"]
 with_ryu = ["ryu"]
 with_rtfm = ["cortex-m-rtic"]
-with_embassy = ["with_rt", "embassy-sync", "embassy-executor", "embassy-time", "embassy-stm32", "embedded-io", "embedded-hal-async", "defmt", "defmt-rtt", "static_cell", "panic-probe", "nb"]
+with_embassy = ["with_rt", "embassy-sync", "embassy-executor", "embassy-time", "embassy-stm32", "embedded-io", "embedded-hal-async", "nb"]
+with_defmt = ["defmt", "defmt-rtt", "panic-probe"]
 # --all-features will include "generic", but you can't build "mini"
 # if device crate is used.
 all = ["with_dcmimu", "with_lsm", "with_heapless", "with_rtfm"]
@@ -152,7 +149,7 @@ path = "pwm/main.rs"
 required-features = ["with_device"]
 
 [[bin]]
-name = "better_pwm"
+name = "better-pwm"
 path = "better_pwm/main.rs"
 required-features = ["with_hal"]
 
@@ -167,7 +164,7 @@ path = "tmtest/main.rs"
 required-features = ["with_hal"]
 
 [[bin]]
-name = "serial_echo"
+name = "serial-echo"
 path = "serial_echo/main.rs"
 required-features = ["with_hal"]
 
@@ -177,22 +174,22 @@ path = "vl53l0x/main.rs"
 required-features = ["with_vl53l0x"]
 
 [[bin]]
-name = "raw_sensors"
+name = "raw-sensors"
 path = "raw_sensors/main.rs"
 required-features = ["with_mpu"]
 
 [[bin]]
-name = "semi_sensors"
+name = "semi-sensors"
 path = "semi_sensors/main.rs"
 required-features = ["with_mpu", "with_semihosting"]
 
 [[bin]]
-name = "pin_sensors"
+name = "pin-sensors"
 path = "pin_sensors/main.rs"
 required-features = ["with_mpu"]
 
 [[bin]]
-name = "cycle_sensors"
+name = "cycle-sensors"
 path = "cycle_sensors/main.rs"
 required-features = ["with_mpu", "with_semihosting"]
 
@@ -207,7 +204,7 @@ path = "therm/main.rs"
 required-features = ["with_mpu"]
 
 [[bin]]
-name = "mpu_calib"
+name = "mpu-calib"
 path = "mpu_calib/main.rs"
 required-features = ["with_mpu"]
 
@@ -237,12 +234,12 @@ path = "lsm303/main.rs"
 required-features = ["with_lsm"]
 
 [[bin]]
-name = "lsm_mpu"
+name = "lsm-mpu"
 path = "lsm_mpu/main.rs"
 required-features = ["with_lsm", "with_mpu"]
 
 [[bin]]
-name = "shared_i2c"
+name = "shared-i2c"
 path = "shared_i2c/main.rs"
 required-features = ["with_shared_bus", "with_lsm", "with_bmp"]
 
@@ -252,7 +249,7 @@ path = "altitude/main.rs"
 required-features = ["with_math"]
 
 [[bin]]
-name = "serial_redirect"
+name = "serial-redirect"
 path = "serial_redirect/main.rs"
 required-features = ["with_hal"]
 
@@ -267,7 +264,7 @@ path = "semi/main.rs"
 required-features = ["with_hal", "with_semihosting"]
 
 [[bin]]
-name = "dma_serial"
+name = "dma-serial"
 path = "dma_serial/main.rs"
 required-features = ["with_hal"]
 
@@ -283,36 +280,36 @@ path = "feed/main.rs"
 required-features = [ "with_dcmimu", "with_semihosting", "with_heapless", "with_ryu"]
 
 [[bin]]
-name = "dma_int"
+name = "dma-int"
 path = "dma_int/main.rs"
 required-features = [ "with_rtfm", "with_hal", "with_heapless"]
 
 [[bin]]
-name = "calibrating_ahrs"
+name = "calibrating-ahrs"
 path = "calibrating_ahrs/main.rs"
 required-features = [ "with_rtfm", "with_hal", "with_heapless", "with_rt", "with_mpu", "with_ryu" ]
 
 [[bin]]
-name = "mpu_int"
+name = "mpu-int"
 path = "mpu_int/main.rs"
 required-features = [ "with_rtfm", "with_semihosting", "with_mpu" ]
 
 [[bin]]
-name = "rtfm_int"
+name = "rtfm-int"
 path = "rtfm_int/main.rs"
 required-features = [ "with_rtfm", "with_device", "ehal"]
 
 [[bin]]
-name = "echo_dma"
+name = "echo-dma"
 path = "echo_dma/main.rs"
 required-features = [ "with_rtfm", "with_device", "with_hal", "with_heapless", "with_semihosting"]
 
 [[bin]]
-name = "cmd_dma"
+name = "cmd-dma"
 path = "cmd_dma/main.rs"
 required-features = [ "with_rtfm", "with_device", "with_hal", "with_heapless", "with_semihosting"]
 
 [[bin]]
-name = "embassy_raw_sensors"
+name = "embassy-raw-sensors"
 path = "embassy_raw_sensors/main.rs"
-required-features = [ "with_embassy", "with_only_mpu", "with_heapless" ]
+required-features = [ "with_embassy", "with_only_mpu", "with_heapless", "with_defmt" ]

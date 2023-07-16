@@ -875,7 +875,6 @@ dependencies = [
  "rand",
  "ryu",
  "shared-bus",
- "static_cell",
  "stm32f3 0.15.1",
  "vl53l0x",
  "won2010",
