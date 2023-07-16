@@ -16,6 +16,8 @@ mem :=
 MEM := $(if $(mem),$(mem),128k)
 chip :=
 CHIP := $(if $(chip),$(chip),stm32f303k8tx)
+probe :=
+PROBE := $(if $(probe),$(probe),probe-rs-cli)
 
 ifeq (,$(wildcard memory.$(MEM)))
 $(error File memory.$(MEM) do not exist, create if you want to use different memory settings)
@@ -42,13 +44,14 @@ memory:
 build: memory
 	cargo -v build $(RELEASE_FLAG) --target $(TARGET) --bin $(NAME) $(FEATURES)
 
-flash: $(BIN).bin
+load: $(BIN).bin
 	python2 ./loader/stm32loader.py -p $(TTY) -f F3 -e -w $(BIN).bin
 
-load: flash
-
-foad: memory
+flash: memory
 	cargo flash $(RELEASE_FLAG) --chip $(CHIP) --target $(TARGET) --bin $(NAME) $(FEATURES)
+
+attach: $(BIN)
+	$(PROBE) attach --chip $(CHIP) $(BIN)
 
 boad: build
 	bobbin -v load $(RELEASE_FLAG) --target $(TARGET) --bin $(NAME) $(FEATURES)
