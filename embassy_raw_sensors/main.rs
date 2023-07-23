@@ -144,10 +144,11 @@ async fn main(spawner: Spawner) -> ! {
     let enabled_int = mpu.get_enabled_interrupts();
     defmt::info!("mpu int enabled; now: {:?}", defmt::Debug2Format(&enabled_int));
 
-    let mpu_interrupt_pin = Input::new(device.PB3, Pull::Up);
-    let mut mpu_interrupt_pin = ExtiInput::new(mpu_interrupt_pin,
-                                               device.EXTI3);
+    let drdy = Input::new(device.PA11, Pull::Up);
+    let mut drdy = ExtiInput::new(drdy, device.EXTI11);
     defmt::info!("mpupin enabled");
+    let mut led = Output::new(device.PB3, Level::Low, Speed::Low);
+    defmt::info!("led ready");
 
     let mut prev_t_ms = Instant::now().as_millis();
 
@@ -162,7 +163,7 @@ async fn main(spawner: Spawner) -> ! {
     let mut quiet = true;
     let mut c = 0u16;
     loop {
-        mpu_interrupt_pin.wait_for_any_edge().await;
+        drdy.wait_for_any_edge().await;
         let t_ms = Instant::now().as_millis();
         let dt_ms = t_ms.wrapping_sub(prev_t_ms);
         prev_t_ms = t_ms;
@@ -195,6 +196,11 @@ async fn main(spawner: Spawner) -> ! {
                     quiet = !quiet;
                     defmt::info!("Signaled quiet: new state: {}", quiet);
                     QUIET.reset();
+                    if quiet {
+                        led.set_high();
+                    } else {
+                        led.set_low();
+                    }
                 }
             }
             Err(e) => {
