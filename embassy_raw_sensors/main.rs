@@ -149,11 +149,6 @@ async fn main(spawner: Spawner) -> ! {
                                                device.EXTI13.degrade());
     defmt::info!("mpupin enabled");
 
-    // loop {
-    //     mpu_interrupt_pin.wait_for_any_edge().await;
-    //     defmt::info!("Pressed!");
-    // }
-
     let mut prev_t_ms = Instant::now().as_millis();
 
     log_to_usart!(
@@ -164,7 +159,6 @@ async fn main(spawner: Spawner) -> ! {
     );
     defmt::info!("all ok, starting loop!");
 
-    // TODO: read mpu on interrupt; await signals here
     let mut quiet = true;
     loop {
         mpu_interrupt_pin.wait_for_any_edge().await;
