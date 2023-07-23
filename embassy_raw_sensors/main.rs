@@ -10,7 +10,7 @@ use defmt;
 use {defmt_rtt as _, panic_probe as _};
 
 use embassy_executor::Spawner;
-use embassy_stm32::exti::Channel;
+// use embassy_stm32::exti::Channel;
 use embassy_stm32::exti::ExtiInput;
 use embassy_stm32::gpio::{Level, Output, Speed, Input, Pull};
 use embassy_stm32::dma::NoDma;
@@ -144,9 +144,9 @@ async fn main(spawner: Spawner) -> ! {
     let enabled_int = mpu.get_enabled_interrupts();
     defmt::info!("mpu int enabled; now: {:?}", defmt::Debug2Format(&enabled_int));
 
-    let mpu_interrupt_pin = Input::new(device.PA11, Pull::Up);
-    let mut mpu_interrupt_pin = ExtiInput::new(mpu_interrupt_pin.degrade(),
-                                               device.EXTI13.degrade());
+    let mpu_interrupt_pin = Input::new(device.PB3, Pull::Up);
+    let mut mpu_interrupt_pin = ExtiInput::new(mpu_interrupt_pin,
+                                               device.EXTI3);
     defmt::info!("mpupin enabled");
 
     let mut prev_t_ms = Instant::now().as_millis();
@@ -160,12 +160,13 @@ async fn main(spawner: Spawner) -> ! {
     defmt::info!("all ok, starting loop!");
 
     let mut quiet = true;
+    let mut c = 0u16;
     loop {
         mpu_interrupt_pin.wait_for_any_edge().await;
-        defmt::info!("interrupt!");
         let t_ms = Instant::now().as_millis();
         let dt_ms = t_ms.wrapping_sub(prev_t_ms);
         prev_t_ms = t_ms;
+        c = (c + 1) % 1000;
         match mpu.all::<[f32; 3]>() {
             Ok(meas) => {
                 let gyro = meas.gyro;
@@ -174,7 +175,7 @@ async fn main(spawner: Spawner) -> ! {
                     meas.accel[1] - accel_biases[1],
                     meas.accel[2] - accel_biases[2],
                 ];
-                if !quiet {
+                if !quiet || c == 0 {
                     log_to_usart!(
                         tx,
                         log_buf,
